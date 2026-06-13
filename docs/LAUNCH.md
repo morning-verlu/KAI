@@ -44,6 +44,7 @@ The process table is the visual proof of the idea.
 - install command works
 - README has a clear first screen
 - GitHub Pages has a direct launch landing page
+- social preview image works for shared links
 - architecture diagram is visible
 - example output is included
 - roadmap is public

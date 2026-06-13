@@ -1,0 +1,37 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">KAI OS social preview card</title>
+  <desc id="desc">Social preview for KAI OS, an AI Agent Operating System in Kotlin.</desc>
+  <rect width="1200" height="630" fill="#101418"/>
+  <rect x="56" y="56" width="1088" height="518" rx="28" fill="#141B22" stroke="#2D3844" stroke-width="2"/>
+  <path d="M104 102h42v68l64-68h54l-76 82 82 94h-59l-65-76v76h-42V102Z" fill="#8FF0BD"/>
+  <text x="296" y="154" fill="#F5F7FB" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="68" font-weight="820" letter-spacing="0">KAI OS</text>
+  <text x="302" y="206" fill="#A8B3C1" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="24">AI Agent Operating System in Kotlin</text>
+
+  <g transform="translate(104 316)">
+    <rect width="224" height="92" rx="10" fill="#18222C" stroke="#2D3844"/>
+    <text x="24" y="38" fill="#F5F7FB" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="760">Agent</text>
+    <text x="24" y="68" fill="#8FF0BD" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">Process</text>
+  </g>
+  <g transform="translate(356 316)">
+    <rect width="224" height="92" rx="10" fill="#18222C" stroke="#2D3844"/>
+    <text x="24" y="38" fill="#F5F7FB" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="760">Workflow</text>
+    <text x="24" y="68" fill="#78D9FF" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">Scheduler</text>
+  </g>
+  <g transform="translate(608 316)">
+    <rect width="224" height="92" rx="10" fill="#18222C" stroke="#2D3844"/>
+    <text x="24" y="38" fill="#F5F7FB" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="760">Tool</text>
+    <text x="24" y="68" fill="#F0B85C" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">Syscall</text>
+  </g>
+  <g transform="translate(860 316)">
+    <rect width="224" height="92" rx="10" fill="#18222C" stroke="#2D3844"/>
+    <text x="24" y="38" fill="#F5F7FB" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="24" font-weight="760">Memory</text>
+    <text x="24" y="68" fill="#8FF0BD" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">State</text>
+  </g>
+
+  <g transform="translate(104 454)">
+    <rect width="992" height="68" rx="10" fill="#0D1116" stroke="#2D3844"/>
+    <text x="26" y="43" fill="#8FF0BD" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">$ kaios run "analyze crypto market" &amp;&amp; kaios ps &lt;run-id&gt;</text>
+  </g>
+  <text x="104" y="552" fill="#A8B3C1" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">github.com/morning-verlu/KAI</text>
+  <text x="796" y="552" fill="#78D9FF" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">morning-verlu.github.io/KAI</text>
+</svg>

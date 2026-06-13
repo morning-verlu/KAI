@@ -7,6 +7,7 @@ Use this page when announcing KAI OS.
 KAI OS is an AI Agent Operating System in Kotlin: agents run like processes, workflows schedule them like a kernel, and tools are syscall boundaries.
 
 Launch site: https://morning-verlu.github.io/KAI/
+Social preview image: https://morning-verlu.github.io/KAI/assets/kaios-social-card.png
 
 ## Short Post
 
