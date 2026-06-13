@@ -11,6 +11,8 @@ KAI OS is a Kotlin runtime for orchestrating AI agents like operating-system pro
 
 It is not a chatbot framework, not a LangChain clone, and not just a CLI. The goal is a developer-native runtime where agents have lifecycle, memory, permissions, metrics, and syscall-style tool boundaries.
 
+![KAI OS CLI demo](docs/assets/kaios-demo.gif)
+
 ![KAI OS process table preview](docs/assets/kaios-process-table.svg)
 
 ```text
@@ -141,6 +143,7 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - CLI process table and run inspector.
 - Static Agent Process Manager HTML reports under `.kaios/reports/`.
 - README-ready terminal process preview for launch sharing.
+- CLI demo GIF for README, launch site, and social posts.
 
 Next milestones are tracked in [ROADMAP.md](ROADMAP.md).
 

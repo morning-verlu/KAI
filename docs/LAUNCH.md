@@ -45,6 +45,7 @@ The process table is the visual proof of the idea.
 - README has a clear first screen
 - GitHub Pages has a direct launch landing page
 - social preview image works for shared links
+- demo GIF shows run, ps, and inspect
 - architecture diagram is visible
 - example output is included
 - roadmap is public

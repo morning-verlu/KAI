@@ -239,6 +239,10 @@
         padding: 92px 0;
       }
 
+      section[id] {
+        scroll-margin-top: 88px;
+      }
+
       .band {
         background: var(--bg-2);
       }
@@ -353,6 +357,11 @@
         display: block;
         width: 100%;
         height: auto;
+      }
+
+      .demo-frame {
+        max-width: 1000px;
+        margin: 0 auto;
       }
 
       .metric-list {
@@ -643,6 +652,18 @@
       <section class="band">
         <div class="section-inner">
           <div class="section-heading">
+            <h2>Watch a run become processes.</h2>
+            <p>The default planner -> executor -> validator workflow emits process metrics and lifecycle events that can be inspected after the run.</p>
+          </div>
+          <div class="terminal-frame demo-frame">
+            <img src="assets/kaios-demo.gif" alt="Animated KAI OS CLI demo showing run, ps, and inspect commands">
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-inner">
+          <div class="section-heading">
             <h2>v0.1 ships the runnable core.</h2>
             <p>The first milestone is intentionally small, deterministic, and inspectable so contributors can build on the runtime instead of reverse-engineering a demo.</p>
           </div>
@@ -708,5 +729,16 @@ build/install/kaios-cli/bin/kaios report &lt;run-id&gt;</code></pre>
         <span>Apache-2.0 open source runtime infrastructure.</span>
       </div>
     </footer>
+    <script>
+      document.querySelectorAll('a[href^="#"]').forEach((link) => {
+        link.addEventListener("click", (event) => {
+          const target = document.querySelector(link.getAttribute("href"));
+          if (!target) return;
+          event.preventDefault();
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+          history.pushState(null, "", link.getAttribute("href"));
+        });
+      });
+    </script>
   </body>
 </html>

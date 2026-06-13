@@ -8,6 +8,7 @@ KAI OS is an AI Agent Operating System in Kotlin: agents run like processes, wor
 
 Launch site: https://morning-verlu.github.io/KAI/
 Social preview image: https://morning-verlu.github.io/KAI/assets/kaios-social-card.png
+Demo GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
 
 ## Short Post
 
@@ -24,9 +25,11 @@ No API key needed for the first demo.
 
 It can also generate a static Agent Process Manager report for screenshots.
 The README now includes a terminal process-table preview for quick sharing.
+There is a short CLI demo GIF for run -> ps -> inspect.
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
+GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
 ```
 
 ## Technical Post
@@ -63,6 +66,7 @@ build/install/kaios-cli/bin/kaios report <run-id>
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
+GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
 ```
 
 ## Show HN Draft
