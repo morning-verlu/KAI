@@ -1,0 +1,53 @@
+<svg width="1120" height="520" viewBox="0 0 1120 520" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">KAI OS agent process table preview</title>
+  <desc id="desc">A terminal-style preview of kaios ps showing planner, executor, and validator agents as inspectable processes.</desc>
+  <rect width="1120" height="520" rx="18" fill="#101418"/>
+  <rect x="1" y="1" width="1118" height="518" rx="17" stroke="#2E3944" stroke-width="2"/>
+  <rect x="0" y="0" width="1120" height="58" rx="18" fill="#182029"/>
+  <rect x="0" y="40" width="1120" height="28" fill="#182029"/>
+  <circle cx="34" cy="29" r="8" fill="#FF5F57"/>
+  <circle cx="60" cy="29" r="8" fill="#FFBD2E"/>
+  <circle cx="86" cy="29" r="8" fill="#28C840"/>
+  <text x="560" y="35" text-anchor="middle" fill="#AAB7C4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">kaios process manager</text>
+
+  <text x="44" y="106" fill="#9BE7C3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">$ build/install/kaios-cli/bin/kaios ps run-97381ae9</text>
+  <text x="44" y="158" fill="#F1F5F9" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" font-weight="700">RUN run-97381ae9</text>
+  <text x="275" y="158" fill="#AAB7C4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">workflow=default</text>
+  <text x="520" y="158" fill="#9BE7C3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">success=true</text>
+
+  <rect x="44" y="194" width="1032" height="56" rx="8" fill="#1B2530"/>
+  <text x="72" y="229" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">PID</text>
+  <text x="170" y="229" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">AGENT</text>
+  <text x="346" y="229" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">STATE</text>
+  <text x="540" y="229" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">TOKENS</text>
+  <text x="690" y="229" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">MEMORY</text>
+  <text x="840" y="229" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">SYSCALLS</text>
+  <text x="990" y="229" fill="#7DD3FC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="700">DUR</text>
+
+  <rect x="44" y="268" width="1032" height="58" rx="8" fill="#121A22"/>
+  <text x="72" y="304" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">1</text>
+  <text x="170" y="304" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">planner</text>
+  <text x="346" y="304" fill="#9BE7C3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">SUCCEEDED</text>
+  <text x="540" y="304" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">13</text>
+  <text x="690" y="304" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">137b</text>
+  <text x="840" y="304" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">1</text>
+  <text x="990" y="304" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">10ms</text>
+
+  <rect x="44" y="338" width="1032" height="58" rx="8" fill="#121A22"/>
+  <text x="72" y="374" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">2</text>
+  <text x="170" y="374" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">executor</text>
+  <text x="346" y="374" fill="#9BE7C3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">SUCCEEDED</text>
+  <text x="540" y="374" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">24</text>
+  <text x="690" y="374" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">282b</text>
+  <text x="840" y="374" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">1</text>
+  <text x="990" y="374" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">0ms</text>
+
+  <rect x="44" y="408" width="1032" height="58" rx="8" fill="#121A22"/>
+  <text x="72" y="444" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">3</text>
+  <text x="170" y="444" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">validator</text>
+  <text x="346" y="444" fill="#9BE7C3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">SUCCEEDED</text>
+  <text x="540" y="444" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">27</text>
+  <text x="690" y="444" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">273b</text>
+  <text x="840" y="444" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">1</text>
+  <text x="990" y="444" fill="#F8FAFC" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19">0ms</text>
+</svg>

@@ -20,6 +20,7 @@ It runs planner -> executor -> validator as inspectable agent processes with PID
 No API key needed for the first demo.
 
 It can also generate a static Agent Process Manager report for screenshots.
+The README now includes a terminal process-table preview for quick sharing.
 
 Repo: https://github.com/morning-verlu/KAI
 ```
@@ -118,4 +119,4 @@ build/install/kaios-cli/bin/kaios report <run-id>
 - Reply quickly to the first issues and comments.
 - Ship one follow-up commit within 24 hours of launch.
 - Create issues for model providers, safe tools, scheduler, memory, and UI.
-- Add a short demo GIF or terminal screenshot as soon as possible.
+- Add a short demo GIF or terminal screenshot as soon as possible. (README terminal preview shipped.)
