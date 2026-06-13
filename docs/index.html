@@ -705,20 +705,19 @@
       <section id="quickstart">
         <div class="section-inner quickstart">
           <div class="section-heading">
-            <h2>Clone it, run it, inspect it.</h2>
-            <p>The demo workflow is planner -> executor -> validator. It writes run snapshots under .kaios/runs and can render a static process report.</p>
+            <h2>Download it, run it, inspect it.</h2>
+            <p>The v0.1.5 CLI distribution runs locally with no API key. The demo workflow is planner -> executor -> validator and writes snapshots under .kaios/runs.</p>
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
             </div>
           </div>
-          <pre class="command"><code>git clone https://github.com/morning-verlu/KAI.git
-cd KAI
-./gradlew test installDist
-build/install/kaios-cli/bin/kaios run "analyze crypto market"
-build/install/kaios-cli/bin/kaios ps &lt;run-id&gt;
-build/install/kaios-cli/bin/kaios inspect &lt;run-id&gt;
-build/install/kaios-cli/bin/kaios report &lt;run-id&gt;</code></pre>
+          <pre class="command"><code>curl -L -o kaios-0.1.5.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.5/kaios-0.1.5.zip
+unzip kaios-0.1.5.zip
+./kaios-0.1.5/bin/kaios run "analyze crypto market"
+./kaios-0.1.5/bin/kaios ps &lt;run-id&gt;
+./kaios-0.1.5/bin/kaios inspect &lt;run-id&gt;
+./kaios-0.1.5/bin/kaios report &lt;run-id&gt;</code></pre>
         </div>
       </section>
     </main>

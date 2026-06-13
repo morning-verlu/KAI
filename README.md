@@ -37,6 +37,16 @@ Kotlin gives this model a strong foundation: JVM ecosystem reach, type safety, c
 
 ## Quick Start
 
+Download the v0.1.5 CLI distribution:
+
+```bash
+curl -L -o kaios-0.1.5.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.5/kaios-0.1.5.zip
+unzip kaios-0.1.5.zip
+./kaios-0.1.5/bin/kaios run "analyze crypto market"
+```
+
+Or build from source:
+
 ```bash
 ./gradlew test installDist
 build/install/kaios-cli/bin/kaios run "analyze crypto market"

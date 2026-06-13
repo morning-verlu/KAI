@@ -67,6 +67,7 @@ build/install/kaios-cli/bin/kaios report <run-id>
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.5/kaios-0.1.5.zip
 ```
 
 ## Show HN Draft
@@ -111,6 +112,19 @@ https://morning-verlu.github.io/KAI/
 ```
 
 ## First Demo Flow
+
+Download-first:
+
+```bash
+curl -L -o kaios-0.1.5.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.5/kaios-0.1.5.zip
+unzip kaios-0.1.5.zip
+./kaios-0.1.5/bin/kaios run "analyze crypto market"
+./kaios-0.1.5/bin/kaios ps <run-id>
+./kaios-0.1.5/bin/kaios inspect <run-id>
+./kaios-0.1.5/bin/kaios report <run-id>
+```
+
+Build from source:
 
 ```bash
 git clone https://github.com/morning-verlu/KAI.git
