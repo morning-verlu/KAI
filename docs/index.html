@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KAI OS - AI Agent Operating System in Kotlin</title>
+    <meta name="description" content="KAI OS is an AI Agent Operating System in Kotlin: agents run like processes, workflows schedule them like a kernel, and tools are syscall boundaries.">
+    <meta property="og:title" content="KAI OS - AI Agent Operating System in Kotlin">
+    <meta property="og:description" content="Agent = Process. Workflow = Scheduler. Tool = Syscall. A Kotlin/JVM runtime for inspectable AI agents.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://morning-verlu.github.io/KAI/">
+    <meta property="og:image" content="https://morning-verlu.github.io/KAI/assets/kaios-process-table.svg">
+    <meta name="theme-color" content="#101418">
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #101418;
+        --bg-2: #151b22;
+        --bg-3: #1c242d;
+        --text: #f5f7fb;
+        --muted: #a8b3c1;
+        --line: #2d3844;
+        --mint: #8ff0bd;
+        --cyan: #78d9ff;
+        --amber: #f0b85c;
+        --red: #f87171;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+        --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        line-height: 1.5;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .site-header {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        z-index: 10;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(16, 20, 24, 0.82);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav {
+        width: min(1160px, calc(100% - 40px));
+        height: 68px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 760;
+        letter-spacing: 0;
+      }
+
+      .brand-mark {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #182029;
+        color: var(--mint);
+        font-family: var(--mono);
+        font-size: 15px;
+        box-shadow: inset 0 0 0 1px rgba(143, 240, 189, 0.1);
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .nav-links a:hover {
+        color: var(--text);
+      }
+
+      .nav-cta {
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(143, 240, 189, 0.54);
+        border-radius: 8px;
+        padding: 0 14px;
+        color: #0b1114;
+        background: var(--mint);
+        font-weight: 720;
+      }
+
+      .hero {
+        position: relative;
+        min-height: 92vh;
+        padding: 140px 0 70px;
+        overflow: hidden;
+        background:
+          linear-gradient(90deg, rgba(16, 20, 24, 0.98) 0%, rgba(16, 20, 24, 0.9) 34%, rgba(16, 20, 24, 0.74) 63%, rgba(16, 20, 24, 0.92) 100%),
+          linear-gradient(180deg, rgba(120, 217, 255, 0.09), transparent 38%),
+          url("assets/kaios-process-table.svg");
+        background-repeat: no-repeat;
+        background-position: center, center, right 8vw center;
+        background-size: cover, cover, min(900px, 72vw);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(120, 217, 255, 0.42), transparent);
+      }
+
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        width: min(1160px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 760px;
+        font-size: clamp(58px, 9vw, 128px);
+        line-height: 0.88;
+        letter-spacing: 0;
+        font-weight: 820;
+      }
+
+      .hero-copy {
+        max-width: 690px;
+        margin: 30px 0 0;
+        color: #d5dde7;
+        font-size: clamp(20px, 2.2vw, 28px);
+        line-height: 1.22;
+      }
+
+      .actions {
+        margin-top: 38px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .button {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        padding: 0 18px;
+        font-size: 15px;
+        font-weight: 740;
+        border: 1px solid var(--line);
+      }
+
+      .button.primary {
+        background: var(--mint);
+        border-color: var(--mint);
+        color: #08100d;
+      }
+
+      .button.secondary {
+        background: rgba(28, 36, 45, 0.68);
+        color: var(--text);
+      }
+
+      .metaphor {
+        margin-top: 62px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1px;
+        max-width: 900px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: var(--shadow);
+      }
+
+      .metaphor div {
+        min-height: 106px;
+        padding: 20px;
+        background: rgba(18, 25, 32, 0.86);
+      }
+
+      .metaphor strong {
+        display: block;
+        color: var(--text);
+        font-size: 18px;
+      }
+
+      .metaphor span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+
+      section {
+        padding: 92px 0;
+      }
+
+      .band {
+        background: var(--bg-2);
+      }
+
+      .section-inner {
+        width: min(1160px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .section-heading {
+        max-width: 760px;
+        margin: 0 0 42px;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-size: clamp(34px, 4.6vw, 58px);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .section-heading p {
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .architecture {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .kernel {
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #101820;
+        box-shadow: var(--shadow);
+      }
+
+      .kernel-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .kernel-title {
+        font-family: var(--mono);
+        color: var(--cyan);
+        font-size: 15px;
+      }
+
+      .kernel-status {
+        color: var(--mint);
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+
+      .runtime-row {
+        display: grid;
+        grid-template-columns: 1.1fr repeat(3, 1fr);
+        gap: 14px;
+        margin-top: 24px;
+      }
+
+      .module {
+        min-height: 176px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #151f28;
+      }
+
+      .module h3 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .module p {
+        margin: 12px 0 0;
+        color: var(--muted);
+      }
+
+      .module code {
+        display: inline-block;
+        margin-top: 18px;
+        color: var(--amber);
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+
+      .process-preview {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+        gap: 42px;
+        align-items: center;
+      }
+
+      .terminal-frame {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #101418;
+        box-shadow: var(--shadow);
+      }
+
+      .terminal-frame img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .metric-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .metric {
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 18px;
+        align-items: baseline;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .metric strong {
+        color: var(--cyan);
+        font-family: var(--mono);
+      }
+
+      .metric span {
+        color: var(--muted);
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+
+      .feature {
+        min-height: 210px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #121a22;
+      }
+
+      .feature h3 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .feature p {
+        margin: 12px 0 0;
+        color: var(--muted);
+      }
+
+      .feature .tag {
+        display: inline-block;
+        margin-top: 22px;
+        color: var(--mint);
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+
+      .quickstart {
+        display: grid;
+        grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+        gap: 44px;
+        align-items: start;
+      }
+
+      .command {
+        margin: 0;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #0d1116;
+        color: #d9fbe7;
+        font-family: var(--mono);
+        font-size: 15px;
+        line-height: 1.7;
+        overflow-x: auto;
+        box-shadow: var(--shadow);
+      }
+
+      .link-grid {
+        margin-top: 26px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      footer {
+        padding: 34px 0;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        background: #0d1116;
+      }
+
+      .footer-inner {
+        width: min(1160px, calc(100% - 40px));
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+        font-size: 14px;
+      }
+
+      @media (max-width: 860px) {
+        .nav-links a:not(.nav-cta) {
+          display: none;
+        }
+
+        .hero {
+          min-height: auto;
+          padding-top: 118px;
+          background-position: center, center, center bottom 22px;
+          background-size: cover, cover, 960px;
+        }
+
+        .hero-copy {
+          max-width: 100%;
+        }
+
+        .metaphor,
+        .runtime-row,
+        .process-preview,
+        .features,
+        .quickstart {
+          grid-template-columns: 1fr;
+        }
+
+        .metaphor {
+          margin-top: 42px;
+        }
+
+        section {
+          padding: 70px 0;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .nav {
+          width: min(100% - 28px, 1160px);
+        }
+
+        .section-inner,
+        .hero-inner,
+        .footer-inner {
+          width: min(100% - 28px, 1160px);
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .metaphor div {
+          min-height: 88px;
+        }
+
+        .kernel,
+        .module,
+        .feature,
+        .command {
+          padding: 18px;
+        }
+
+        .metric {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary navigation">
+        <a class="brand" href="#">
+          <span class="brand-mark">K</span>
+          <span>KAI OS</span>
+        </a>
+        <div class="nav-links">
+          <a href="#model">Model</a>
+          <a href="#processes">Processes</a>
+          <a href="#quickstart">Quick start</a>
+          <a class="nav-cta" href="https://github.com/morning-verlu/KAI">Star on GitHub</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-inner">
+          <h1>KAI OS</h1>
+          <p class="hero-copy">
+            AI Agent Operating System in Kotlin. Agents run like processes, workflows schedule them like a kernel, and tools cross syscall boundaries.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/morning-verlu/KAI">Star on GitHub</a>
+            <a class="button secondary" href="#quickstart">Run the demo</a>
+          </div>
+          <div class="metaphor" aria-label="KAI OS core metaphor">
+            <div>
+              <strong>Agent</strong>
+              <span>Process</span>
+            </div>
+            <div>
+              <strong>Workflow</strong>
+              <span>Scheduler</span>
+            </div>
+            <div>
+              <strong>Tool</strong>
+              <span>Syscall</span>
+            </div>
+            <div>
+              <strong>Memory</strong>
+              <span>State</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="model" class="band">
+        <div class="section-inner">
+          <div class="section-heading">
+            <h2>A runtime model, not another chain wrapper.</h2>
+            <p>KAI OS starts from operating-system primitives: lifecycle, scheduling, permissions, memory, and observable process state.</p>
+          </div>
+          <div class="architecture">
+            <div class="kernel">
+              <div class="kernel-top">
+                <div class="kernel-title">agent-runtime / kernel</div>
+                <div class="kernel-status">coroutine scheduler online</div>
+              </div>
+              <div class="runtime-row">
+                <div class="module">
+                  <h3>Agent Runtime</h3>
+                  <p>Spawn, start, suspend, resume, cancel, succeed, and fail agent processes with event traces.</p>
+                  <code>AgentProcess(pid, state)</code>
+                </div>
+                <div class="module">
+                  <h3>Scheduler</h3>
+                  <p>Execute DAG workflows with parallel-ready nodes, fallback routing, timeout policy, and sibling cancellation.</p>
+                  <code>WorkflowScheduler</code>
+                </div>
+                <div class="module">
+                  <h3>Tool System</h3>
+                  <p>Route side effects through permissioned syscall-style tools instead of direct agent access.</p>
+                  <code>ToolRegistry</code>
+                </div>
+                <div class="module">
+                  <h3>Memory Layer</h3>
+                  <p>Use session memory, SQLite persistence, and JSON run snapshots for local inspection.</p>
+                  <code>MemoryStore</code>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="processes">
+        <div class="section-inner process-preview">
+          <div class="terminal-frame">
+            <img src="assets/kaios-process-table.svg" alt="kaios ps terminal process table showing planner, executor, and validator agents">
+          </div>
+          <div>
+            <div class="section-heading">
+              <h2>Inspect agents like processes.</h2>
+              <p>The CLI exposes process-style observability from the first demo, with no external API key required.</p>
+            </div>
+            <div class="metric-list">
+              <div class="metric">
+                <strong>PID</strong>
+                <span>Every agent execution gets a stable process id inside the run.</span>
+              </div>
+              <div class="metric">
+                <strong>CPU</strong>
+                <span>Token usage is tracked as the runtime's first compute metric.</span>
+              </div>
+              <div class="metric">
+                <strong>MEM</strong>
+                <span>Context size and persisted memory make agent state visible.</span>
+              </div>
+              <div class="metric">
+                <strong>IO</strong>
+                <span>Tool calls are counted as syscalls across the process lifecycle.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="band">
+        <div class="section-inner">
+          <div class="section-heading">
+            <h2>v0.1 ships the runnable core.</h2>
+            <p>The first milestone is intentionally small, deterministic, and inspectable so contributors can build on the runtime instead of reverse-engineering a demo.</p>
+          </div>
+          <div class="features">
+            <article class="feature">
+              <h3>Deterministic by default</h3>
+              <p>Mock model execution keeps the first run local and reproducible, while provider interfaces leave room for real models.</p>
+              <span class="tag">MockModelProvider</span>
+            </article>
+            <article class="feature">
+              <h3>Real provider boundary</h3>
+              <p>OpenAI-compatible and Ollama providers plug into the same runtime abstraction when you want live inference.</p>
+              <span class="tag">ModelProvider</span>
+            </article>
+            <article class="feature">
+              <h3>Safe syscalls first</h3>
+              <p>Echo, clock, mock HTTP, and scoped file access demonstrate permissioned tool execution.</p>
+              <span class="tag">ToolPermission</span>
+            </article>
+            <article class="feature">
+              <h3>Persisted state</h3>
+              <p>Session memory, SQLite memory, and JSON snapshots make agent runs inspectable after execution.</p>
+              <span class="tag">MemoryStore</span>
+            </article>
+            <article class="feature">
+              <h3>CLI process manager</h3>
+              <p>Run workflows, list runs, print process tables, inspect lifecycle events, and render static reports.</p>
+              <span class="tag">kaios ps</span>
+            </article>
+            <article class="feature">
+              <h3>Kotlin-native DSL</h3>
+              <p>Describe agents and workflows with typed Kotlin APIs that can grow into plugin and UI layers.</p>
+              <span class="tag">agent { workflow }</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="quickstart">
+        <div class="section-inner quickstart">
+          <div class="section-heading">
+            <h2>Clone it, run it, inspect it.</h2>
+            <p>The demo workflow is planner -> executor -> validator. It writes run snapshots under .kaios/runs and can render a static process report.</p>
+            <div class="link-grid">
+              <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
+              <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
+            </div>
+          </div>
+          <pre class="command"><code>git clone https://github.com/morning-verlu/KAI.git
+cd KAI
+./gradlew test installDist
+build/install/kaios-cli/bin/kaios run "analyze crypto market"
+build/install/kaios-cli/bin/kaios ps &lt;run-id&gt;
+build/install/kaios-cli/bin/kaios inspect &lt;run-id&gt;
+build/install/kaios-cli/bin/kaios report &lt;run-id&gt;</code></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <span>KAI OS: AI Agent Operating System in Kotlin.</span>
+        <span>Apache-2.0 open source runtime infrastructure.</span>
+      </div>
+    </footer>
+  </body>
+</html>

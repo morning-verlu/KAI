@@ -19,6 +19,7 @@ Avoid positioning it as:
 
 ## Launch Channels
 
+- GitHub Pages launch site: https://morning-verlu.github.io/KAI/
 - GitHub README and topics
 - Hacker News "Show HN"
 - Reddit: r/Kotlin, r/MachineLearning, r/LocalLLaMA, r/programming
@@ -42,6 +43,7 @@ The process table is the visual proof of the idea.
 - CI green
 - install command works
 - README has a clear first screen
+- GitHub Pages has a direct launch landing page
 - architecture diagram is visible
 - example output is included
 - roadmap is public

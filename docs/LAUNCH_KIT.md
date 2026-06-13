@@ -6,6 +6,8 @@ Use this page when announcing KAI OS.
 
 KAI OS is an AI Agent Operating System in Kotlin: agents run like processes, workflows schedule them like a kernel, and tools are syscall boundaries.
 
+Launch site: https://morning-verlu.github.io/KAI/
+
 ## Short Post
 
 ```text
@@ -23,6 +25,7 @@ It can also generate a static Agent Process Manager report for screenshots.
 The README now includes a terminal process-table preview for quick sharing.
 
 Repo: https://github.com/morning-verlu/KAI
+Site: https://morning-verlu.github.io/KAI/
 ```
 
 ## Technical Post
@@ -58,6 +61,7 @@ build/install/kaios-cli/bin/kaios ps <run-id>
 build/install/kaios-cli/bin/kaios report <run-id>
 
 Repo: https://github.com/morning-verlu/KAI
+Site: https://morning-verlu.github.io/KAI/
 ```
 
 ## Show HN Draft
@@ -81,6 +85,7 @@ It uses a deterministic mock model provider, so no API key is needed.
 I am interested in feedback from Kotlin/JVM developers, agent-framework builders, and people thinking about AI runtime infrastructure.
 
 Repo: https://github.com/morning-verlu/KAI
+Site: https://morning-verlu.github.io/KAI/
 ```
 
 ## Reddit / Kotlin Slack Draft
@@ -97,6 +102,7 @@ The first version is intentionally small but runnable: a default planner -> exec
 I would love feedback on the Kotlin API/DSL and runtime model.
 
 https://github.com/morning-verlu/KAI
+https://morning-verlu.github.io/KAI/
 ```
 
 ## First Demo Flow
@@ -114,6 +120,7 @@ build/install/kaios-cli/bin/kaios report <run-id>
 ## Launch Checklist
 
 - Pin the repository on the GitHub profile.
+- Share the GitHub Pages launch site alongside the repository.
 - Add the repo link to social bios for launch week.
 - Post the short pitch first, then follow with the technical post.
 - Reply quickly to the first issues and comments.

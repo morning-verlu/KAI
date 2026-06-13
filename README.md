@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF.svg)](https://kotlinlang.org/)
 
+Website: [morning-verlu.github.io/KAI](https://morning-verlu.github.io/KAI/)
+
 KAI OS is a Kotlin runtime for orchestrating AI agents like operating-system processes.
 
 It is not a chatbot framework, not a LangChain clone, and not just a CLI. The goal is a developer-native runtime where agents have lifecycle, memory, permissions, metrics, and syscall-style tool boundaries.
