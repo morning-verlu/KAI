@@ -40,6 +40,7 @@ The v0.1 release is a runnable Kotlin/JVM seed:
 - DAG workflow scheduler
 - permissioned syscall tools
 - deterministic mock model provider
+- OpenAI-compatible and Ollama providers
 - JSON run snapshots
 - CLI process table
 

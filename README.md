@@ -86,6 +86,7 @@ Modules:
 - `runtime-core`: process lifecycle, scheduler, events, model abstraction, DSL.
 - `tool-runtime`: built-in syscall tools.
 - `memory-engine`: in-memory session memory and JSON run snapshots.
+- `model-providers`: OpenAI-compatible and Ollama model provider implementations.
 - `kaios-cli`: `kaios run`, `kaios ps`, and `kaios inspect`.
 
 Read the deeper design notes in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -111,11 +112,14 @@ See [examples/README.md](examples/README.md) for runnable CLI examples and the c
 
 For launch posts, demos, and community announcements, see [docs/LAUNCH_KIT.md](docs/LAUNCH_KIT.md).
 
+For real model execution, see [docs/PROVIDERS.md](docs/PROVIDERS.md).
+
 ## Current Status
 
 KAI OS is early v0.1 infrastructure. Today it includes:
 
 - Deterministic `MockModelProvider`, no API key needed.
+- OpenAI-compatible and Ollama providers for real model execution.
 - Agent lifecycle: spawn, start, suspend, resume, cancel, succeed, fail.
 - Process metrics: PID, state, token usage, context size, syscall count, duration.
 - Simple DAG scheduler with parallel-ready nodes and fallback routing.

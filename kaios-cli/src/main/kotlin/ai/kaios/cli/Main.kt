@@ -3,7 +3,12 @@ package ai.kaios.cli
 import ai.kaios.AgentRuntime
 import ai.kaios.FileRunSnapshotStore
 import ai.kaios.MemoryStore
+import ai.kaios.ModelProvider
 import ai.kaios.MockModelProvider
+import ai.kaios.OllamaConfig
+import ai.kaios.OllamaModelProvider
+import ai.kaios.OpenAiCompatibleConfig
+import ai.kaios.OpenAiCompatibleModelProvider
 import ai.kaios.RunId
 import ai.kaios.SessionMemoryStore
 import ai.kaios.StoredProcess
@@ -54,10 +59,14 @@ class KaiosCli(
         }
 
         val memory = SessionMemoryStore()
+        val modelProvider = runCatching { modelProviderFromEnv() }.getOrElse { error ->
+            err.println(error.message)
+            return 1
+        }
         val runtime = AgentRuntime()
         val scheduler = WorkflowScheduler(
             runtime = runtime,
-            modelProvider = MockModelProvider(),
+            modelProvider = modelProvider,
             tools = builtInToolRegistry(),
             memory = memory,
         )
@@ -174,6 +183,14 @@ class KaiosCli(
         else -> 10
     }
 }
+
+fun modelProviderFromEnv(env: (String) -> String? = System::getenv): ModelProvider =
+    when (val provider = env("KAIOS_MODEL_PROVIDER")?.lowercase()?.trim().orEmpty().ifBlank { "mock" }) {
+        "mock" -> MockModelProvider()
+        "openai", "openai-compatible" -> OpenAiCompatibleModelProvider(OpenAiCompatibleConfig.fromEnv(env))
+        "ollama" -> OllamaModelProvider(OllamaConfig.fromEnv(env))
+        else -> error("Unsupported KAIOS_MODEL_PROVIDER '$provider'. Use mock, openai, or ollama.")
+    }
 
 fun defaultWorkflow(memory: MemoryStore): Workflow {
     val planner = agent("planner") {

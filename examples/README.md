@@ -48,3 +48,24 @@ build/install/kaios-cli/bin/kaios run "draft a release plan"
 build/install/kaios-cli/bin/kaios run "summarize JVM agent infrastructure"
 build/install/kaios-cli/bin/kaios run "design a safe file tool"
 ```
+
+## Use a Real Provider
+
+OpenAI-compatible endpoint:
+
+```bash
+export KAIOS_MODEL_PROVIDER=openai
+export OPENAI_API_KEY="..."
+export OPENAI_MODEL="your-model"
+build/install/kaios-cli/bin/kaios run "draft a launch plan"
+```
+
+Ollama:
+
+```bash
+export KAIOS_MODEL_PROVIDER=ollama
+export OLLAMA_MODEL="your-local-model"
+build/install/kaios-cli/bin/kaios run "draft a launch plan"
+```
+
+See [../docs/PROVIDERS.md](../docs/PROVIDERS.md) for provider details.

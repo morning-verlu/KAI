@@ -1,11 +1,15 @@
 package ai.kaios.cli
 
 import ai.kaios.FileRunSnapshotStore
+import ai.kaios.MockModelProvider
+import ai.kaios.OllamaModelProvider
+import ai.kaios.OpenAiCompatibleModelProvider
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class KaiosCliSmokeTest {
@@ -53,5 +57,35 @@ class KaiosCliSmokeTest {
         assertTrue(inspectText.contains("events:"))
         assertTrue(inspectText.contains("SPAWNED"))
         assertTrue(inspectText.contains("SUCCEEDED"))
+    }
+
+    @Test
+    fun `model provider env selection supports mock openai and ollama`() {
+        assertTrue(modelProviderFromEnv { null } is MockModelProvider)
+
+        val openAi = modelProviderFromEnv { key ->
+            mapOf(
+                "KAIOS_MODEL_PROVIDER" to "openai",
+                "OPENAI_API_KEY" to "test-key",
+                "OPENAI_MODEL" to "test-model",
+                "OPENAI_BASE_URL" to "https://llm.example/v1",
+            )[key]
+        }
+        assertTrue(openAi is OpenAiCompatibleModelProvider)
+
+        val ollama = modelProviderFromEnv { key ->
+            mapOf(
+                "KAIOS_MODEL_PROVIDER" to "ollama",
+                "OLLAMA_MODEL" to "local-model",
+            )[key]
+        }
+        assertTrue(ollama is OllamaModelProvider)
+    }
+
+    @Test
+    fun `model provider env selection rejects unsupported providers`() {
+        assertFailsWith<IllegalStateException> {
+            modelProviderFromEnv { key -> if (key == "KAIOS_MODEL_PROVIDER") "unknown" else null }
+        }
     }
 }

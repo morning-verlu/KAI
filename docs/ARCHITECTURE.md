@@ -33,6 +33,7 @@ Runtime events create an inspectable trace for every run.
 - `WorkflowScheduler` executes a workflow DAG.
 - `ModelProvider` abstracts model execution.
 - `MockModelProvider` provides deterministic local behavior for tests and demos.
+- `OpenAiCompatibleModelProvider` and `OllamaModelProvider` connect the same runtime boundary to real model APIs.
 - `ToolRegistry` enforces syscall registration and agent permissions.
 
 The first scheduler is deliberately small: it runs ready nodes in parallel-capable batches, records failure state, and can route a failed node to a declared fallback node.
@@ -69,6 +70,8 @@ Snapshots are JSON files under `.kaios/runs/` and are used by the CLI to inspect
 - `kaios run "task"`
 - `kaios ps <run-id>`
 - `kaios inspect <run-id>`
+
+`kaios-cli` defaults to `MockModelProvider`, but can select real providers through `KAIOS_MODEL_PROVIDER`.
 
 The default workflow is:
 

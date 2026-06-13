@@ -18,5 +18,6 @@ include(
     "runtime-core",
     "tool-runtime",
     "memory-engine",
+    "model-providers",
     "kaios-cli",
 )

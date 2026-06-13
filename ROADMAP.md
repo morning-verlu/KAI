@@ -15,8 +15,8 @@ KAI OS is starting with a small, inspectable runtime. The goal is to grow into a
 
 ## v0.2 - Real Providers and Safer Tools
 
-- OpenAI-compatible model provider
-- Ollama provider
+- OpenAI-compatible provider foundations, shipped in v0.1.1
+- Ollama provider foundations, shipped in v0.1.1
 - structured tool argument schemas
 - file tool with scoped permissions
 - HTTP tool with allowlist policy
