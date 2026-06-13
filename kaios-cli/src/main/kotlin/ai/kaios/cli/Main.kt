@@ -11,6 +11,7 @@ import ai.kaios.OpenAiCompatibleConfig
 import ai.kaios.OpenAiCompatibleModelProvider
 import ai.kaios.RunId
 import ai.kaios.SessionMemoryStore
+import ai.kaios.SQLiteMemoryStore
 import ai.kaios.StoredProcess
 import ai.kaios.agent
 import ai.kaios.builtInToolRegistry
@@ -65,7 +66,10 @@ class KaiosCli(
             return 1
         }
 
-        val memory = SessionMemoryStore()
+        val memory = runCatching { memoryStoreFromEnv() }.getOrElse { error ->
+            err.println(error.message)
+            return 1
+        }
         val modelProvider = runCatching { modelProviderFromEnv() }.getOrElse { error ->
             err.println(error.message)
             return 1
@@ -251,6 +255,13 @@ fun modelProviderFromEnv(env: (String) -> String? = System::getenv): ModelProvid
         "openai", "openai-compatible" -> OpenAiCompatibleModelProvider(OpenAiCompatibleConfig.fromEnv(env))
         "ollama" -> OllamaModelProvider(OllamaConfig.fromEnv(env))
         else -> error("Unsupported KAIOS_MODEL_PROVIDER '$provider'. Use mock, openai, or ollama.")
+    }
+
+fun memoryStoreFromEnv(env: (String) -> String? = System::getenv): MemoryStore =
+    when (val store = env("KAIOS_MEMORY_STORE")?.lowercase()?.trim().orEmpty().ifBlank { "session" }) {
+        "session" -> SessionMemoryStore()
+        "sqlite" -> SQLiteMemoryStore(env("KAIOS_SQLITE_PATH")?.let { Paths.get(it) } ?: Paths.get(".kaios", "kaios.db"))
+        else -> error("Unsupported KAIOS_MEMORY_STORE '$store'. Use session or sqlite.")
     }
 
 fun defaultWorkflow(memory: MemoryStore): Workflow {

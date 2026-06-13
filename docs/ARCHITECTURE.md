@@ -62,9 +62,12 @@ The `file` syscall is rooted to a configured directory, defaults to `.kaios/file
 `memory-engine` provides:
 
 - `SessionMemoryStore`
+- `SQLiteMemoryStore`
 - `FileRunSnapshotStore`
 
 Snapshots are JSON files under `.kaios/runs/` and are used by the CLI to inspect prior runs.
+
+`SessionMemoryStore` is the default for short local runs. `SQLiteMemoryStore` persists memory entries to a local database for longer-running local runtimes.
 
 ## CLI
 

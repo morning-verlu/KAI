@@ -4,6 +4,8 @@ import ai.kaios.FileRunSnapshotStore
 import ai.kaios.MockModelProvider
 import ai.kaios.OllamaModelProvider
 import ai.kaios.OpenAiCompatibleModelProvider
+import ai.kaios.SQLiteMemoryStore
+import ai.kaios.SessionMemoryStore
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
@@ -117,6 +119,29 @@ class KaiosCliSmokeTest {
     fun `model provider env selection rejects unsupported providers`() {
         assertFailsWith<IllegalStateException> {
             modelProviderFromEnv { key -> if (key == "KAIOS_MODEL_PROVIDER") "unknown" else null }
+        }
+    }
+
+    @Test
+    fun `memory store env selection supports session and sqlite`() {
+        assertTrue(memoryStoreFromEnv { null } is SessionMemoryStore)
+
+        val database = Files.createTempDirectory("kaios-cli-sqlite").resolve("memory.db")
+        val sqlite = memoryStoreFromEnv { key ->
+            mapOf(
+                "KAIOS_MEMORY_STORE" to "sqlite",
+                "KAIOS_SQLITE_PATH" to database.toString(),
+            )[key]
+        }
+
+        assertTrue(sqlite is SQLiteMemoryStore)
+        assertTrue(Files.exists(database))
+    }
+
+    @Test
+    fun `memory store env selection rejects unsupported stores`() {
+        assertFailsWith<IllegalStateException> {
+            memoryStoreFromEnv { key -> if (key == "KAIOS_MEMORY_STORE") "unknown" else null }
         }
     }
 }

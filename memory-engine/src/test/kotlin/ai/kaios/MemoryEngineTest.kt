@@ -28,6 +28,44 @@ class MemoryEngineTest {
     }
 
     @Test
+    fun `sqlite memory persists entries across store instances and filters by agent`() {
+        val database = Files.createTempDirectory("kaios-sqlite-memory").resolve("memory.db")
+        val runId = RunId("run-sqlite")
+        val planner = AgentId("planner")
+        val executor = AgentId("executor")
+
+        SQLiteMemoryStore(database).apply {
+            append(MemoryEntry(runId, planner, "user", "plan input", clock.instant()))
+            append(MemoryEntry(runId, executor, "assistant", "execution output", clock.instant().plusSeconds(1)))
+            append(MemoryEntry(RunId("run-other"), planner, "user", "other", clock.instant().plusSeconds(2)))
+        }
+
+        val reopened = SQLiteMemoryStore(database)
+
+        assertEquals(
+            listOf("plan input", "execution output"),
+            reopened.read(runId).map { it.content },
+        )
+        assertEquals(listOf("plan input"), reopened.read(runId, planner).map { it.content })
+        assertEquals(listOf("execution output"), reopened.read(runId, executor).map { it.content })
+    }
+
+    @Test
+    fun `sqlite memory clear removes one run without deleting other runs`() {
+        val database = Files.createTempDirectory("kaios-sqlite-clear").resolve("memory.db")
+        val store = SQLiteMemoryStore(database)
+        val agent = AgentId("planner")
+
+        store.append(MemoryEntry(RunId("run-a"), agent, "user", "a", clock.instant()))
+        store.append(MemoryEntry(RunId("run-b"), agent, "user", "b", clock.instant()))
+
+        store.clear(RunId("run-a"))
+
+        assertTrue(store.read(RunId("run-a")).isEmpty())
+        assertEquals(listOf("b"), store.read(RunId("run-b")).map { it.content })
+    }
+
+    @Test
     fun `snapshot store writes and reads workflow result JSON`() {
         val runtime = AgentRuntime(clock)
         val runId = RunId("run-snapshot")

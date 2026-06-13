@@ -78,6 +78,16 @@ build/install/kaios-cli/bin/kaios run "draft a launch plan"
 
 See [../docs/PROVIDERS.md](../docs/PROVIDERS.md) for provider details.
 
+## Use SQLite Memory
+
+```bash
+export KAIOS_MEMORY_STORE=sqlite
+export KAIOS_SQLITE_PATH=".kaios/kaios.db"
+build/install/kaios-cli/bin/kaios run "draft a launch plan"
+```
+
+See [../docs/MEMORY.md](../docs/MEMORY.md) for memory store details.
+
 ## Scoped File Syscall
 
 The built-in `file` tool supports `read`, `write`, `list`, and `exists` operations inside a configured root. The default root is `.kaios/files`, and traversal outside that root is rejected.

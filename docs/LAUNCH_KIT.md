@@ -44,6 +44,7 @@ The v0.1 release is a runnable Kotlin/JVM seed:
 - deterministic mock model provider
 - OpenAI-compatible and Ollama providers
 - scoped file syscall
+- SQLite memory adapter
 - JSON run snapshots
 - CLI process table
 - static Agent Process Manager report

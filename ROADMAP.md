@@ -10,6 +10,7 @@ KAI OS is starting with a small, inspectable runtime. The goal is to grow into a
 - DAG workflow scheduler
 - permissioned syscall tools
 - session memory
+- SQLite memory adapter
 - JSON run snapshots
 - CLI run, process table, and inspector
 - static Agent Process Manager report
@@ -19,6 +20,7 @@ KAI OS is starting with a small, inspectable runtime. The goal is to grow into a
 - OpenAI-compatible provider foundations, shipped in v0.1.1
 - Ollama provider foundations, shipped in v0.1.1
 - scoped file syscall, shipped in v0.1.3
+- SQLite memory adapter, shipped in v0.1.4
 - structured tool argument schemas
 - HTTP tool with allowlist policy
 - better error surfaces and retry policy

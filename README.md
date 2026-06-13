@@ -120,6 +120,8 @@ For launch posts, demos, and community announcements, see [docs/LAUNCH_KIT.md](d
 
 For real model execution, see [docs/PROVIDERS.md](docs/PROVIDERS.md).
 
+For persisted memory, see [docs/MEMORY.md](docs/MEMORY.md).
+
 ## Current Status
 
 KAI OS is early v0.1 infrastructure. Today it includes:
@@ -131,6 +133,7 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - Simple DAG scheduler with parallel-ready nodes and fallback routing.
 - Permissioned tools: `echo`, `clock`, `mock-http`, scoped `file`.
 - Session memory and JSON snapshots under `.kaios/runs/`.
+- SQLite memory adapter for persisted agent process memory.
 - CLI process table and run inspector.
 - Static Agent Process Manager HTML reports under `.kaios/reports/`.
 
