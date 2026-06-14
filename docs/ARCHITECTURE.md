@@ -76,6 +76,7 @@ Snapshots are JSON files under `.kaios/runs/` and are used by the CLI to inspect
 
 `kaios-cli` exposes the runtime as a local developer experience:
 
+- `kaios demo`
 - `kaios run "task"`
 - `kaios analyze [path ...]`
 - `kaios index [path ...]`

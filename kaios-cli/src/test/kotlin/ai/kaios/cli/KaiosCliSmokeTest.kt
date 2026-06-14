@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -29,7 +30,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.31\n", out.toString())
+        assertEquals("kaios 0.1.32\n", out.toString())
     }
 
     @Test
@@ -43,7 +44,7 @@ class KaiosCliSmokeTest {
 
         assertEquals(0, code)
         assertTrue(text.contains("Quick start (3 steps):"))
-        assertTrue(text.contains("kaios doctor"))
+        assertTrue(text.contains("kaios demo"))
         assertEquals("", err.toString())
     }
 
@@ -57,9 +58,9 @@ class KaiosCliSmokeTest {
 
         assertEquals(0, code)
         assertTrue(text.contains("Quick start (3 steps):"))
-        assertTrue(text.contains("kaios doctor"))
+        assertTrue(text.contains("kaios demo"))
         assertTrue(text.contains("kaios analyze . --out artifacts/analysis.md --force"))
-        assertTrue(text.contains("kaios run --index . --out artifacts/project.md --force \"summarize this project\""))
+        assertTrue(text.contains("kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\""))
         assertTrue(text.contains("kaios --version"))
         assertTrue(text.contains("kaios help <command>"))
         assertTrue(text.contains("Command groups:"))
@@ -70,6 +71,7 @@ class KaiosCliSmokeTest {
         val cli = cliFor(Files.createTempDirectory("kaios-cli-subcommand-help"))
         val cases = mapOf(
             "init" to "Usage: kaios init",
+            "demo" to "Usage: kaios demo",
             "run" to "Usage: kaios run",
             "context" to "Usage: kaios context",
             "index" to "Usage: kaios index",
@@ -95,6 +97,53 @@ class KaiosCliSmokeTest {
             assertTrue(text.contains("kaios help"), command)
             assertTrue(!text.contains("run_id:"), command)
         }
+    }
+
+    @Test
+    fun `demo runs no key workflow and prints process table plus artifacts`() {
+        val workspace = Files.createTempDirectory("kaios-cli-demo")
+        val cli = cliFor(workspace)
+        val out = ByteArrayOutputStream()
+        val err = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("demo"), PrintStream(out), PrintStream(err))
+        val text = out.toString()
+        val runId = Regex("run_id: (\\S+)").find(text)?.groupValues?.get(1)
+        val tracePath = Regex("trace: (\\S+)").find(text)?.groupValues?.get(1)?.let(Paths::get)
+        val artifactPath = Regex("artifact: (\\S+)").find(text)?.groupValues?.get(1)?.let(Paths::get)
+
+        assertEquals(0, code)
+        assertEquals("", err.toString())
+        assertTrue(text.contains("KAI OS demo"))
+        assertTrue(text.contains("provider: mock"))
+        assertTrue(text.contains("processes:"))
+        assertTrue(text.contains("planner"))
+        assertTrue(text.contains("executor"))
+        assertTrue(text.contains("validator"))
+        assertTrue(text.contains("kaios trace"))
+        assertTrue(runId != null)
+        assertTrue(tracePath != null)
+        assertTrue(artifactPath != null)
+        assertTrue(Files.exists(tracePath))
+        assertTrue(Files.exists(artifactPath))
+
+        val traceJson = Json.parseToJsonElement(Files.readString(tracePath)).jsonObject
+        assertEquals("kaios.process-trace/v1", traceJson.getValue("schema").jsonPrimitive.content)
+        assertEquals(3, traceJson.getValue("metrics").jsonObject.getValue("processCount").jsonPrimitive.int)
+    }
+
+    @Test
+    fun `demo rejects arguments with help pointer`() {
+        val cli = cliFor(Files.createTempDirectory("kaios-cli-demo-args"))
+        val err = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("demo", "extra"), PrintStream(ByteArrayOutputStream()), PrintStream(err))
+        val text = err.toString()
+
+        assertEquals(1, code)
+        assertTrue(text.contains("Demo does not accept arguments."))
+        assertTrue(text.contains("Usage: kaios demo"))
+        assertTrue(text.contains("Run 'kaios help demo' for examples."))
     }
 
     @Test

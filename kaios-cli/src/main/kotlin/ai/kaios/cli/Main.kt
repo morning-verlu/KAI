@@ -34,10 +34,11 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.31"
+private const val KAIOS_VERSION = "0.1.32"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
+    "demo",
     "run",
     "context",
     "index",
@@ -93,6 +94,7 @@ class KaiosCli(
         val commandArgs = args.drop(1)
         return when (args.first()) {
             "init" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("init")) else initProject(commandArgs, out, err)
+            "demo" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("demo")) else runDemo(commandArgs, out, err)
             "run" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("run")) else runWorkflow(commandArgs, out, err)
             "context" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("context")) else previewContext(commandArgs, out, err)
             "index" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("index")) else previewIndex(commandArgs, out, err)
@@ -258,6 +260,15 @@ class KaiosCli(
                 ),
                 notes = listOf("Run 'kaios config templates' to see built-in workflow templates."),
             )
+            "demo" -> CommandHelp(
+                usage = "kaios demo",
+                summary = "Run the no-key planner -> executor -> validator demo and print the agent process table.",
+                examples = listOf("kaios demo"),
+                notes = listOf(
+                    "The demo always uses the deterministic mock provider.",
+                    "It writes a Markdown artifact and kaios.process-trace/v1 JSON under .kaios/artifacts/.",
+                ),
+            )
             "run" -> CommandHelp(
                 usage = "kaios run [--context path] [--index path] [--config kaios.json] [--out artifact.md] [--trace-out trace.json] [--force] \"task\"",
                 summary = "Run an inspectable agent workflow and persist a snapshot under .kaios/runs/.",
@@ -386,6 +397,55 @@ class KaiosCli(
             )
             else -> null
         }
+
+    private fun runDemo(args: List<String>, out: PrintStream, err: PrintStream): Int {
+        if (args.isNotEmpty()) {
+            return printCommandUsageError(err, "demo", "Demo does not accept arguments.")
+        }
+
+        val memory = SessionMemoryStore()
+        val runtime = AgentRuntime()
+        val tools = toolRegistry()
+        val scheduler = WorkflowScheduler(
+            runtime = runtime,
+            modelProvider = MockModelProvider(),
+            tools = tools,
+            memory = memory,
+        )
+        val task = "show KAI OS as Agent=Process, Workflow=Scheduler, Tool=Syscall"
+        val result = scheduler.run(defaultWorkflow(memory), task)
+        val snapshotPath = snapshotStore.save(task, result)
+        val snapshot = snapshotStore.load(result.runId)
+        val artifactPath = runCatching { writeArtifact(snapshot, defaultArtifactPath(result.runId), false) }.getOrElse { error ->
+            err.println(error.message)
+            return 1
+        }
+        val tracePath = runCatching { writeTraceJson(snapshot, defaultTracePath(result.runId), false) }.getOrElse { error ->
+            err.println(error.message)
+            return 1
+        }
+
+        out.println("KAI OS demo")
+        out.println("provider: mock (deterministic, no API key)")
+        out.println("run_id: ${result.runId.value}")
+        out.println("success: ${result.success}")
+        out.println("snapshot: $snapshotPath")
+        out.println("artifact: $artifactPath")
+        out.println("trace: $tracePath")
+        out.println()
+        out.println("processes:")
+        out.println(formatProcessHeader())
+        snapshot.processes.forEach { process -> out.println(formatProcess(process)) }
+        out.println()
+        out.println("output:")
+        out.println(result.finalOutput)
+        out.println()
+        out.println("next:")
+        out.println("  kaios inspect ${result.runId.value}")
+        out.println("  kaios trace ${result.runId.value}")
+        out.println("  kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\"")
+        return if (result.success) 0 else 2
+    }
 
     private fun runWorkflow(args: List<String>, out: PrintStream, err: PrintStream): Int {
         val command = runCatching { parseRunCommand(args) }.getOrElse { error ->
@@ -1094,12 +1154,13 @@ class KaiosCli(
             KAI OS - AI Agent Operating System in Kotlin
 
             Quick start (3 steps):
-              kaios doctor
+              kaios demo
               kaios analyze . --out artifacts/analysis.md --force
-              kaios run --index . --out artifacts/project.md --force "summarize this project"
+              kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 
             Command groups:
               Runtime:
+                kaios demo
                 kaios run "task"
                 kaios run --index . --context README.md --out artifact.md --trace-out trace.json --force "task"
 
@@ -1282,6 +1343,9 @@ class KaiosCli(
 
     private fun defaultArtifactPath(runId: RunId): Path =
         artifactRoot.resolve("${runId.value}.md").normalize()
+
+    private fun defaultTracePath(runId: RunId): Path =
+        artifactRoot.resolve("${runId.value}.trace.json").normalize()
 
     private fun writeArtifact(snapshot: StoredRunSnapshot, path: Path, force: Boolean): Path {
         if (path.exists() && !force) {

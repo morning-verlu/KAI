@@ -45,9 +45,9 @@ Three steps get you from install to a useful project artifact:
 brew tap morning-verlu/tap
 brew install kaios
 
-kaios doctor
+kaios demo
 kaios analyze . --out artifacts/analysis.md --force
-kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
+kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 ```
 
 If the project does not have `README.md`, omit `--context README.md`. KAI OS still uses the Workspace Index to orient the run.
@@ -56,6 +56,7 @@ Every command has local examples when you need the next move without opening doc
 
 ```bash
 kaios
+kaios help demo
 kaios help run
 kaios help analyze
 kaios help config
@@ -89,18 +90,18 @@ Or install with the hosted script:
 ```bash
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
-kaios doctor
+kaios demo
 kaios analyze . --out artifacts/analysis.md --force
-kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
+kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 ```
 
 Or build from source:
 
 ```bash
 ./gradlew test installDist
-build/install/kaios-cli/bin/kaios doctor
+build/install/kaios-cli/bin/kaios demo
 build/install/kaios-cli/bin/kaios analyze . --out artifacts/analysis.md --force
-build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
+build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 ```
 
 Example output:
@@ -202,7 +203,7 @@ Modules:
 - `tool-runtime`: built-in syscall tools including allowlisted HTTP and scoped files.
 - `memory-engine`: in-memory session memory and JSON run snapshots.
 - `model-providers`: OpenAI-compatible and Ollama model provider implementations.
-- `kaios-cli`: `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
+- `kaios-cli`: `kaios demo`, `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
 
 Read the deeper design notes in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Read the trace schema contract in [docs/TRACE.md](docs/TRACE.md).
@@ -296,6 +297,7 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - Project-aware runs with `kaios context`, `.kaiosignore`, and bounded `kaios run --context <file-or-dir>` ingestion.
 - Session memory and JSON snapshots under `.kaios/runs/`.
 - SQLite memory adapter for persisted agent process memory.
+- No-key `kaios demo` that prints the process table and writes a trace artifact.
 - CLI process table and run inspector.
 - KAI Process Trace schema with text and JSON output through `kaios trace`.
 - Markdown run artifacts with `kaios run --out` and `kaios export`.

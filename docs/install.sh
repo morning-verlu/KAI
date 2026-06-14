@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-VERSION="${KAIOS_VERSION:-0.1.31}"
+VERSION="${KAIOS_VERSION:-0.1.32}"
 REPO="morning-verlu/KAI"
 BASE_URL="https://github.com/${REPO}/releases/download/v${VERSION}"
 ARCHIVE="kaios-${VERSION}.zip"
@@ -71,25 +71,25 @@ echo "  ${BIN_DIR}/kaios"
 echo
 if command -v kaios >/dev/null 2>&1; then
   if [ -f README.md ]; then
-    PROJECT_RUN="kaios run --index . --context README.md --out artifacts/project.md --force \"summarize this project\""
+    PROJECT_RUN="kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\""
   else
-    PROJECT_RUN="kaios run --index . --out artifacts/project.md --force \"summarize this project\""
+    PROJECT_RUN="kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\""
   fi
   echo "Try:"
-  echo "  kaios doctor"
+  echo "  kaios demo"
   echo "  kaios analyze . --out artifacts/analysis.md --force"
   echo "  ${PROJECT_RUN}"
 else
   if [ -f README.md ]; then
-    PROJECT_RUN="${BIN_DIR}/kaios run --index . --context README.md --out artifacts/project.md --force \"summarize this project\""
+    PROJECT_RUN="${BIN_DIR}/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\""
   else
-    PROJECT_RUN="${BIN_DIR}/kaios run --index . --out artifacts/project.md --force \"summarize this project\""
+    PROJECT_RUN="${BIN_DIR}/kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\""
   fi
   echo "Add this to your shell profile if kaios is not on PATH:"
   echo "  export PATH=\"${BIN_DIR}:\$PATH\""
   echo
   echo "Try now:"
-  echo "  ${BIN_DIR}/kaios doctor"
+  echo "  ${BIN_DIR}/kaios demo"
   echo "  ${BIN_DIR}/kaios analyze . --out artifacts/analysis.md --force"
   echo "  ${PROJECT_RUN}"
 fi
