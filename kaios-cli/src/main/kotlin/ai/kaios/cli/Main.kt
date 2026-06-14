@@ -35,7 +35,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.56"
+private const val KAIOS_VERSION = "0.1.57"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val RUN_CAPSULE_SCHEMA = "kaios.run-capsule/v1"
 private const val RUN_REPLAY_SCHEMA = "kaios.run-replay/v1"
@@ -309,18 +309,19 @@ class KaiosCli(
                 ),
             )
             "verify" -> CommandHelp(
-                usage = "kaios verify [--config kaios.json] [--evidence-out capsule.json] [--baseline capsule.json] [--check] [--force] [--json|--format json]",
+                usage = "kaios verify [--config kaios.json] [--evidence|--evidence-out capsule.json] [--baseline capsule.json] [--check] [--force] [--json|--format json]",
                 summary = "Run the one-command readiness and evidence gate for local projects and CI.",
                 examples = listOf(
                     "kaios verify",
                     "kaios verify --config kaios.json",
-                    "kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --force",
-                    "kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force",
+                    "kaios verify --config kaios.json --evidence --force",
+                    "kaios verify --config kaios.json --evidence --baseline artifacts/baseline.capsule.json --check --force",
+                    "kaios verify --config kaios.json --evidence-out artifacts/custom.capsule.json --force",
                     "kaios verify --json",
                 ),
                 notes = listOf(
                     "The gate checks doctor diagnostics, validates project config, runs a deterministic mock smoke workflow, and validates the process trace contract.",
-                    "Use --evidence-out to also write, validate, replay, and optionally diff a portable capsule from the verify run.",
+                    "Use --evidence to write artifacts/kaios-run.capsule.json, or --evidence-out for a custom capsule path.",
                     "--check exits 1 when the baseline evidence differs, and 2 when readiness or evidence validation fails.",
                     "It writes a normal run snapshot under .kaios/runs/ so ps, inspect, trace, capsule, evidence, and bug-report keep working.",
                     "JSON output uses schema $VERIFY_SCHEMA for CI and release gates.",
@@ -867,7 +868,7 @@ class KaiosCli(
         buildList {
             add("kaios config validate --config ${displayPath(Paths.get(validation.config))} --json")
             if (validation.valid) {
-                add("kaios verify --config ${displayPath(Paths.get(validation.config))}")
+                add(verifyEvidenceCommand(Paths.get(validation.config)))
                 add("kaios ps latest")
             } else {
                 add("fix ${displayPath(Paths.get(validation.config))} or rerun kaios setup --force")
@@ -877,6 +878,9 @@ class KaiosCli(
             }
             add("kaios bug-report")
         }.distinct()
+
+    private fun verifyEvidenceCommand(configPath: Path): String =
+        "kaios verify --config ${displayPath(configPath)} --evidence --force"
 
     private fun renderSetupText(report: SetupReport, out: PrintStream) {
         out.println("KAI OS setup")
@@ -1132,7 +1136,7 @@ class KaiosCli(
         out.println("next:")
         out.println("  kaios config validate --config ${displayPath(path)} --json")
         out.println("  kaios config show --config ${displayPath(path)}")
-        out.println("  kaios verify --config ${displayPath(path)}")
+        out.println("  ${verifyEvidenceCommand(path)}")
         out.println("  kaios run \"${template.exampleTask}\"")
         ciPath?.let { out.println("  git add ${displayPath(path)} ${displayPath(it)}") }
         out.println("  kaios ps latest")
@@ -1532,7 +1536,7 @@ class KaiosCli(
             if (!config.valid) {
                 add("kaios setup --ci")
             } else {
-                add("kaios verify --config ${displayPath(Paths.get(config.config))}")
+                add(verifyEvidenceCommand(Paths.get(config.config)))
             }
             if (latestRun == null) {
                 add("kaios demo")
@@ -1675,7 +1679,7 @@ class KaiosCli(
             if (failed > 0) add("fix failed checks above")
             add("kaios demo")
             if (configPath.exists()) {
-                add("kaios verify --config ${displayPath(configPath)}")
+                add(verifyEvidenceCommand(configPath))
             } else if (configPath == defaultConfigPath()) {
                 add("kaios setup --ci")
             } else {
@@ -2748,7 +2752,7 @@ class KaiosCli(
             Command groups:
               Setup:
                 kaios setup [--ci]
-                kaios verify [--config kaios.json]
+                kaios verify [--config kaios.json] [--evidence]
                 kaios init [--template default|research|code-review|release] [--ci]
 
               Runtime:
@@ -2949,6 +2953,9 @@ class KaiosCli(
     private fun defaultCapsulePath(runId: RunId): Path =
         capsuleRoot.resolve("${runId.value}.capsule.json").normalize()
 
+    private fun defaultVerifyEvidencePath(): Path =
+        workingDir.resolve("artifacts").resolve("kaios-run.capsule.json").normalize()
+
     private fun writeArtifact(snapshot: StoredRunSnapshot, path: Path, force: Boolean): Path {
         if (path.exists() && !force) {
             error("Artifact '$path' already exists. Use --force to overwrite it.")
@@ -3076,7 +3083,7 @@ class KaiosCli(
                       echo "${'$'}HOME/.kaios/bin" >> "${'$'}GITHUB_PATH"
 
                   - name: Verify KAI OS project
-                    run: kaios verify --config $config --evidence-out artifacts/kaios-run.capsule.json --force
+                    run: kaios verify --config $config --evidence --force
 
                   - name: Upload KAI evidence
                     if: always()
@@ -3370,6 +3377,7 @@ class KaiosCli(
         var format = VerifyFormat.Text
         var evidenceOutputPath: Path? = null
         var evidenceBaselinePath: Path? = null
+        var evidenceDefault = false
         var evidenceCheck = false
         var evidenceForce = false
         var index = 0
@@ -3401,6 +3409,10 @@ class KaiosCli(
                     val value = arg.substringAfter("=")
                     require(value.isNotBlank()) { "--format requires text or json." }
                     format = parseVerifyFormat(value)
+                    index += 1
+                }
+                arg == "--evidence" -> {
+                    evidenceDefault = true
                     index += 1
                 }
                 arg == "--evidence-out" || arg == "--evidence-output" -> {
@@ -3438,14 +3450,19 @@ class KaiosCli(
             }
         }
 
-        if ((evidenceCheck || evidenceForce) && evidenceOutputPath == null && evidenceBaselinePath == null) {
-            error("--check and --force require --evidence-out or --baseline.")
+        val finalEvidenceOutputPath = when {
+            evidenceOutputPath != null -> evidenceOutputPath
+            evidenceDefault || evidenceBaselinePath != null -> defaultVerifyEvidencePath()
+            else -> null
+        }
+        if ((evidenceCheck || evidenceForce) && finalEvidenceOutputPath == null && evidenceBaselinePath == null) {
+            error("--check and --force require --evidence, --evidence-out, or --baseline.")
         }
 
         return VerifyCommand(
             configPath = configPath,
             format = format,
-            evidenceOutputPath = evidenceOutputPath,
+            evidenceOutputPath = finalEvidenceOutputPath,
             evidenceBaselinePath = evidenceBaselinePath,
             evidenceCheck = evidenceCheck,
             evidenceForce = evidenceForce,

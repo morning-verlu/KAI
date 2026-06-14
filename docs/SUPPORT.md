@@ -32,7 +32,7 @@ kaios bug-report --format json --out artifacts/kaios-bug-report.json --force
 ```
 
 JSON output uses schema `kaios.bug-report/v1`.
-The report's next commands use the same onboarding path as the rest of the CLI: `kaios setup --ci` when no valid project workflow exists, or `kaios verify --config kaios.json` when one does.
+The report's next commands use the same onboarding path as the rest of the CLI: `kaios setup --ci` when no valid project workflow exists, or `kaios verify --config kaios.json --evidence --force` when one does.
 
 ## Better Reproduction
 
@@ -46,6 +46,6 @@ kaios bug-report --out artifacts/kaios-bug-report.md --force
 For project-specific issues, include the workflow, trace, and capsule evidence:
 
 ```bash
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --force
+kaios verify --evidence --force
 kaios bug-report --out artifacts/kaios-bug-report.md --force
 ```

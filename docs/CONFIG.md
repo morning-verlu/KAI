@@ -26,7 +26,7 @@ kaios init --template research --ci
 git add kaios.json .github/workflows/kaios.yml
 ```
 
-The generated Agent Gate installs KAI OS, uses the deterministic mock provider, and runs `kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --force`. That single gate validates the config as `kaios.config-validation/v1`, executes one smoke workflow, checks the saved process trace with `kaios.process-trace/v1`, and uploads a portable evidence capsule.
+The generated Agent Gate installs KAI OS, uses the deterministic mock provider, and runs `kaios verify --config kaios.json --evidence --force`. That single gate validates the config as `kaios.config-validation/v1`, executes one smoke workflow, checks the saved process trace with `kaios.process-trace/v1`, and uploads a portable evidence capsule.
 
 When `kaios.json` exists in the current directory, `kaios run "task"` uses it automatically. Use `--default` to force the built-in workflow:
 

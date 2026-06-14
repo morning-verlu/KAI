@@ -55,7 +55,7 @@ kaios verify
 ```
 
 `kaios setup --ci` creates a validated `kaios.json` and a no-key GitHub Actions Agent Gate without overwriting existing files.
-`kaios verify` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, and leaves a normal run snapshot for `ps`, `inspect`, `trace`, `capsule`, and `evidence`. Add `--evidence-out artifacts/kaios-run.capsule.json --force` when CI should retain the portable proof package from the same command.
+`kaios verify` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, and leaves a normal run snapshot for `ps`, `inspect`, `trace`, `capsule`, and `evidence`. Add `--evidence --force` when CI should retain the portable proof package from the same command.
 
 When the gate is ready, create a project artifact:
 
@@ -88,7 +88,7 @@ kaios bug-report
 ```
 
 `kaios bug-report` creates a safe-to-paste Markdown report with doctor checks, config validation, latest run metrics, and trace contract status.
-`kaios doctor` also prints the next onboarding command: `kaios setup --ci` when no project workflow exists, or `kaios verify --config kaios.json` when one does.
+`kaios doctor` also prints the next onboarding command: `kaios setup --ci` when no project workflow exists, or `kaios verify --config kaios.json --evidence --force` when one does.
 
 Need a machine-readable workspace report for CI or dashboards?
 
@@ -106,8 +106,8 @@ kaios run --index . --trace-out artifacts/trace.json --force "summarize this pro
 Need a portable audit package for CI, review, or future Agent Desktop imports?
 
 ```bash
-kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --force
-kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
+kaios verify --config kaios.json --evidence --force
+kaios verify --config kaios.json --evidence --baseline artifacts/baseline.capsule.json --check --force
 ```
 
 Need to package the latest non-verify run instead?
@@ -137,7 +137,7 @@ kaios verify
 kaios run --out artifacts/runtime.md "map the JVM agent runtime"
 ```
 
-`kaios setup --ci` also writes `.github/workflows/kaios.yml`, a no-key Agent Gate that installs KAI OS, runs `kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --force`, and uploads the capsule artifact.
+`kaios setup --ci` also writes `.github/workflows/kaios.yml`, a no-key Agent Gate that installs KAI OS, runs `kaios verify --config kaios.json --evidence --force`, and uploads the capsule artifact.
 
 Or install with the hosted script:
 
@@ -373,7 +373,7 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - `kaios setup` bootstraps a validated project workflow and can add the CI Agent Gate in one command.
 - `kaios verify` emits `kaios.verify/v1`, runs the no-key readiness gate, can write `kaios.evidence/v1`, and saves a normal run snapshot for inspection.
 - `kaios config validate --json` emits `kaios.config-validation/v1` for CI and release gates.
-- `kaios init --ci` writes a GitHub Actions Agent Gate that uses the same local `kaios verify --config kaios.json --evidence-out ...` contract.
+- `kaios init --ci` writes a GitHub Actions Agent Gate that uses the same local `kaios verify --config kaios.json --evidence --force` contract.
 - Deterministic workspace analysis with `kaios analyze` for no-key Markdown and JSON project reports.
 - Workspace Index with `kaios index` and `kaios run --index <path>` for language stats, notable files, and project source maps.
 - Project-aware runs with `kaios context`, `.kaiosignore`, and bounded `kaios run --context <file-or-dir>` ingestion.

@@ -13,7 +13,7 @@ This command:
 - validates the workflow with `kaios.config-validation/v1`.
 - runs readiness checks and warns about optional real-provider or persisted-memory env problems.
 - writes `.github/workflows/kaios.yml` when `--ci` is passed.
-- points the generated Agent Gate at `kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --force`.
+- points the generated Agent Gate at `kaios verify --config kaios.json --evidence --force`.
 - prints the next useful commands.
 
 ## Common Paths
@@ -59,10 +59,10 @@ Run the readiness gate:
 kaios verify
 kaios ps latest
 kaios trace latest --check
-kaios verify --evidence-out artifacts/run.capsule.json --force
+kaios verify --evidence --force
 ```
 
-`kaios verify` checks the local runtime, validates the project workflow, runs a deterministic mock smoke workflow, validates the process trace contract, and saves a normal run snapshot. `kaios verify --evidence-out artifacts/run.capsule.json --force` confirms the same smoke run can become a portable audit package, replay offline, and later compare against a baseline with `--baseline ... --check`.
+`kaios verify` checks the local runtime, validates the project workflow, runs a deterministic mock smoke workflow, validates the process trace contract, and saves a normal run snapshot. `kaios verify --evidence --force` confirms the same smoke run can become a portable audit package, replay offline, and later compare against a baseline with `--baseline ... --check`. Use `--evidence-out artifacts/run.capsule.json` when you need a custom capsule path.
 
 Create a project artifact when the gate is ready:
 

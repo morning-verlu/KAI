@@ -17,7 +17,7 @@ git add kaios.json .github/workflows/kaios.yml
 The generated `.github/workflows/kaios.yml` is intentionally no-key by default. It pins the current KAI OS CLI version, sets `KAIOS_MODEL_PROVIDER=mock`, runs the verify evidence gate, and uploads the resulting capsule artifact:
 
 ```bash
-kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --force
+kaios verify --config kaios.json --evidence --force
 ```
 
 This gives teams a stable gate for environment readiness, editable workflow validation, deterministic runtime execution, process trace contract checks, and portable evidence. The same command runs locally before pushing.
@@ -25,7 +25,7 @@ This gives teams a stable gate for environment readiness, editable workflow vali
 If the repository keeps a known-good baseline capsule, add a regression diff gate:
 
 ```bash
-kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
+kaios verify --config kaios.json --evidence --baseline artifacts/baseline.capsule.json --check --force
 ```
 
 ## Repository CI

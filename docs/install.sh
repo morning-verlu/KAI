@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-VERSION="${KAIOS_VERSION:-0.1.56}"
+VERSION="${KAIOS_VERSION:-0.1.57}"
 REPO="morning-verlu/KAI"
 BASE_URL="https://github.com/${REPO}/releases/download/v${VERSION}"
 ARCHIVE="kaios-${VERSION}.zip"
@@ -78,7 +78,7 @@ if command -v kaios >/dev/null 2>&1; then
   echo "Try:"
   echo "  kaios demo"
   echo "  kaios setup --ci"
-  echo "  kaios verify --evidence-out artifacts/kaios-run.capsule.json --force"
+  echo "  kaios verify --evidence --force"
   echo "  ${PROJECT_RUN}"
   echo "  kaios ps latest"
   echo "  kaios trace latest"
@@ -95,7 +95,7 @@ else
   echo "Try now:"
   echo "  ${BIN_DIR}/kaios demo"
   echo "  ${BIN_DIR}/kaios setup --ci"
-  echo "  ${BIN_DIR}/kaios verify --evidence-out artifacts/kaios-run.capsule.json --force"
+  echo "  ${BIN_DIR}/kaios verify --evidence --force"
   echo "  ${PROJECT_RUN}"
   echo "  ${BIN_DIR}/kaios ps latest"
   echo "  ${BIN_DIR}/kaios trace latest"

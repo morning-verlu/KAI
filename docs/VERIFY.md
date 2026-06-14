@@ -13,7 +13,7 @@ The command runs the same no-key checks locally and in CI:
 - project workflow validation from `kaios.config-validation/v1`.
 - a deterministic `MockModelProvider` smoke workflow.
 - process trace contract validation for `kaios.process-trace/v1`.
-- optional evidence packaging through `--evidence-out`.
+- optional evidence packaging through `--evidence`, with `--evidence-out` for custom paths.
 - a normal run snapshot under `.kaios/runs/` for `ps`, `inspect`, `trace`, `capsule`, `evidence`, and `bug-report`.
 
 `kaios verify` always runs the smoke workflow with the deterministic mock provider and session memory. If optional real-provider or persisted-memory environment variables are misconfigured, verify reports them as warnings instead of blocking the no-key gate. Use `kaios doctor` when you want those optional runtime settings to be checked strictly.
@@ -37,16 +37,16 @@ The JSON schema is `kaios.verify/v1`.
 When you want CI to retain a portable proof package from the same smoke run:
 
 ```bash
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --force
+kaios verify --evidence --force
 ```
 
 If your repository keeps a known-good baseline capsule:
 
 ```bash
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
+kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
 ```
 
-With `--evidence-out`, verify writes the capsule, validates it, replays it offline, and includes an `evidence` object in `kaios.verify/v1` JSON output.
+With `--evidence`, verify writes `artifacts/kaios-run.capsule.json`, validates it, replays it offline, and includes an `evidence` object in `kaios.verify/v1` JSON output. Use `--evidence-out <path>` when a custom capsule path is required.
 
 ## Config Path
 
@@ -73,7 +73,7 @@ kaios verify --config workflows/research.json
 `kaios setup --ci` writes `.github/workflows/kaios.yml` with the same gate and uploads the generated evidence capsule:
 
 ```bash
-kaios verify --config kaios.json --evidence-out artifacts/kaios-run.capsule.json --force
+kaios verify --config kaios.json --evidence --force
 ```
 
 That makes failures reproducible locally before pushing.

@@ -141,8 +141,8 @@ Run capsules make KAI OS harder to reduce to a chatbot or wrapper:
 After a readiness gate:
 
 ```bash
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --force
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
+kaios verify --evidence --force
+kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
 ```
 
 The first command proves the runtime can execute a deterministic workflow and package the same run as evidence. The baseline command proves the saved run can produce and re-validate a stable audit package, rebuild trace evidence offline, and compare current behavior against a baseline when your CI has one.

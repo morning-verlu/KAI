@@ -82,7 +82,7 @@ The v0.1 release is a runnable Kotlin/JVM seed:
 - kaios doctor --json for machine-readable environment diagnostics
 - kaios runs --json for a stable local run registry
 - kaios config validate --json for CI-safe workflow validation
-- kaios init --ci for a ready-to-commit GitHub Actions Agent Gate powered by `kaios verify --evidence-out`
+- kaios init --ci for a ready-to-commit GitHub Actions Agent Gate powered by `kaios verify --evidence`
 - kaios bug-report for safe GitHub issue diagnostics and support handoff
 
 Try:
@@ -91,18 +91,18 @@ brew tap morning-verlu/tap
 brew install kaios
 kaios demo
 kaios setup --ci
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --force
+kaios verify --evidence --force
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 kaios runs --json
 kaios ps latest
 kaios trace latest
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
+kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
 kaios export latest
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.56/kaios-0.1.56.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.57/kaios-0.1.57.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 ```
 
@@ -156,12 +156,12 @@ brew tap morning-verlu/tap
 brew install kaios
 kaios demo
 kaios setup --ci
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --force
+kaios verify --evidence --force
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 kaios ps latest
 kaios inspect latest
 kaios trace latest
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
+kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
 kaios report latest
 ```
 
@@ -172,25 +172,25 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
 kaios demo
 kaios setup --ci
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --force
+kaios verify --evidence --force
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 kaios ps latest
 kaios inspect latest
 kaios trace latest
-kaios verify --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
+kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
 kaios report latest
 ```
 
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.1.56.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.56/kaios-0.1.56.zip
-unzip kaios-0.1.56.zip
-./kaios-0.1.56/bin/kaios demo
-./kaios-0.1.56/bin/kaios setup --ci
-./kaios-0.1.56/bin/kaios verify --evidence-out artifacts/kaios-run.capsule.json --force
-./kaios-0.1.56/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-./kaios-0.1.56/bin/kaios verify --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
+curl -L -o kaios-0.1.57.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.57/kaios-0.1.57.zip
+unzip kaios-0.1.57.zip
+./kaios-0.1.57/bin/kaios demo
+./kaios-0.1.57/bin/kaios setup --ci
+./kaios-0.1.57/bin/kaios verify --evidence --force
+./kaios-0.1.57/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+./kaios-0.1.57/bin/kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
 ```
 
 Build from source:
@@ -201,12 +201,12 @@ cd KAI
 ./gradlew test installDist
 build/install/kaios-cli/bin/kaios demo
 build/install/kaios-cli/bin/kaios setup --ci
-build/install/kaios-cli/bin/kaios verify --evidence-out artifacts/kaios-run.capsule.json --force
+build/install/kaios-cli/bin/kaios verify --evidence --force
 build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 build/install/kaios-cli/bin/kaios ps latest
 build/install/kaios-cli/bin/kaios inspect latest
 build/install/kaios-cli/bin/kaios trace latest
-build/install/kaios-cli/bin/kaios verify --evidence-out artifacts/kaios-run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
+build/install/kaios-cli/bin/kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
 build/install/kaios-cli/bin/kaios report latest
 ```
 
