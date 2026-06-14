@@ -96,6 +96,12 @@ MARKDOWN
   fi
 )
 
+run_step "kaios gate" "$KAIOS_BIN" gate > gate.out
+assert_contains gate.out "KAI OS gate"
+assert_contains gate.out "status: ready"
+assert_contains gate.out "evidence: valid"
+assert_file artifacts/kaios-run.capsule.json
+
 run_step "kaios run --index . --context README.md" "$KAIOS_BIN" run \
   --index . \
   --context README.md \

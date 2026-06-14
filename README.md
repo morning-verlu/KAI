@@ -70,11 +70,11 @@ Prefer the manual path when you want to see each step:
 ```bash
 kaios demo
 kaios setup --ci
-kaios verify --evidence --force
+kaios gate
 ```
 
 `kaios setup --ci` creates a validated `kaios.json` and a no-key GitHub Actions Agent Gate without overwriting existing files. The setup output names the uploaded `kaios-agent-gate` artifact and its evidence files so CI failures are easy to inspect.
-`kaios verify --evidence --force` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, leaves a normal run snapshot for `ps`, `inspect`, and `trace`, and writes a portable proof package at `artifacts/kaios-run.capsule.json`.
+`kaios gate` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, leaves a normal run snapshot for `ps`, `inspect`, and `trace`, and writes a portable proof package at `artifacts/kaios-run.capsule.json`. It is the short product path for `kaios verify --evidence --force`.
 
 When the gate is ready, create a project artifact:
 
@@ -90,6 +90,7 @@ Every command has local examples when you need the next move without opening doc
 kaios
 kaios help quickstart
 kaios help demo
+kaios help gate
 kaios help verify
 kaios help run
 kaios help analyze
@@ -130,8 +131,8 @@ kaios run --index . --trace-out artifacts/trace.json --force "summarize this pro
 Need a portable audit package for CI, review, or future Agent Desktop imports?
 
 ```bash
-kaios verify --config kaios.json --evidence --force
-kaios verify --config kaios.json --evidence --baseline artifacts/baseline.capsule.json --check --force
+kaios gate --config kaios.json
+kaios gate --config kaios.json --baseline artifacts/baseline.capsule.json --check
 ```
 
 Need to package the latest non-verify run instead?
@@ -157,7 +158,7 @@ Create a local workflow config when you want your own agent process graph:
 kaios setup --ci
 kaios config show
 kaios config validate --json
-kaios verify --evidence --force
+kaios gate
 kaios run --out artifacts/runtime.md "map the JVM agent runtime"
 ```
 
@@ -289,7 +290,7 @@ Modules:
 - `tool-runtime`: built-in syscall tools including allowlisted HTTP and scoped files.
 - `memory-engine`: in-memory session memory and JSON run snapshots.
 - `model-providers`: OpenAI-compatible and Ollama model provider implementations.
-- `kaios-cli`: `kaios quickstart`, `kaios demo`, `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios replay`, `kaios diff`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
+- `kaios-cli`: `kaios quickstart`, `kaios gate`, `kaios demo`, `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios replay`, `kaios diff`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
 
 Read the deeper design notes in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Read the JSON automation contracts in [docs/JSON_CONTRACTS.md](docs/JSON_CONTRACTS.md).
@@ -397,6 +398,7 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - Project workflow templates, retry policy, config validation, config graph display, and auto-detected `kaios.json` runs.
 - `kaios setup` bootstraps a validated project workflow and can add the CI Agent Gate in one command.
 - Default GitHub Actions Agent Gate with verify JSON, evidence capsule, and failure-time bug report.
+- `kaios gate` runs the product Agent Gate: readiness checks, trace validation, evidence capsule, offline replay, and optional baseline diff.
 - `kaios verify` emits `kaios.verify/v1`, runs the no-key readiness gate, can write `kaios.evidence/v1`, and saves a normal run snapshot for inspection.
 - `kaios config validate --json` emits `kaios.config-validation/v1` with `next` commands and structured `nextActions` for CI and release gates.
 - `kaios init --ci` writes a GitHub Actions Agent Gate that uses the same local `kaios verify --config kaios.json --evidence --force` contract and stores machine-readable artifacts for automation.

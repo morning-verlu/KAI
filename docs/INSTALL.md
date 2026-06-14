@@ -11,7 +11,7 @@ kaios --version
 Running `kaios` with no arguments prints the quick start and exits successfully, so it is safe to use as a first smoke test.
 Common aliases execute directly: `kaios start --no-ci`, `kaios status`, `kaios ls`, `kaios proc`, and `kaios audit`.
 Mistyped commands still show a suggestion when there is a clear match.
-After a saved run exists, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios evidence`, `kaios report`, and `kaios export` default to the newest run. When no snapshots exist yet, the CLI points back to `kaios quickstart`, `kaios demo`, `kaios setup --ci`, and `kaios verify --evidence --force`.
+After a saved run exists, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios evidence`, `kaios report`, and `kaios export` default to the newest run. When no snapshots exist yet, the CLI points back to `kaios quickstart`, `kaios demo`, `kaios setup --ci`, and `kaios gate`.
 If `kaios.json` is missing, `kaios config show` and `kaios config validate` point back to `kaios setup --ci`; use `kaios config templates` when you want to choose a different workflow template before setup.
 
 Every core command also supports local help with examples and notes:
@@ -20,6 +20,7 @@ Every core command also supports local help with examples and notes:
 kaios
 kaios quickstart --help
 kaios setup --help
+kaios gate --help
 kaios verify --help
 kaios demo --help
 kaios run --help
@@ -49,10 +50,10 @@ Manual path:
 ```bash
 kaios demo
 kaios setup --ci
-kaios verify --evidence --force
+kaios gate
 ```
 
-After `kaios verify` reports `status: ready`, create an artifact with `kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"`.
+After `kaios gate` reports `status: ready`, create an artifact with `kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"`.
 If your project has no `README.md`, omit `--context README.md`.
 
 ## Hosted Installer
@@ -74,9 +75,9 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.73.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.73/kaios-0.1.73.zip
-unzip kaios-0.1.73.zip
-./kaios-0.1.73/bin/kaios quickstart
+curl -L -o kaios-0.1.74.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.74/kaios-0.1.74.zip
+unzip kaios-0.1.74.zip
+./kaios-0.1.74/bin/kaios quickstart
 ```
 
 ## Build From Source
@@ -96,7 +97,7 @@ kaios quickstart
 kaios doctor --json
 kaios doctor --config workflows/research.json --json
 kaios setup --ci
-kaios verify --evidence --force
+kaios gate
 kaios config show
 kaios config validate --json
 kaios run --index . --trace-out artifacts/trace.json --force "summarize this project"
@@ -106,7 +107,7 @@ kaios inspect
 kaios trace
 kaios trace --json
 kaios trace --json --out artifacts/trace.json --force
-kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
+kaios gate --baseline artifacts/baseline.capsule.json --check
 kaios bug-report --out artifacts/kaios-bug-report.md --force
 kaios bug-report --config workflows/research.json --out artifacts/kaios-bug-report.md --force
 ```

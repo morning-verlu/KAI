@@ -35,7 +35,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.73"
+private const val KAIOS_VERSION = "0.1.74"
 private const val CI_AGENT_GATE_ARTIFACT_NAME = "kaios-agent-gate"
 private const val CI_WORKFLOW_PUSH_NOTE = "Pushing .github/workflows/kaios.yml may require GitHub workflow permission/scope."
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
@@ -54,6 +54,7 @@ private const val QUICKSTART_SCHEMA = "kaios.quickstart/v1"
 private val TOP_LEVEL_COMMANDS = listOf(
     "quickstart",
     "setup",
+    "gate",
     "verify",
     "init",
     "demo",
@@ -136,6 +137,7 @@ class KaiosCli(
         return when (command) {
             "quickstart" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("quickstart")) else runQuickstart(commandArgs, out, err)
             "setup" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("setup")) else setupProject(commandArgs, out, err)
+            "gate" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("gate")) else runAgentGate(commandArgs, out, err)
             "verify" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("verify")) else verifyProject(commandArgs, out, err)
             "init" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("init")) else initProject(commandArgs, out, err)
             "demo" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("demo")) else runDemo(commandArgs, out, err)
@@ -226,6 +228,7 @@ class KaiosCli(
             command.startsWith("kaios setup ") || command == "kaios setup" -> "setup-project"
             command.startsWith("kaios config validate ") -> "validate-config"
             command.startsWith("kaios config show ") -> "show-config"
+            command == "kaios gate" || command.startsWith("kaios gate ") -> "verify-project"
             command.startsWith("kaios verify ") -> "verify-project"
             command.startsWith("kaios demo") -> "run-demo"
             command.startsWith("kaios run ") -> "run-workflow"
@@ -417,6 +420,22 @@ class KaiosCli(
                     "The default setup template is research because it is useful for project onboarding.",
                     "Existing config and CI files are kept unless --force is passed.",
                     "JSON output uses schema $SETUP_SCHEMA for automation.",
+                ),
+            )
+            "gate" -> CommandHelp(
+                usage = "kaios gate [--config kaios.json] [--baseline capsule.json] [--check] [--json|--format json]",
+                summary = "Run the production Agent Gate with readiness checks and portable evidence enabled by default.",
+                examples = listOf(
+                    "kaios gate",
+                    "kaios gate --json",
+                    "kaios gate --baseline artifacts/baseline.capsule.json --check",
+                    "kaios gate --config workflows/research.json",
+                ),
+                notes = listOf(
+                    "Equivalent to 'kaios verify --evidence --force' with the same $VERIFY_SCHEMA JSON contract.",
+                    "The gate validates doctor diagnostics, project config, a deterministic mock smoke workflow, the process trace contract, offline replay, and optional baseline diff.",
+                    "It writes artifacts/kaios-run.capsule.json by default and overwrites that gate artifact safely on repeat runs.",
+                    "Use 'kaios verify' when you need lower-level control over evidence output protection.",
                 ),
             )
             "verify" -> CommandHelp(
@@ -783,7 +802,7 @@ class KaiosCli(
                 setup?.next?.let(::addAll)
                 verify?.next?.let(::addAll)
                 if (setup == null) add("kaios setup --ci")
-                if (verify == null) add("kaios verify --evidence --force")
+                if (verify == null) add("kaios gate")
                 add("kaios doctor --json")
             }
         }.distinct()
@@ -1258,14 +1277,43 @@ class KaiosCli(
         report.next.forEach { command -> out.println("  $command") }
     }
 
-    private fun verifyProject(args: List<String>, out: PrintStream, err: PrintStream): Int {
-        val command = runCatching { parseVerifyCommand(args) }.getOrElse { error ->
-            return printCommandUsageError(err, "verify", error.message)
+    private fun runAgentGate(args: List<String>, out: PrintStream, err: PrintStream): Int =
+        verifyProject(withGateDefaults(args), out, err, "KAI OS gate", "gate")
+
+    private fun withGateDefaults(args: List<String>): List<String> {
+        val requestsEvidence = args.any { arg ->
+            arg == "--evidence" ||
+                arg == "--evidence-out" ||
+                arg == "--evidence-output" ||
+                arg.startsWith("--evidence-out=") ||
+                arg.startsWith("--evidence-output=") ||
+                arg == "--baseline" ||
+                arg == "--evidence-baseline" ||
+                arg.startsWith("--baseline=") ||
+                arg.startsWith("--evidence-baseline=")
+        }
+        val forcesEvidence = args.any { it == "--force" || it == "-f" || it == "--evidence-force" }
+        return buildList {
+            addAll(args)
+            if (!requestsEvidence) add("--evidence")
+            if (!forcesEvidence) add("--force")
+        }
+    }
+
+    private fun verifyProject(
+        args: List<String>,
+        out: PrintStream,
+        err: PrintStream,
+        title: String = "KAI OS verify",
+        commandName: String = "verify",
+    ): Int {
+        val command = runCatching { parseVerifyCommand(args, commandName) }.getOrElse { error ->
+            return printCommandUsageError(err, commandName, error.message)
         }
         val report = buildVerifyReport(command)
 
         when (command.format) {
-            VerifyFormat.Text -> renderVerifyText(report, out)
+            VerifyFormat.Text -> renderVerifyText(report, out, title)
             VerifyFormat.Json -> out.println(TRACE_JSON.encodeToString(report))
         }
 
@@ -1398,8 +1446,8 @@ class KaiosCli(
             add(bugReportCommand(configPath))
         }.distinct()
 
-    private fun renderVerifyText(report: VerifyReport, out: PrintStream) {
-        out.println("KAI OS verify")
+    private fun renderVerifyText(report: VerifyReport, out: PrintStream, title: String = "KAI OS verify") {
+        out.println(title)
         out.println("schema: ${report.schema}")
         out.println("version: ${report.version}")
         out.println("cwd: ${report.cwd}")
@@ -1719,7 +1767,7 @@ class KaiosCli(
         out.println("Run 'kaios quickstart' to create a no-key onboarding run, project workflow, and evidence capsule.")
         out.println("Run 'kaios demo' to create a no-key sample run.")
         out.println("Run 'kaios setup --ci' to create a project workflow.")
-        out.println("Run 'kaios verify --evidence --force' to create an inspectable project run and evidence capsule.")
+        out.println("Run 'kaios gate' after setup to create an inspectable project run and evidence capsule.")
     }
 
     private fun resolveRunId(value: String, knownSnapshots: List<StoredRunSnapshot>? = null): RunId {
@@ -3124,12 +3172,13 @@ class KaiosCli(
             Manual path (3 steps):
               kaios demo
               kaios setup --ci
-              kaios verify --evidence --force
+              kaios gate
 
             Command groups:
               Setup:
                 kaios quickstart
                 kaios setup [--ci]
+                kaios gate [--config kaios.json]
                 kaios verify [--config kaios.json] [--evidence]
                 kaios init [--template default|research|code-review|release] [--ci]
 
@@ -3819,7 +3868,7 @@ class KaiosCli(
             else -> error("Unknown setup format '$value'. Use text or json.")
         }
 
-    private fun parseVerifyCommand(args: List<String>): VerifyCommand {
+    private fun parseVerifyCommand(args: List<String>, commandName: String = "verify"): VerifyCommand {
         var configPath = defaultConfigPath()
         var format = VerifyFormat.Text
         var evidenceOutputPath: Path? = null
@@ -3892,8 +3941,8 @@ class KaiosCli(
                     evidenceForce = true
                     index += 1
                 }
-                arg.startsWith("-") -> error("Unknown verify option '$arg'.")
-                else -> error("Unexpected verify argument '$arg'.")
+                arg.startsWith("-") -> error("Unknown $commandName option '$arg'.")
+                else -> error("Unexpected $commandName argument '$arg'.")
             }
         }
 

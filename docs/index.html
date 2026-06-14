@@ -716,7 +716,7 @@
         <div class="section-inner quickstart">
           <div class="section-heading">
             <h2>Install it, check it, inspect it.</h2>
-            <p>The v0.1.73 CLI installs locally with no API key. One command runs the demo, bootstraps a validated workflow, verifies the runtime gate, and creates portable evidence for audit or future Agent Desktop imports.</p>
+            <p>The v0.1.74 CLI installs locally with no API key. One command runs the demo, bootstraps a validated workflow, verifies the runtime gate, and creates portable evidence for audit or future Agent Desktop imports.</p>
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
@@ -737,9 +737,9 @@ kaios quickstart --no-ci
 # manual path:
 kaios demo
 kaios setup --ci
-kaios verify --evidence --force
+kaios gate
 # optional when you keep a baseline:
-kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
+kaios gate --baseline artifacts/baseline.capsule.json --check
 kaios export
 
 # or:
@@ -751,7 +751,7 @@ kaios ps
 kaios inspect
 kaios trace --check
 # optional when you keep a baseline:
-kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
+kaios gate --baseline artifacts/baseline.capsule.json --check
 kaios report</code></pre>
         </div>
       </section>

@@ -1,40 +1,40 @@
 # Verify Gate
 
-Use `kaios verify` when you want one answer to the question: is this KAI OS project ready to run and inspect?
+Use `kaios gate` when you want one answer to the question: is this KAI OS project ready to run, inspect, and audit?
 
 ```bash
 kaios setup --ci
-kaios verify
+kaios gate
 ```
 
-The command runs the same no-key checks locally and in CI:
+`kaios gate` is the product shortcut for `kaios verify --evidence --force`. It runs the same no-key checks locally and writes the same portable evidence package used by CI:
 
 - local runtime diagnostics from `kaios doctor`.
 - project workflow validation from `kaios.config-validation/v1`.
 - a deterministic `MockModelProvider` smoke workflow.
 - process trace contract validation for `kaios.process-trace/v1`.
-- optional evidence packaging through `--evidence`, with `--evidence-out` for custom paths.
+- evidence packaging to `artifacts/kaios-run.capsule.json`.
 - a normal run snapshot under `.kaios/runs/` for `ps`, `inspect`, `trace`, `capsule`, `evidence`, and `bug-report`.
 
-`kaios verify` always runs the smoke workflow with the deterministic mock provider and session memory. If optional real-provider or persisted-memory environment variables are misconfigured, verify reports them as warnings instead of blocking the no-key gate. Use `kaios doctor` when you want those optional runtime settings to be checked strictly.
+`kaios verify` remains the lower-level command when you need protected evidence outputs or a custom `--evidence-out` path. Both commands always run the smoke workflow with the deterministic mock provider and session memory. If optional real-provider or persisted-memory environment variables are misconfigured, the gate reports them as warnings instead of blocking the no-key path. Use `kaios doctor` when you want those optional runtime settings to be checked strictly.
 
 ## Output
 
 Text output is designed for humans:
 
 ```bash
-kaios verify
+kaios gate
 ```
 
 JSON output is designed for CI, release gates, dashboards, and future Agent Desktop integrations:
 
 ```bash
-kaios verify --json
+kaios gate --json
 ```
 
 The JSON schema is `kaios.verify/v1`. It keeps the existing `next` command list and adds structured `nextActions` with stable ids, commands, and reasons so CI, dashboards, and future Agent Desktop views do not need to parse shell text. See [JSON_CONTRACTS.md](JSON_CONTRACTS.md) for the full automation contract matrix.
 
-When you want CI to retain a portable proof package from the same smoke run:
+The lower-level equivalent is:
 
 ```bash
 kaios verify --evidence --force
@@ -43,10 +43,10 @@ kaios verify --evidence --force
 If your repository keeps a known-good baseline capsule:
 
 ```bash
-kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
+kaios gate --baseline artifacts/baseline.capsule.json --check
 ```
 
-With `--evidence`, verify writes `artifacts/kaios-run.capsule.json`, validates it, replays it offline, and includes an `evidence` object in `kaios.verify/v1` JSON output. Use `--evidence-out <path>` when a custom capsule path is required.
+The gate writes `artifacts/kaios-run.capsule.json`, validates it, replays it offline, and includes an `evidence` object in `kaios.verify/v1` JSON output. Use `kaios verify --evidence-out <path>` when a custom capsule path is required.
 
 ## Config Path
 

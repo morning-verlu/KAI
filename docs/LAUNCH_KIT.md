@@ -77,7 +77,8 @@ The v0.1 release is a runnable Kotlin/JVM seed:
 - kaios quickstart for one-command no-key onboarding with setup, CI gate, verify, evidence, and next actions
 - kaios quickstart --no-ci for local-only onboarding when a project is not ready for CI files
 - kaios setup for one-command project workflow bootstrap
-- kaios verify for one-command readiness and evidence gates in local projects and CI
+- kaios gate for one-command readiness, trace, evidence, replay, and optional baseline checks
+- kaios verify for lower-level CI-compatible readiness control
 - kaios capsule for portable run evidence packages
 - kaios doctor for local environment diagnostics
 - kaios init templates, config validation, and editable agent DAGs
@@ -97,13 +98,13 @@ kaios run --index . --context README.md --out artifacts/project.md --trace-out a
 kaios runs --json
 kaios ps
 kaios trace --check
-kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
+kaios gate --baseline artifacts/baseline.capsule.json --check
 kaios export
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.73/kaios-0.1.73.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.74/kaios-0.1.74.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 ```
 
@@ -160,7 +161,7 @@ kaios run --index . --context README.md --out artifacts/project.md --trace-out a
 kaios ps
 kaios inspect
 kaios trace --check
-kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
+kaios gate --baseline artifacts/baseline.capsule.json --check
 kaios report
 ```
 
@@ -174,18 +175,18 @@ kaios run --index . --context README.md --out artifacts/project.md --trace-out a
 kaios ps
 kaios inspect
 kaios trace --check
-kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
+kaios gate --baseline artifacts/baseline.capsule.json --check
 kaios report
 ```
 
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.1.73.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.73/kaios-0.1.73.zip
-unzip kaios-0.1.73.zip
-./kaios-0.1.73/bin/kaios quickstart
-./kaios-0.1.73/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-./kaios-0.1.73/bin/kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
+curl -L -o kaios-0.1.74.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.74/kaios-0.1.74.zip
+unzip kaios-0.1.74.zip
+./kaios-0.1.74/bin/kaios quickstart
+./kaios-0.1.74/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+./kaios-0.1.74/bin/kaios gate --baseline artifacts/baseline.capsule.json --check
 ```
 
 Build from source:
@@ -199,7 +200,7 @@ build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifa
 build/install/kaios-cli/bin/kaios ps
 build/install/kaios-cli/bin/kaios inspect
 build/install/kaios-cli/bin/kaios trace --check
-build/install/kaios-cli/bin/kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
+build/install/kaios-cli/bin/kaios gate --baseline artifacts/baseline.capsule.json --check
 build/install/kaios-cli/bin/kaios report
 ```
 
