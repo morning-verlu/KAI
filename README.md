@@ -51,6 +51,14 @@ kaios run --index . --context README.md --out artifacts/project.md --force "summ
 
 If the project does not have `README.md`, omit `--context README.md`. KAI OS still uses the Workspace Index to orient the run.
 
+Every command has local examples when you need the next move without opening docs:
+
+```bash
+kaios help run
+kaios help analyze
+kaios help config
+```
+
 Need a machine-readable workspace report for CI or dashboards?
 
 ```bash

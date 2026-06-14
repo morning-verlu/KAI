@@ -83,7 +83,7 @@ kaios export <run-id>
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.22/kaios-0.1.22.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.23/kaios-0.1.23.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 ```
 
@@ -159,11 +159,11 @@ kaios report <run-id>
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.1.22.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.22/kaios-0.1.22.zip
-unzip kaios-0.1.22.zip
-./kaios-0.1.22/bin/kaios doctor
-./kaios-0.1.22/bin/kaios analyze . --out artifacts/analysis.md --force
-./kaios-0.1.22/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
+curl -L -o kaios-0.1.23.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.23/kaios-0.1.23.zip
+unzip kaios-0.1.23.zip
+./kaios-0.1.23/bin/kaios doctor
+./kaios-0.1.23/bin/kaios analyze . --out artifacts/analysis.md --force
+./kaios-0.1.23/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 ```
 
 Build from source:

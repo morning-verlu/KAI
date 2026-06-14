@@ -29,7 +29,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.22"
+private const val KAIOS_VERSION = "0.1.23"
 
 fun main(args: Array<String>) {
     val exitCode = KaiosCli().run(args, System.out, System.err)
@@ -54,18 +54,18 @@ class KaiosCli(
 
         val commandArgs = args.drop(1)
         return when (args.first()) {
-            "init" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("init")) else initProject(commandArgs, out, err)
-            "run" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("run")) else runWorkflow(commandArgs, out, err)
-            "context" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("context")) else previewContext(commandArgs, out, err)
-            "index" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("index")) else previewIndex(commandArgs, out, err)
-            "analyze" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("analyze")) else analyzeWorkspace(commandArgs, out, err)
-            "config" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("config")) else configCommand(commandArgs, out, err)
-            "runs" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("runs")) else listRuns(out)
-            "ps" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("ps")) else printProcessTable(commandArgs, out, err)
-            "inspect" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("inspect")) else inspectRun(commandArgs, out, err)
-            "report" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("report")) else generateReport(commandArgs, out, err)
-            "export" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("export")) else exportRun(commandArgs, out, err)
-            "doctor" -> if (isHelp(commandArgs)) printCommandHelp(out, commandUsage("doctor")) else doctor(out)
+            "init" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("init")) else initProject(commandArgs, out, err)
+            "run" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("run")) else runWorkflow(commandArgs, out, err)
+            "context" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("context")) else previewContext(commandArgs, out, err)
+            "index" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("index")) else previewIndex(commandArgs, out, err)
+            "analyze" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("analyze")) else analyzeWorkspace(commandArgs, out, err)
+            "config" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("config")) else configCommand(commandArgs, out, err)
+            "runs" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("runs")) else listRuns(out)
+            "ps" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("ps")) else printProcessTable(commandArgs, out, err)
+            "inspect" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("inspect")) else inspectRun(commandArgs, out, err)
+            "report" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("report")) else generateReport(commandArgs, out, err)
+            "export" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("export")) else exportRun(commandArgs, out, err)
+            "doctor" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("doctor")) else doctor(out)
             "version", "--version", "-V" -> version(out)
             "help", "--help", "-h" -> {
                 if (commandArgs.isNotEmpty() && !isHelp(commandArgs)) return printNamedCommandHelp(commandArgs, out, err)
@@ -83,8 +83,20 @@ class KaiosCli(
     private fun isHelp(args: List<String>): Boolean =
         args.size == 1 && args.first() in setOf("help", "--help", "-h")
 
-    private fun printCommandHelp(out: PrintStream, usage: String): Int {
-        out.println("Usage: $usage")
+    private fun printCommandHelp(out: PrintStream, help: CommandHelp): Int {
+        out.println("Usage: ${help.usage}")
+        out.println(help.summary)
+        if (help.examples.isNotEmpty()) {
+            out.println()
+            out.println("Examples:")
+            help.examples.forEach { example -> out.println("  $example") }
+        }
+        if (help.notes.isNotEmpty()) {
+            out.println()
+            out.println("Notes:")
+            help.notes.forEach { note -> out.println("  $note") }
+        }
+        out.println()
         out.println("Run 'kaios help' for all commands.")
         return 0
     }
@@ -95,33 +107,123 @@ class KaiosCli(
             return 1
         }
 
-        val usage = commandUsageOrNull(args.first())
-        if (usage == null) {
+        val help = commandHelpOrNull(args.first())
+        if (help == null) {
             err.println("Unknown command '${args.first()}'.")
             err.println("Usage: kaios help <command>")
             return 1
         }
-        return printCommandHelp(out, usage)
+        return printCommandHelp(out, help)
     }
 
     private fun commandUsage(command: String): String =
         commandUsageOrNull(command) ?: error("Missing usage for command '$command'.")
 
     private fun commandUsageOrNull(command: String): String? =
+        commandHelpOrNull(command)?.usage
+
+    private fun commandHelp(command: String): CommandHelp =
+        commandHelpOrNull(command) ?: error("Missing help for command '$command'.")
+
+    private fun commandHelpOrNull(command: String): CommandHelp? =
         when (command) {
-            "init" -> "kaios init [--template default|research|code-review|release] [--config kaios.json] [--force]"
-            "run" -> "kaios run [--context path] [--index path] [--config kaios.json] [--out artifact.md] [--force] \"task\""
-            "context" -> "kaios context [path ...]"
-            "index" -> "kaios index [path ...]"
-            "analyze" -> "kaios analyze [path ...] [--format markdown|json] [--out analysis.md] [--force]"
-            "config" -> "kaios config <validate|show|templates> [--config kaios.json]"
-            "runs" -> "kaios runs"
-            "ps" -> "kaios ps <run-id>"
-            "inspect" -> "kaios inspect <run-id>"
-            "report" -> "kaios report <run-id>"
-            "export" -> "kaios export <run-id> [--out artifact.md] [--force]"
-            "doctor" -> "kaios doctor"
-            "version" -> "kaios --version"
+            "init" -> CommandHelp(
+                usage = "kaios init [--template default|research|code-review|release] [--config kaios.json] [--force]",
+                summary = "Create a local kaios.json workflow so runs use your own agent process graph.",
+                examples = listOf(
+                    "kaios init",
+                    "kaios init --template research",
+                    "kaios init --template code-review --force",
+                ),
+                notes = listOf("Run 'kaios config templates' to see built-in workflow templates."),
+            )
+            "run" -> CommandHelp(
+                usage = "kaios run [--context path] [--index path] [--config kaios.json] [--out artifact.md] [--force] \"task\"",
+                summary = "Run an inspectable agent workflow and persist a snapshot under .kaios/runs/.",
+                examples = listOf(
+                    "kaios run \"summarize this project\"",
+                    "kaios run --index . --out artifacts/project.md --force \"summarize this project\"",
+                    "kaios run --index . --context README.md --out artifacts/project.md --force \"explain the architecture\"",
+                    "kaios run --config kaios.json \"review this release\"",
+                ),
+                notes = listOf(
+                    "No API key is required by default; the mock provider is deterministic.",
+                    "Use -- before a task that starts with '-'.",
+                    "After a run, use 'kaios ps <run-id>' and 'kaios inspect <run-id>'.",
+                ),
+            )
+            "context" -> CommandHelp(
+                usage = "kaios context [path ...]",
+                summary = "Preview bounded local files that would be attached to an agent run.",
+                examples = listOf("kaios context README.md docs", "kaios context ."),
+                notes = listOf("Generated directories and .kaiosignore matches are skipped."),
+            )
+            "index" -> CommandHelp(
+                usage = "kaios index [path ...]",
+                summary = "Render a deterministic Workspace Index with language stats and notable files.",
+                examples = listOf("kaios index .", "kaios index README.md src docs"),
+                notes = listOf("Use the same paths with 'kaios run --index' to orient a workflow without dumping file contents."),
+            )
+            "analyze" -> CommandHelp(
+                usage = "kaios analyze [path ...] [--format markdown|json] [--out analysis.md] [--force]",
+                summary = "Generate a no-key workspace report for onboarding, CI, or project handoff.",
+                examples = listOf(
+                    "kaios analyze .",
+                    "kaios analyze . --out artifacts/analysis.md --force",
+                    "kaios analyze . --format json --out artifacts/analysis.json --force",
+                ),
+            )
+            "config" -> CommandHelp(
+                usage = "kaios config <validate|show|templates> [--config kaios.json]",
+                summary = "Validate, inspect, or list workflow configuration templates.",
+                examples = listOf(
+                    "kaios config templates",
+                    "kaios config validate",
+                    "kaios config show --config kaios.json",
+                ),
+            )
+            "runs" -> CommandHelp(
+                usage = "kaios runs",
+                summary = "List saved run snapshots from .kaios/runs/.",
+                examples = listOf("kaios runs"),
+                notes = listOf("Use a listed run id with ps, inspect, report, or export."),
+            )
+            "ps" -> CommandHelp(
+                usage = "kaios ps <run-id>",
+                summary = "Print the agent process table for a saved run.",
+                examples = listOf("kaios ps run-97381ae9"),
+                notes = listOf("Tokens behave like CPU, context size like memory, and tool calls like syscalls."),
+            )
+            "inspect" -> CommandHelp(
+                usage = "kaios inspect <run-id>",
+                summary = "Print final output and lifecycle events for a saved run.",
+                examples = listOf("kaios inspect run-97381ae9"),
+            )
+            "report" -> CommandHelp(
+                usage = "kaios report <run-id>",
+                summary = "Generate a standalone HTML Agent Process Manager report.",
+                examples = listOf("kaios report run-97381ae9"),
+                notes = listOf("Reports are written under .kaios/reports/ by default."),
+            )
+            "export" -> CommandHelp(
+                usage = "kaios export <run-id> [--out artifact.md] [--force]",
+                summary = "Export a saved run snapshot as a Markdown artifact.",
+                examples = listOf(
+                    "kaios export run-97381ae9",
+                    "kaios export run-97381ae9 --out artifacts/run.md --force",
+                ),
+            )
+            "doctor" -> CommandHelp(
+                usage = "kaios doctor",
+                summary = "Check the local Java runtime, writable KAI OS directories, provider config, and project config.",
+                examples = listOf("kaios doctor"),
+                notes = listOf("Run this first when a command behaves differently across machines."),
+            )
+            "version" -> CommandHelp(
+                usage = "kaios --version",
+                summary = "Print the installed KAI OS CLI version.",
+                examples = listOf("kaios --version", "kaios version"),
+            )
             else -> null
         }
 
@@ -1189,6 +1291,13 @@ class KaiosCli(
         }
     }
 }
+
+private data class CommandHelp(
+    val usage: String,
+    val summary: String,
+    val examples: List<String> = emptyList(),
+    val notes: List<String> = emptyList(),
+)
 
 private data class RunCommand(
     val task: String,

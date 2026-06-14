@@ -29,7 +29,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.22\n", out.toString())
+        assertEquals("kaios 0.1.23\n", out.toString())
     }
 
     @Test
@@ -75,6 +75,7 @@ class KaiosCliSmokeTest {
 
             assertEquals(0, code)
             assertTrue(text.contains(usage), command)
+            assertTrue(text.contains("Examples:"), command)
             assertTrue(text.contains("kaios help"), command)
             assertTrue(!text.contains("run_id:"), command)
         }
@@ -90,6 +91,11 @@ class KaiosCliSmokeTest {
 
         assertEquals(0, code)
         assertTrue(text.contains("Usage: kaios run"))
+        assertTrue(text.contains("Run an inspectable agent workflow"))
+        assertTrue(text.contains("Examples:"))
+        assertTrue(text.contains("kaios run --index . --out artifacts/project.md --force \"summarize this project\""))
+        assertTrue(text.contains("No API key is required by default"))
+        assertTrue(text.contains("kaios ps <run-id>"))
         assertTrue(text.contains("kaios help"))
         assertTrue(!text.contains("run_id:"))
     }
