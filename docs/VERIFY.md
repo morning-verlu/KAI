@@ -46,7 +46,7 @@ When a GitHub Actions workflow wants a human-readable PR summary and a clean JSO
 kaios gate --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json
 ```
 
-`--summary-out` appends Markdown, so it works with GitHub Step Summary files and local release-note artifacts without changing the `kaios.verify/v1` JSON printed to stdout.
+`--summary-out` appends Markdown, so it works with GitHub Step Summary files and local release-note artifacts without changing the `kaios.verify/v1` JSON printed to stdout. On failure, the summary starts with Verdict, Why It Failed, and Fix First sections so a maintainer can act before opening the JSON artifact.
 
 If your repository keeps a known-good baseline capsule:
 

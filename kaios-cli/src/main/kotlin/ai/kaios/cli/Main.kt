@@ -36,7 +36,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.75"
+private const val KAIOS_VERSION = "0.1.76"
 private const val CI_AGENT_GATE_ARTIFACT_NAME = "kaios-agent-gate"
 private const val CI_WORKFLOW_PUSH_NOTE = "Pushing .github/workflows/kaios.yml may require GitHub workflow permission/scope."
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
@@ -1317,7 +1317,7 @@ class KaiosCli(
         }
         val report = buildVerifyReport(command)
         val summaryPath = command.summaryOutputPath?.let { outputPath ->
-            runCatching { appendVerifySummary(report, title, outputPath) }.getOrElse { error ->
+            runCatching { appendVerifySummary(report, title, command, outputPath) }.getOrElse { error ->
                 err.println(error.message)
                 return 1
             }
@@ -3428,23 +3428,50 @@ class KaiosCli(
         return path
     }
 
-    private fun appendVerifySummary(report: VerifyReport, title: String, path: Path): Path {
+    private fun appendVerifySummary(report: VerifyReport, title: String, command: VerifyCommand, path: Path): Path {
         path.parent?.let { Files.createDirectories(it) }
         val prefix = if (path.exists() && Files.size(path) > 0L) "\n" else ""
         Files.writeString(
             path,
-            "$prefix${renderVerifySummaryMarkdown(report, title)}\n",
+            "$prefix${renderVerifySummaryMarkdown(report, title, command)}\n",
             StandardOpenOption.CREATE,
             StandardOpenOption.APPEND,
         )
         return path
     }
 
-    private fun renderVerifySummaryMarkdown(report: VerifyReport, title: String): String = buildString {
+    private fun renderVerifySummaryMarkdown(report: VerifyReport, title: String, command: VerifyCommand): String = buildString {
+        val summaryStatus = verifySummaryStatus(report, command)
+        val fixFirst = verifySummaryFixCommand(report, command)
         appendLine("## $title")
+        appendLine()
+        appendLine("### Verdict")
+        appendLine()
+        appendLine(verifySummaryVerdict(summaryStatus))
+        if (summaryStatus != "ready") {
+            val reasons = verifySummaryFailureReasons(report, command)
+            if (reasons.isNotEmpty()) {
+                appendLine()
+                appendLine("### Why It Failed")
+                reasons.forEach { reason -> appendLine("- ${markdownCell(reason)}") }
+            }
+            if (fixFirst != null) {
+                appendLine()
+                appendLine("### Fix First")
+                appendLine()
+                appendLine("Run:")
+                appendLine()
+                appendLine("```bash")
+                appendLine(fixFirst)
+                appendLine("```")
+                appendLine()
+                appendLine(nextActionReason(nextActionId(fixFirst)))
+            }
+        }
         appendLine()
         appendLine("| Check | Status | Detail |")
         appendLine("| --- | --- | --- |")
+        appendLine("| Agent Gate | `$summaryStatus` | `${report.schema}` `${report.version}` |")
         appendLine("| Readiness | `${report.status}` | `${report.schema}` `${report.version}` |")
         appendLine("| Doctor | `${doctorSummaryText(report.doctor.summary)}` | `${report.doctor.summary.failed}` failed, `${report.doctor.summary.warnings}` warning(s) |")
         appendLine("| Config | `${if (report.config.valid) "valid" else "invalid"}` | `${markdownCell(report.config.config)}` workflow `${report.config.workflowName ?: "-"}` |")
@@ -3486,6 +3513,55 @@ class KaiosCli(
             report.next.forEach { command -> appendLine("- `$command`") }
         }
     }.trimEnd()
+
+    private fun verifySummaryStatus(report: VerifyReport, command: VerifyCommand): String =
+        when {
+            report.status != "ready" -> "failed"
+            report.evidence?.valid == false -> "failed"
+            command.evidenceCheck && report.evidence?.diff?.same == false -> "different"
+            else -> "ready"
+        }
+
+    private fun verifySummaryVerdict(status: String): String =
+        when (status) {
+            "ready" -> "Ready. Agent Gate passed and the run is inspectable."
+            "different" -> "Different. Agent Gate passed, but the baseline check found behavior changes."
+            else -> "Failed. Fix the first blocking issue below, then rerun `kaios gate`."
+        }
+
+    private fun verifySummaryFailureReasons(report: VerifyReport, command: VerifyCommand): List<String> =
+        buildList {
+            if (report.doctor.summary.failed > 0) {
+                report.doctor.checks
+                    .filter { check -> check.status == DoctorStatus.FAIL.name }
+                    .filterNot { check -> !report.config.valid && check.name == "project config" }
+                    .forEach { check -> add("${check.name}: ${singleLine(check.detail)}") }
+            }
+            if (!report.config.valid) addAll(report.config.errors)
+            report.trace?.issues?.forEach { issue -> add("trace: $issue") }
+            report.evidence?.let { evidence ->
+                if (!evidence.valid) {
+                    evidence.capsule.issues.forEach { issue -> add("capsule: $issue") }
+                    evidence.replay.issues.forEach { issue -> add("replay: $issue") }
+                    evidence.diff.issues.forEach { issue -> add("diff: $issue") }
+                }
+                if (command.evidenceCheck && evidence.diff.same == false) {
+                    add("baseline diff: ${evidence.diff.differences} stable runtime difference(s) found.")
+                }
+            }
+            report.errors
+                .filterNot { error -> error.startsWith("doctor failed with ") }
+                .filterNot { error -> report.config.errors.any { configError -> singleLine(configError) == singleLine(error) } }
+                .forEach(::add)
+        }.map(::singleLine).filter { it.isNotBlank() }.distinct()
+
+    private fun verifySummaryFixCommand(report: VerifyReport, command: VerifyCommand): String? {
+        val evidence = report.evidence
+        if (command.evidenceCheck && evidence?.diff?.same == false) {
+            return evidence.next.firstOrNull { next -> next.startsWith("kaios diff ") }
+        }
+        return report.next.firstOrNull()
+    }
 
     private fun markdownCell(value: String): String =
         singleLine(value).replace("|", "\\|")
