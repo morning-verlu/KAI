@@ -84,7 +84,7 @@ Snapshots are JSON files under `.kaios/runs/` and are used by the CLI to inspect
 - `kaios run --index . --trace-out artifacts/trace.json "task"`
 - `kaios run --context README.md "task"`
 - `kaios context [path ...]`
-- `kaios runs`
+- `kaios runs` and `kaios runs --json`
 - `kaios ps latest`
 - `kaios inspect latest`
 - `kaios trace latest`
@@ -95,7 +95,7 @@ Snapshots are JSON files under `.kaios/runs/` and are used by the CLI to inspect
 
 `kaios-cli` defaults to `MockModelProvider`, but can select real providers through `KAIOS_MODEL_PROVIDER`.
 
-Reports are static HTML files generated from JSON snapshots under `.kaios/runs/`. They render a run list, process table, workflow graph, lifecycle event timeline, and final output without a web server.
+Reports are static HTML files generated from JSON snapshots under `.kaios/runs/`. They render a run list, process table, workflow graph, lifecycle event timeline, and final output without a web server. `kaios runs --json` emits `kaios.runs/v1`, a stable run registry for Agent Desktop, CI, and local tooling.
 
 Process traces are text or JSON views generated from the same snapshots. `kaios trace` emits `kaios.process-trace/v1` with process metrics, the observed execution path, event counts, and lifecycle timeline for CI, replay, visualizers, audit logs, and future Agent Desktop surfaces. See [TRACE.md](TRACE.md) for the schema contract and output-file workflow.
 

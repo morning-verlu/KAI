@@ -31,7 +31,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.39\n", out.toString())
+        assertEquals("kaios 0.1.40\n", out.toString())
     }
 
     @Test
@@ -345,6 +345,22 @@ class KaiosCliSmokeTest {
             line.contains(firstRunId) && !line.contains("latest") && line.contains("first agent process")
         })
 
+        val runsJsonOut = ByteArrayOutputStream()
+        val runsJsonCode = cli.run(arrayOf("runs", "--json"), PrintStream(runsJsonOut), PrintStream(ByteArrayOutputStream()))
+        val runsJson = Json.parseToJsonElement(runsJsonOut.toString()).jsonObject
+        val runs = runsJson.getValue("runs").jsonArray
+        val newestRun = runs.first().jsonObject
+
+        assertEquals(0, runsJsonCode)
+        assertEquals("kaios.runs/v1", runsJson.getValue("schema").jsonPrimitive.content)
+        assertEquals(2, runsJson.getValue("count").jsonPrimitive.int)
+        assertEquals(secondRunId, runsJson.getValue("latestRunId").jsonPrimitive.content)
+        assertEquals(secondRunId, newestRun.getValue("runId").jsonPrimitive.content)
+        assertEquals("latest", newestRun.getValue("alias").jsonPrimitive.content)
+        assertEquals("success", newestRun.getValue("status").jsonPrimitive.content)
+        assertEquals(3, newestRun.getValue("processCount").jsonPrimitive.int)
+        assertTrue(newestRun.getValue("tokenTotal").jsonPrimitive.int > 0)
+
         val psOut = ByteArrayOutputStream()
         val psCode = cli.run(arrayOf("ps", "latest"), PrintStream(psOut), PrintStream(ByteArrayOutputStream()))
         assertEquals(0, psCode)
@@ -405,6 +421,16 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("No run snapshots found."))
         assertTrue(text.contains("Run 'kaios demo' to create a no-key sample run."))
         assertTrue(text.contains("Run 'kaios run \"task\"' to create your own run."))
+
+        val jsonOut = ByteArrayOutputStream()
+        val jsonCode = cli.run(arrayOf("runs", "--format", "json"), PrintStream(jsonOut), PrintStream(ByteArrayOutputStream()))
+        val json = Json.parseToJsonElement(jsonOut.toString()).jsonObject
+
+        assertEquals(0, jsonCode)
+        assertEquals("kaios.runs/v1", json.getValue("schema").jsonPrimitive.content)
+        assertEquals(0, json.getValue("count").jsonPrimitive.int)
+        assertEquals("null", json.getValue("latestRunId").toString())
+        assertEquals(0, json.getValue("runs").jsonArray.size)
     }
 
     @Test
@@ -1661,7 +1687,7 @@ class KaiosCliSmokeTest {
 
         assertEquals(0, code)
         assertEquals("kaios.doctor/v1", json.getValue("schema").jsonPrimitive.content)
-        assertEquals("0.1.39", json.getValue("version").jsonPrimitive.content)
+        assertEquals("0.1.40", json.getValue("version").jsonPrimitive.content)
         assertEquals("ready", summary.getValue("status").jsonPrimitive.content)
         assertEquals(0, summary.getValue("failed").jsonPrimitive.int)
         assertTrue(checks.any { check ->

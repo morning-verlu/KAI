@@ -81,6 +81,7 @@ kaios analyze . --format json --out artifacts/analysis.json --force
 Need the run itself as a machine-readable process trace?
 
 ```bash
+kaios runs --json
 kaios run --index . --trace-out artifacts/trace.json --force "summarize this project"
 ```
 
@@ -308,8 +309,9 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - Session memory and JSON snapshots under `.kaios/runs/`.
 - SQLite memory adapter for persisted agent process memory.
 - No-key `kaios demo` that prints the process table and writes a trace artifact.
-- CLI process table and run inspector.
+- CLI process table, run registry, and run inspector.
 - KAI Process Trace schema with text and JSON output through `kaios trace`.
+- `kaios runs --json` emits `kaios.runs/v1` for Agent Desktop, CI, and local tooling.
 - Markdown run artifacts with `kaios run --out` and `kaios export`.
 - `kaios doctor` and `kaios doctor --json` environment diagnostics for Java, provider, memory, snapshots, and writable runtime directories.
 - Static Agent Process Manager HTML reports under `.kaios/reports/`.

@@ -34,9 +34,10 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.39"
+private const val KAIOS_VERSION = "0.1.40"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val DOCTOR_SCHEMA = "kaios.doctor/v1"
+private const val RUNS_SCHEMA = "kaios.runs/v1"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
@@ -102,9 +103,7 @@ class KaiosCli(
             "index" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("index")) else previewIndex(commandArgs, out, err)
             "analyze" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("analyze")) else analyzeWorkspace(commandArgs, out, err)
             "config" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("config")) else configCommand(commandArgs, out, err)
-            "runs" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("runs")) else {
-                if (rejectUnexpectedArguments(commandArgs, "runs", err)) 1 else listRuns(out)
-            }
+            "runs" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("runs")) else listRuns(commandArgs, out, err)
             "ps" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("ps")) else printProcessTable(commandArgs, out, err)
             "inspect" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("inspect")) else inspectRun(commandArgs, out, err)
             "trace" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("trace")) else traceRun(commandArgs, out, err)
@@ -353,10 +352,16 @@ class KaiosCli(
                 ),
             )
             "runs" -> CommandHelp(
-                usage = "kaios runs",
+                usage = "kaios runs [--json|--format json]",
                 summary = "List saved run snapshots from .kaios/runs/.",
-                examples = listOf("kaios runs"),
-                notes = listOf("Use a listed run id, or 'latest', with ps, inspect, trace, report, or export."),
+                examples = listOf(
+                    "kaios runs",
+                    "kaios runs --json",
+                ),
+                notes = listOf(
+                    "Use a listed run id, or 'latest', with ps, inspect, trace, report, or export.",
+                    "JSON output uses schema $RUNS_SCHEMA for Agent Desktop, CI, and local tooling.",
+                ),
             )
             "ps" -> CommandHelp(
                 usage = "kaios ps <run-id|latest>",
@@ -760,8 +765,16 @@ class KaiosCli(
         return 1
     }
 
-    private fun listRuns(out: PrintStream): Int {
+    private fun listRuns(args: List<String>, out: PrintStream, err: PrintStream): Int {
+        val command = runCatching { parseRunsCommand(args) }.getOrElse { error ->
+            return printCommandUsageError(err, "runs", error.message)
+        }
         val snapshots = snapshotStore.list()
+        if (command.format == RunsFormat.Json) {
+            out.println(TRACE_JSON.encodeToString(buildRunsReport(snapshots)))
+            return 0
+        }
+
         if (snapshots.isEmpty()) {
             out.println("No run snapshots found.")
             printNoRunSnapshotsHint(out)
@@ -788,6 +801,28 @@ class KaiosCli(
         }
         return 0
     }
+
+    private fun buildRunsReport(snapshots: List<StoredRunSnapshot>): RunsReport =
+        RunsReport(
+            schema = RUNS_SCHEMA,
+            count = snapshots.size,
+            latestRunId = snapshots.firstOrNull()?.runId,
+            runs = snapshots.mapIndexed { index, snapshot ->
+                RunsReportItem(
+                    runId = snapshot.runId,
+                    alias = if (index == 0) "latest" else null,
+                    status = if (snapshot.success) "success" else "failed",
+                    success = snapshot.success,
+                    workflowName = snapshot.workflowName,
+                    task = snapshot.task,
+                    processCount = snapshot.processes.size,
+                    tokenTotal = snapshot.processes.sumOf { it.tokens },
+                    syscallCount = snapshot.processes.sumOf { it.syscallCount },
+                    contextBytes = snapshot.processes.sumOf { it.contextSize },
+                    durationMillis = snapshot.processes.sumOf { it.durationMillis },
+                )
+            },
+        )
 
     private fun printSnapshotLoadError(
         err: PrintStream,
@@ -2042,6 +2077,43 @@ class KaiosCli(
             else -> error("Unknown doctor format '$value'. Use text or json.")
         }
 
+    private fun parseRunsCommand(args: List<String>): RunsCommand {
+        var format = RunsFormat.Text
+        var index = 0
+
+        while (index < args.size) {
+            val arg = args[index]
+            when {
+                arg == "--json" -> {
+                    format = RunsFormat.Json
+                    index += 1
+                }
+                arg == "--format" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--format requires text or json.")
+                    format = parseRunsFormat(value)
+                    index += 2
+                }
+                arg.startsWith("--format=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--format requires text or json." }
+                    format = parseRunsFormat(value)
+                    index += 1
+                }
+                arg.startsWith("-") -> error("Unknown runs option '$arg'.")
+                else -> error("Unexpected runs argument '$arg'.")
+            }
+        }
+
+        return RunsCommand(format)
+    }
+
+    private fun parseRunsFormat(value: String): RunsFormat =
+        when (value.lowercase().trim()) {
+            "text", "plain" -> RunsFormat.Text
+            "json" -> RunsFormat.Json
+            else -> error("Unknown runs format '$value'. Use text or json.")
+        }
+
     private fun printTemplates(out: PrintStream) {
         out.println("TEMPLATES")
         projectConfigTemplates.forEach { template ->
@@ -2187,6 +2259,38 @@ private data class DoctorReportCheck(
     val name: String,
     val status: String,
     val detail: String,
+)
+
+private data class RunsCommand(
+    val format: RunsFormat,
+)
+
+private enum class RunsFormat(val id: String) {
+    Text("text"),
+    Json("json"),
+}
+
+@Serializable
+private data class RunsReport(
+    val schema: String,
+    val count: Int,
+    val latestRunId: String?,
+    val runs: List<RunsReportItem>,
+)
+
+@Serializable
+private data class RunsReportItem(
+    val runId: String,
+    val alias: String?,
+    val status: String,
+    val success: Boolean,
+    val workflowName: String,
+    val task: String,
+    val processCount: Int,
+    val tokenTotal: Int,
+    val syscallCount: Int,
+    val contextBytes: Int,
+    val durationMillis: Long,
 )
 
 private enum class DoctorStatus {
