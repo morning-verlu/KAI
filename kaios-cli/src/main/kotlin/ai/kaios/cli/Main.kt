@@ -29,7 +29,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.9"
+private const val KAIOS_VERSION = "0.1.10"
 
 fun main(args: Array<String>) {
     val exitCode = KaiosCli().run(args, System.out, System.err)
@@ -77,7 +77,7 @@ class KaiosCli(
     private fun runWorkflow(args: List<String>, out: PrintStream, err: PrintStream): Int {
         val command = runCatching { parseRunCommand(args) }.getOrElse { error ->
             err.println(error.message)
-            err.println("Usage: kaios run [--config kaios.json] \"task\"")
+            err.println("Usage: kaios run [--context path] [--config kaios.json] [--out artifact.md] \"task\"")
             return 1
         }
 
@@ -91,6 +91,10 @@ class KaiosCli(
         }
         val runtime = AgentRuntime()
         val tools = toolRegistry()
+        val context = runCatching { contextLoader().load(command.contextPaths) }.getOrElse { error ->
+            err.println(error.message)
+            return 1
+        }
         val configPath = command.configPath ?: defaultConfigPath().takeIf { !command.useBuiltInDefault && it.exists() }
         val workflow = runCatching {
             configPath?.let { loadProjectWorkflow(it, memory, tools) } ?: defaultWorkflow(memory)
@@ -105,8 +109,8 @@ class KaiosCli(
             memory = memory,
         )
 
-        val result = scheduler.run(workflow, command.task)
-        val path = snapshotStore.save(command.task, result)
+        val result = scheduler.run(workflow, context.inputFor(command.task))
+        val path = snapshotStore.save(context.taskSummary(command.task), result)
         val artifactPath = runCatching {
             command.outputPath?.let { outputPath ->
                 val snapshot = snapshotStore.load(result.runId)
@@ -121,6 +125,9 @@ class KaiosCli(
         out.println("success: ${result.success}")
         out.println("snapshot: $path")
         configPath?.let { out.println("config: $it") }
+        if (context.sources.isNotEmpty()) {
+            out.println("context: ${context.sources.size} file(s), ${context.totalChars} chars")
+        }
         artifactPath?.let { out.println("artifact: $it") }
         out.println()
         out.println(result.finalOutput)
@@ -499,6 +506,7 @@ class KaiosCli(
               kaios config show [--config kaios.json]
               kaios config templates
               kaios run "task"
+              kaios run --context README.md "task"
               kaios run --config kaios.json "task"
               kaios run --default "task"
               kaios runs
@@ -555,6 +563,12 @@ class KaiosCli(
     private fun toolRegistry() =
         builtInToolRegistry(fileRoot = workingDir.resolve(".kaios").resolve("files"))
 
+    private fun contextLoader() =
+        ContextLoader(
+            workingDir = workingDir,
+            maxChars = env("KAIOS_CONTEXT_MAX_CHARS")?.toIntOrNull()?.coerceAtLeast(1) ?: 80_000,
+        )
+
     private fun resolvePath(value: String): Path {
         val path = Paths.get(value)
         return if (path.isAbsolute) path.normalize() else workingDir.resolve(path).normalize()
@@ -584,6 +598,7 @@ class KaiosCli(
         var useBuiltInDefault = false
         var outputPath: Path? = null
         var forceOutput = false
+        val contextPaths = mutableListOf<Path>()
         val taskParts = mutableListOf<String>()
         var index = 0
 
@@ -620,6 +635,17 @@ class KaiosCli(
                     forceOutput = true
                     index += 1
                 }
+                arg == "--context" || arg == "--ctx" -> {
+                    val value = args.getOrNull(index + 1) ?: error("$arg requires a path.")
+                    contextPaths.add(resolvePath(value))
+                    index += 2
+                }
+                arg.startsWith("--context=") || arg.startsWith("--ctx=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "$arg requires a path." }
+                    contextPaths.add(resolvePath(value))
+                    index += 1
+                }
                 arg == "--" -> {
                     taskParts += args.drop(index + 1)
                     index = args.size
@@ -634,7 +660,7 @@ class KaiosCli(
         val task = taskParts.joinToString(" ").trim()
         require(task.isNotBlank()) { "Task cannot be blank." }
         require(!(configPath != null && useBuiltInDefault)) { "Use either --config or --default, not both." }
-        return RunCommand(task, configPath, useBuiltInDefault, outputPath, forceOutput)
+        return RunCommand(task, configPath, useBuiltInDefault, outputPath, forceOutput, contextPaths)
     }
 
     private fun parseInitCommand(args: List<String>): InitCommand {
@@ -756,6 +782,7 @@ private data class RunCommand(
     val useBuiltInDefault: Boolean,
     val outputPath: Path?,
     val forceOutput: Boolean,
+    val contextPaths: List<Path>,
 )
 
 private data class InitCommand(

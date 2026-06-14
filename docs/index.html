@@ -694,6 +694,11 @@
               <span class="tag">kaios ps</span>
             </article>
             <article class="feature">
+              <h3>Project context</h3>
+              <p>Attach bounded local files or directories to a run and keep source summaries in snapshots and artifacts.</p>
+              <span class="tag">--context</span>
+            </article>
+            <article class="feature">
               <h3>Project configs</h3>
               <p>Generate template workflows, validate configs, show the DAG, and auto-run kaios.json without recompiling Kotlin.</p>
               <span class="tag">kaios init</span>
@@ -711,7 +716,7 @@
         <div class="section-inner quickstart">
           <div class="section-heading">
             <h2>Install it, check it, inspect it.</h2>
-            <p>The v0.1.9 CLI installs locally with no API key. Run doctor first, then launch the demo workflow or generate a template kaios.json DAG and export a Markdown artifact.</p>
+            <p>The v0.1.10 CLI installs locally with no API key. Run doctor first, then launch a demo workflow, attach project context, or generate a template kaios.json DAG and export a Markdown artifact.</p>
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
@@ -725,6 +730,7 @@ kaios config templates
 kaios init --template research
 kaios config show
 kaios run --out artifacts/runtime.md "map the JVM agent runtime"
+kaios run --context README.md --out artifacts/project.md "summarize this project"
 kaios ps &lt;run-id&gt;
 kaios export &lt;run-id&gt;
 
@@ -733,6 +739,7 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
 kaios doctor
 kaios run "analyze crypto market"
+kaios run --context README.md --out artifacts/project.md "summarize this project"
 kaios ps &lt;run-id&gt;
 kaios inspect &lt;run-id&gt;
 kaios report &lt;run-id&gt;</code></pre>

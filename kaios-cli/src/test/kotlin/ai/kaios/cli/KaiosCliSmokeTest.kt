@@ -167,6 +167,56 @@ class KaiosCliSmokeTest {
     }
 
     @Test
+    fun `run with context file includes source summary in saved artifact`() {
+        val workspace = Files.createTempDirectory("kaios-cli-context")
+        val cli = cliFor(workspace)
+        val context = workspace.resolve("notes.md")
+        val artifact = workspace.resolve("artifacts/context.md")
+        Files.writeString(context, "# Notes\nKAI context payload for a useful agent run.\n")
+        val out = ByteArrayOutputStream()
+
+        val code = cli.run(
+            arrayOf(
+                "run",
+                "--context",
+                context.toString(),
+                "--out",
+                artifact.toString(),
+                "summarize",
+                "the",
+                "project",
+            ),
+            PrintStream(out),
+            PrintStream(ByteArrayOutputStream()),
+        )
+        val text = out.toString()
+        val artifactText = Files.readString(artifact)
+
+        assertEquals(0, code)
+        assertTrue(text.contains("context: 1 file(s)"))
+        assertTrue(!text.contains("KAI context payload"))
+        assertTrue(artifactText.contains("Context:"))
+        assertTrue(artifactText.contains("notes.md"))
+        assertTrue(!artifactText.contains("KAI context payload"))
+    }
+
+    @Test
+    fun `run with missing context path fails before spawning agents`() {
+        val workspace = Files.createTempDirectory("kaios-cli-missing-context")
+        val cli = cliFor(workspace)
+        val err = ByteArrayOutputStream()
+
+        val code = cli.run(
+            arrayOf("run", "--context", workspace.resolve("missing.md").toString(), "summarize", "this"),
+            PrintStream(ByteArrayOutputStream()),
+            PrintStream(err),
+        )
+
+        assertEquals(1, code)
+        assertTrue(err.toString().contains("was not found"))
+    }
+
+    @Test
     fun `init writes a project config and refuses accidental overwrite`() {
         val workspace = Files.createTempDirectory("kaios-cli-init")
         val cli = cliFor(workspace)

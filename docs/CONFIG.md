@@ -29,6 +29,23 @@ kaios init --template research --config workflows/research.json
 kaios run --config workflows/research.json "analyze a release plan"
 ```
 
+## Context Files
+
+Attach files or directories from the current workspace when a run needs project context:
+
+```bash
+kaios run --context README.md "summarize this project"
+kaios run --context README.md --context docs --out artifacts/project.md "explain the architecture"
+```
+
+Context is bounded and local by default:
+
+- paths must stay inside the current working directory.
+- generated/runtime directories such as `.git`, `.kaios`, `build`, `node_modules`, `out`, and `target` are skipped.
+- only readable text files are loaded.
+- the default total context limit is 80,000 characters. Override it with `KAIOS_CONTEXT_MAX_CHARS`.
+- snapshots and Markdown artifacts store context source summaries rather than the raw context payload.
+
 ## Templates
 
 List templates:

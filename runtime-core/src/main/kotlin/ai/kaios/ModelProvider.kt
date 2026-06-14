@@ -21,9 +21,10 @@ interface ModelProvider {
 
 class MockModelProvider : ModelProvider {
     override fun complete(request: ModelRequest): ModelResponse {
-        val task = request.input.trim().ifBlank { "empty task" }
+        val rawInput = request.input.trim()
+        val task = rawInput.substringBefore("\n\n[KAIOS_CONTEXT]").trim().ifBlank { "empty task" }
         val agentName = request.agent.id.value.lowercase()
-        val fingerprint = stableFingerprint("${request.agent.id.value}:$task:${request.dependencyContext.values.joinToString("|")}")
+        val fingerprint = stableFingerprint("${request.agent.id.value}:$rawInput:${request.dependencyContext.values.joinToString("|")}")
         val dependencySummary = if (request.dependencyContext.isEmpty()) {
             "no dependencies"
         } else {
@@ -71,7 +72,7 @@ class MockModelProvider : ModelProvider {
         return ModelResponse(
             content = content,
             tokenUsage = TokenUsage(
-                input = estimateTokens(task + request.dependencyContext.values.joinToString(" ") + request.memory.joinToString(" ") { it.content }),
+                input = estimateTokens(rawInput + request.dependencyContext.values.joinToString(" ") + request.memory.joinToString(" ") { it.content }),
                 output = estimateTokens(content + toolCalls.joinToString(" ") { it.tool }),
             ),
             toolCalls = toolCalls,

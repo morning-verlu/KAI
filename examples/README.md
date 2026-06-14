@@ -41,6 +41,14 @@ Write the final output and process table to a Markdown artifact during the run:
 build/install/kaios-cli/bin/kaios run --out artifacts/runtime.md "map the JVM agent runtime"
 ```
 
+Attach local context files or directories when the workflow should reason over project material:
+
+```bash
+build/install/kaios-cli/bin/kaios run --context README.md --context docs --out artifacts/project.md "summarize this project"
+```
+
+The run snapshot and Markdown artifact include a source summary such as `README.md` and `docs/CONFIG.md`, while the saved context metadata avoids copying the full payload.
+
 The generated config starts with the default process graph:
 
 ```json
