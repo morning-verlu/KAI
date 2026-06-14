@@ -31,7 +31,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.34\n", out.toString())
+        assertEquals("kaios 0.1.35\n", out.toString())
     }
 
     @Test
@@ -344,7 +344,22 @@ class KaiosCliSmokeTest {
         assertEquals(1, code)
         assertTrue(text.contains("Run snapshot 'latest' was not found."))
         assertTrue(text.contains("No run snapshots are available yet."))
-        assertTrue(text.contains("Run 'kaios run \"task\"' to create one."))
+        assertTrue(text.contains("Run 'kaios demo' to create a no-key sample run."))
+        assertTrue(text.contains("Run 'kaios run \"task\"' to create your own run."))
+    }
+
+    @Test
+    fun `empty runs list suggests no key demo first`() {
+        val cli = cliFor(Files.createTempDirectory("kaios-cli-runs-empty"))
+        val out = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("runs"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
+        val text = out.toString()
+
+        assertEquals(0, code)
+        assertTrue(text.contains("No run snapshots found."))
+        assertTrue(text.contains("Run 'kaios demo' to create a no-key sample run."))
+        assertTrue(text.contains("Run 'kaios run \"task\"' to create your own run."))
     }
 
     @Test
@@ -361,7 +376,8 @@ class KaiosCliSmokeTest {
         assertEquals(1, emptyCode)
         assertTrue(emptyText.contains("Run snapshot 'run-missing' was not found"))
         assertTrue(emptyText.contains("No run snapshots are available yet."))
-        assertTrue(emptyText.contains("Run 'kaios run \"task\"' to create one."))
+        assertTrue(emptyText.contains("Run 'kaios demo' to create a no-key sample run."))
+        assertTrue(emptyText.contains("Run 'kaios run \"task\"' to create your own run."))
 
         val runOut = ByteArrayOutputStream()
         val runCode = cli.run(
@@ -1506,6 +1522,7 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("[OK] project config"))
         assertTrue(text.contains("summary: ready"))
         assertTrue(text.contains("next:"))
+        assertTrue(text.contains("kaios demo"))
         assertTrue(text.contains("kaios analyze . --out artifacts/analysis.md --force"))
         assertTrue(text.contains("kaios run --index ."))
         assertTrue(text.contains("--force"))

@@ -34,7 +34,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.34"
+private const val KAIOS_VERSION = "0.1.35"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
@@ -744,7 +744,7 @@ class KaiosCli(
         val snapshots = snapshotStore.list()
         if (snapshots.isEmpty()) {
             out.println("No run snapshots found.")
-            out.println("Run 'kaios run \"task\"' to create one.")
+            printNoRunSnapshotsHint(out)
             return 0
         }
 
@@ -777,7 +777,7 @@ class KaiosCli(
         val snapshots = knownSnapshots ?: runCatching { snapshotStore.list() }.getOrDefault(emptyList())
         if (snapshots.isEmpty()) {
             err.println("No run snapshots are available yet.")
-            err.println("Run 'kaios run \"task\"' to create one.")
+            printNoRunSnapshotsHint(err)
             return 1
         }
 
@@ -788,6 +788,11 @@ class KaiosCli(
             err.println("  ${snapshot.runId}  $status  ${abbreviate(singleLine(snapshot.task), 80)}")
         }
         return 1
+    }
+
+    private fun printNoRunSnapshotsHint(out: PrintStream) {
+        out.println("Run 'kaios demo' to create a no-key sample run.")
+        out.println("Run 'kaios run \"task\"' to create your own run.")
     }
 
     private fun resolveRunId(value: String, knownSnapshots: List<StoredRunSnapshot>? = null): RunId {
@@ -902,6 +907,7 @@ class KaiosCli(
         if (failed > 0) {
             out.println("  fix failed checks above")
         }
+        out.println("  kaios demo")
         out.println("  kaios analyze . --out artifacts/analysis.md --force")
         out.println("  ${firstProjectRunCommand()}")
 
