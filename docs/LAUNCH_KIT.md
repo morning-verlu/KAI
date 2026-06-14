@@ -87,7 +87,7 @@ kaios export latest
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.37/kaios-0.1.37.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.38/kaios-0.1.38.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 ```
 
@@ -165,11 +165,11 @@ kaios report latest
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.1.37.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.37/kaios-0.1.37.zip
-unzip kaios-0.1.37.zip
-./kaios-0.1.37/bin/kaios demo
-./kaios-0.1.37/bin/kaios analyze . --out artifacts/analysis.md --force
-./kaios-0.1.37/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+curl -L -o kaios-0.1.38.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.38/kaios-0.1.38.zip
+unzip kaios-0.1.38.zip
+./kaios-0.1.38/bin/kaios demo
+./kaios-0.1.38/bin/kaios analyze . --out artifacts/analysis.md --force
+./kaios-0.1.38/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 ```
 
 Build from source:

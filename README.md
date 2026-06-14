@@ -140,6 +140,7 @@ Print the KAI Process Trace:
 ```bash
 kaios trace latest
 kaios trace latest --json
+kaios trace latest --check
 kaios trace latest --json --out artifacts/trace.json --force
 ```
 

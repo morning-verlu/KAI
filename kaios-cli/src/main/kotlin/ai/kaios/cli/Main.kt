@@ -34,7 +34,8 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.37"
+private const val KAIOS_VERSION = "0.1.38"
+private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
@@ -376,17 +377,19 @@ class KaiosCli(
                 ),
             )
             "trace" -> CommandHelp(
-                usage = "kaios trace <run-id|latest> [--format text|json] [--out trace.json] [--force]",
+                usage = "kaios trace <run-id|latest> [--format text|json] [--out trace.json] [--force] [--check]",
                 summary = "Print a KAI Process Trace with process metrics, execution path, event counts, and timeline.",
                 examples = listOf(
                     "kaios trace latest",
                     "kaios trace latest --json",
+                    "kaios trace latest --check",
                     "kaios trace run-97381ae9",
                     "kaios trace run-97381ae9 --json",
                     "kaios trace run-97381ae9 --json --out artifacts/trace.json --force",
                 ),
                 notes = listOf(
-                    "Trace JSON uses schema kaios.process-trace/v1 for CI, UI, replay, and audit tooling.",
+                    "Trace JSON uses schema $PROCESS_TRACE_SCHEMA for CI, UI, replay, and audit tooling.",
+                    "Use --check in CI to validate the trace contract without writing an artifact.",
                     "Existing trace files are protected unless --force is passed.",
                 ),
             )
@@ -1087,6 +1090,10 @@ class KaiosCli(
         }
 
         val trace = buildProcessTrace(snapshot)
+        if (command.check) {
+            return checkProcessTrace(trace, out, err)
+        }
+
         val rendered = when (command.format) {
             TraceFormat.Text -> renderProcessTrace(trace)
             TraceFormat.Json -> TRACE_JSON.encodeToString(trace)
@@ -1107,6 +1114,85 @@ class KaiosCli(
         return 0
     }
 
+    private fun checkProcessTrace(trace: ProcessTrace, out: PrintStream, err: PrintStream): Int {
+        val issues = validateProcessTrace(trace)
+        if (issues.isEmpty()) {
+            out.println("trace: ${trace.runId}")
+            out.println("schema: ${trace.schema}")
+            out.println("status: valid")
+            out.println("processes: ${trace.metrics.processCount}")
+            out.println("events: ${trace.metrics.eventCount}")
+            return 0
+        }
+
+        err.println("trace: ${trace.runId}")
+        err.println("schema: ${trace.schema}")
+        err.println("status: invalid")
+        err.println("issues:")
+        issues.forEach { issue -> err.println("  - $issue") }
+        return 2
+    }
+
+    private fun validateProcessTrace(trace: ProcessTrace): List<String> {
+        val issues = mutableListOf<String>()
+        fun requireTrace(condition: Boolean, message: String) {
+            if (!condition) issues += message
+        }
+
+        requireTrace(trace.schema == PROCESS_TRACE_SCHEMA, "schema must be $PROCESS_TRACE_SCHEMA.")
+        requireTrace(trace.runId.isNotBlank(), "runId must not be blank.")
+        requireTrace(trace.workflowName.isNotBlank(), "workflowName must not be blank.")
+        requireTrace(trace.metrics.processCount == trace.processes.size, "metrics.processCount must equal processes.size.")
+        requireTrace(trace.metrics.eventCount == trace.events.size, "metrics.eventCount must equal events.size.")
+        requireTrace(trace.metrics.tokenTotal == trace.processes.sumOf { it.tokens }, "metrics.tokenTotal must equal the process token sum.")
+        requireTrace(trace.metrics.inputTokens == trace.processes.sumOf { it.inputTokens }, "metrics.inputTokens must equal the process input token sum.")
+        requireTrace(trace.metrics.outputTokens == trace.processes.sumOf { it.outputTokens }, "metrics.outputTokens must equal the process output token sum.")
+        requireTrace(trace.metrics.contextBytes == trace.processes.sumOf { it.contextBytes }, "metrics.contextBytes must equal the process context byte sum.")
+        requireTrace(trace.metrics.syscallCount == trace.processes.sumOf { it.syscallCount }, "metrics.syscallCount must equal the process syscall sum.")
+        requireTrace(
+            trace.metrics.processDurationMillis == trace.processes.sumOf { it.durationMillis },
+            "metrics.processDurationMillis must equal the process duration sum.",
+        )
+        requireTrace(trace.metrics.wallDurationMillis >= 0, "metrics.wallDurationMillis must be non-negative.")
+
+        val pids = mutableSetOf<Long>()
+        val agentByPid = mutableMapOf<Long, String>()
+        trace.processes.forEachIndexed { index, process ->
+            requireTrace(process.pid > 0, "processes[$index].pid must be positive.")
+            requireTrace(pids.add(process.pid), "processes[$index].pid duplicates pid ${process.pid}.")
+            agentByPid[process.pid] = process.agent
+            requireTrace(process.agent.isNotBlank(), "processes[$index].agent must not be blank.")
+            requireTrace(process.state.isNotBlank(), "processes[$index].state must not be blank.")
+            requireTrace(process.tokens >= 0, "processes[$index].tokens must be non-negative.")
+            requireTrace(process.inputTokens >= 0, "processes[$index].inputTokens must be non-negative.")
+            requireTrace(process.outputTokens >= 0, "processes[$index].outputTokens must be non-negative.")
+            requireTrace(process.tokens == process.inputTokens + process.outputTokens, "processes[$index].tokens must equal inputTokens + outputTokens.")
+            requireTrace(process.contextBytes >= 0, "processes[$index].contextBytes must be non-negative.")
+            requireTrace(process.syscallCount >= 0, "processes[$index].syscallCount must be non-negative.")
+            requireTrace(process.durationMillis >= 0, "processes[$index].durationMillis must be non-negative.")
+        }
+
+        val processPids = trace.processes.map { it.pid }
+        requireTrace(processPids == processPids.sorted(), "processes must be ordered by pid.")
+        val expectedPath = trace.processes.map { process -> "${process.agent}(pid=${process.pid})" }
+        requireTrace(trace.path == expectedPath, "path must match processes ordered by pid.")
+
+        val expectedEventCounts = trace.events.groupingBy { event -> event.type }.eachCount().toSortedMap()
+        requireTrace(trace.eventCounts == expectedEventCounts, "eventCounts must match events grouped by type.")
+        trace.events.forEachIndexed { index, event ->
+            requireTrace(event.timestamp.isNotBlank(), "events[$index].timestamp must not be blank.")
+            requireTrace(runCatching { Instant.parse(event.timestamp) }.isSuccess, "events[$index].timestamp must be ISO-8601.")
+            requireTrace(event.pid in pids, "events[$index].pid must reference a process pid.")
+            agentByPid[event.pid]?.let { agent ->
+                requireTrace(event.agent == agent, "events[$index].agent must match the process agent for pid ${event.pid}.")
+            }
+            requireTrace(event.type.isNotBlank(), "events[$index].type must not be blank.")
+            requireTrace(event.message.isNotBlank(), "events[$index].message must not be blank.")
+        }
+
+        return issues
+    }
+
     private fun buildProcessTrace(snapshot: StoredRunSnapshot): ProcessTrace {
         val processes = snapshot.processes.sortedBy { it.pid }
         val events = snapshot.events
@@ -1122,7 +1208,7 @@ class KaiosCli(
         }
 
         return ProcessTrace(
-            schema = "kaios.process-trace/v1",
+            schema = PROCESS_TRACE_SCHEMA,
             runId = snapshot.runId,
             workflowName = snapshot.workflowName,
             task = snapshot.task,
@@ -1245,7 +1331,7 @@ class KaiosCli(
                 kaios runs
                 kaios ps latest
                 kaios inspect latest
-                kaios trace latest [--format text|json] [--out trace.json]
+                kaios trace latest [--format text|json] [--out trace.json] [--check]
                 kaios report latest
                 kaios export latest [--out artifact.md]
                 kaios doctor
@@ -1813,6 +1899,7 @@ class KaiosCli(
         var format = TraceFormat.Text
         var outputPath: Path? = null
         var forceOutput = false
+        var check = false
         var index = 0
 
         while (index < args.size) {
@@ -1848,6 +1935,10 @@ class KaiosCli(
                     forceOutput = true
                     index += 1
                 }
+                arg == "--check" -> {
+                    check = true
+                    index += 1
+                }
                 arg.startsWith("-") -> error("Unknown trace option '$arg'.")
                 runIdText == null -> {
                     runIdText = arg
@@ -1857,7 +1948,14 @@ class KaiosCli(
             }
         }
 
-        return TraceCommand(runIdText ?: error("Run id is required."), format, outputPath, forceOutput)
+        if (check && outputPath != null) {
+            error("--check does not write output; omit --out.")
+        }
+        if (check && forceOutput) {
+            error("--check does not write output; omit --force.")
+        }
+
+        return TraceCommand(runIdText ?: error("Run id is required."), format, outputPath, forceOutput, check)
     }
 
     private fun parseTraceFormat(value: String): TraceFormat =
@@ -1911,6 +2009,7 @@ private data class TraceCommand(
     val format: TraceFormat,
     val outputPath: Path?,
     val forceOutput: Boolean,
+    val check: Boolean,
 )
 
 private enum class TraceFormat(val id: String) {

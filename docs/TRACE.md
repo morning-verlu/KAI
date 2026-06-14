@@ -17,6 +17,14 @@ kaios trace latest --json --out artifacts/trace.json --force
 
 Existing output files are protected by default. Pass `--force` when you intentionally want to overwrite a trace artifact.
 
+Validate the trace contract without writing an artifact:
+
+```bash
+kaios trace latest --check
+```
+
+`--check` exits `0` when the generated trace satisfies the contract. It exits non-zero and prints specific contract issues when a saved run snapshot cannot produce a valid trace.
+
 ## Schema
 
 Current schema id:
@@ -84,3 +92,19 @@ kaios trace latest --json --out artifacts/trace.json --force
 ```
 
 Downstream checks can inspect `metrics.processCount`, `metrics.syscallCount`, `success`, `eventCounts`, or specific process states without scraping terminal output.
+
+For a simple gate, validate the contract directly:
+
+```bash
+kaios trace latest --check
+```
+
+Successful output is intentionally short:
+
+```text
+trace: run-97381ae9
+schema: kaios.process-trace/v1
+status: valid
+processes: 3
+events: 18
+```

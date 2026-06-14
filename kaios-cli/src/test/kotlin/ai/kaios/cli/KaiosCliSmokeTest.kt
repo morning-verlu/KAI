@@ -31,7 +31,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.37\n", out.toString())
+        assertEquals("kaios 0.1.38\n", out.toString())
     }
 
     @Test
@@ -167,6 +167,20 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("kaios trace latest"))
         assertTrue(text.contains("kaios help"))
         assertTrue(!text.contains("run_id:"))
+    }
+
+    @Test
+    fun `trace help documents contract check mode`() {
+        val cli = cliFor(Files.createTempDirectory("kaios-cli-help-trace"))
+        val out = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("help", "trace"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
+        val text = out.toString()
+
+        assertEquals(0, code)
+        assertTrue(text.contains("Usage: kaios trace"))
+        assertTrue(text.contains("kaios trace latest --check"))
+        assertTrue(text.contains("validate the trace contract"))
     }
 
     @Test
@@ -571,6 +585,19 @@ class KaiosCliSmokeTest {
         assertEquals(3, traceJson.getValue("path").jsonArray.size)
         assertEquals(3, traceJson.getValue("processes").jsonArray.size)
 
+        val traceCheckOut = ByteArrayOutputStream()
+        val traceCheckCode = cli.run(
+            arrayOf("trace", runId, "--check"),
+            PrintStream(traceCheckOut),
+            PrintStream(ByteArrayOutputStream()),
+        )
+        val traceCheckText = traceCheckOut.toString()
+
+        assertEquals(0, traceCheckCode)
+        assertTrue(traceCheckText.contains("schema: kaios.process-trace/v1"))
+        assertTrue(traceCheckText.contains("status: valid"))
+        assertTrue(traceCheckText.contains("processes: 3"))
+
         val tracePath = artifactRoot.resolve("$runId-trace.json")
         val traceFileOut = ByteArrayOutputStream()
         val traceFileCode = cli.run(
@@ -635,6 +662,62 @@ class KaiosCliSmokeTest {
         assertTrue(reportText.contains("Lifecycle Events"))
         assertTrue(reportText.contains("planner"))
         assertTrue(reportText.contains("validator"))
+    }
+
+    @Test
+    fun `trace check rejects invalid saved process trace contract`() {
+        val root = Files.createTempDirectory("kaios-cli-trace-check-invalid")
+        val cli = KaiosCli(
+            FileRunSnapshotStore(root),
+            Files.createTempDirectory("kaios-cli-trace-check-invalid-reports"),
+            artifactRoot = Files.createTempDirectory("kaios-cli-trace-check-invalid-artifacts"),
+            snapshotRoot = root,
+        )
+        Files.writeString(
+            root.resolve("run-corrupt.json"),
+            """
+            {
+              "runId": "run-corrupt",
+              "workflowName": "default",
+              "task": "corrupt trace",
+              "success": true,
+              "finalOutput": "done",
+              "processes": [
+                {
+                  "pid": 1,
+                  "agent": "planner",
+                  "state": "SUCCEEDED",
+                  "tokens": -1,
+                  "inputTokens": 1,
+                  "outputTokens": 1,
+                  "contextSize": 0,
+                  "syscallCount": 0,
+                  "durationMillis": 0
+                }
+              ],
+              "events": [
+                {
+                  "timestamp": "not-a-time",
+                  "pid": 99,
+                  "agent": "ghost",
+                  "type": "STARTED",
+                  "message": "started"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        val err = ByteArrayOutputStream()
+        val code = cli.run(arrayOf("trace", "run-corrupt", "--check"), PrintStream(ByteArrayOutputStream()), PrintStream(err))
+        val text = err.toString()
+
+        assertEquals(2, code)
+        assertTrue(text.contains("status: invalid"))
+        assertTrue(text.contains("processes[0].tokens must be non-negative."))
+        assertTrue(text.contains("processes[0].tokens must equal inputTokens + outputTokens."))
+        assertTrue(text.contains("events[0].timestamp must be ISO-8601."))
+        assertTrue(text.contains("events[0].pid must reference a process pid."))
     }
 
     @Test
