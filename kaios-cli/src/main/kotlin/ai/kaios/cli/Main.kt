@@ -35,7 +35,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.58"
+private const val KAIOS_VERSION = "0.1.59"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val RUN_CAPSULE_SCHEMA = "kaios.run-capsule/v1"
 private const val RUN_REPLAY_SCHEMA = "kaios.run-replay/v1"
@@ -882,6 +882,13 @@ class KaiosCli(
     private fun verifyEvidenceCommand(configPath: Path): String =
         "kaios verify --config ${displayPath(configPath)} --evidence --force"
 
+    private fun setupCommand(configPath: Path): String =
+        if (configPath.toAbsolutePath().normalize() == defaultConfigPath().toAbsolutePath().normalize()) {
+            "kaios setup --ci"
+        } else {
+            "kaios setup --config ${displayPath(configPath)} --ci"
+        }
+
     private fun renderSetupText(report: SetupReport, out: PrintStream) {
         out.println("KAI OS setup")
         out.println("schema: ${report.schema}")
@@ -1032,7 +1039,11 @@ class KaiosCli(
         evidence: RunEvidenceReport?,
     ): List<String> =
         buildList {
-            if (!config.valid) add("kaios setup --ci")
+            val configPath = Paths.get(config.config)
+            if (!config.valid) {
+                add(setupCommand(configPath))
+                add(verifyEvidenceCommand(configPath))
+            }
             if (run != null) {
                 add("kaios ps latest")
                 add("kaios inspect latest")
@@ -1534,7 +1545,7 @@ class KaiosCli(
     private fun bugReportNextCommands(config: ConfigValidationReport, latestRun: BugReportRun?): List<String> =
         buildList {
             if (!config.valid) {
-                add("kaios setup --ci")
+                add(setupCommand(Paths.get(config.config)))
             } else {
                 add(verifyEvidenceCommand(Paths.get(config.config)))
             }
@@ -1680,10 +1691,8 @@ class KaiosCli(
             add("kaios demo")
             if (configPath.exists()) {
                 add(verifyEvidenceCommand(configPath))
-            } else if (configPath == defaultConfigPath()) {
-                add("kaios setup --ci")
             } else {
-                add("kaios setup --config ${displayPath(configPath)} --ci")
+                add(setupCommand(configPath))
             }
             add("kaios analyze . --out artifacts/analysis.md --force")
         }.distinct()
