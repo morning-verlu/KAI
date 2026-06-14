@@ -29,7 +29,34 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.24"
+private const val KAIOS_VERSION = "0.1.25"
+
+private val TOP_LEVEL_COMMANDS = listOf(
+    "init",
+    "run",
+    "context",
+    "index",
+    "analyze",
+    "config",
+    "runs",
+    "ps",
+    "inspect",
+    "report",
+    "export",
+    "doctor",
+    "version",
+)
+
+private val TOP_LEVEL_COMMAND_ALIASES = mapOf(
+    "analyse" to "analyze",
+    "ls" to "runs",
+    "list" to "runs",
+    "proc" to "ps",
+    "process" to "ps",
+    "status" to "doctor",
+)
+
+private val CONFIG_COMMANDS = listOf("templates", "validate", "show")
 
 fun main(args: Array<String>) {
     val exitCode = KaiosCli().run(args, System.out, System.err)
@@ -74,6 +101,7 @@ class KaiosCli(
             }
             else -> {
                 err.println("Unknown command '${args.first()}'.")
+                printSuggestion(err, args.first(), TOP_LEVEL_COMMANDS, TOP_LEVEL_COMMAND_ALIASES, "kaios")
                 err.println("Run 'kaios help' for available commands.")
                 printUsage(err)
                 1
@@ -112,6 +140,7 @@ class KaiosCli(
         val help = commandHelpOrNull(args.first())
         if (help == null) {
             err.println("Unknown command '${args.first()}'.")
+            printSuggestion(err, args.first(), TOP_LEVEL_COMMANDS, TOP_LEVEL_COMMAND_ALIASES, "kaios help")
             err.println("Run 'kaios help' for available commands.")
             err.println("Usage: kaios help <command>")
             return 1
@@ -129,6 +158,56 @@ class KaiosCli(
         err.println("Usage: $usage")
         err.println("Run 'kaios help $helpCommand' for examples.")
         return 1
+    }
+
+    private fun printSuggestion(
+        err: PrintStream,
+        input: String,
+        candidates: List<String>,
+        aliases: Map<String, String>,
+        commandPrefix: String,
+    ) {
+        val suggestion = suggestedCommand(input, candidates, aliases) ?: return
+        err.println("Did you mean '$commandPrefix $suggestion'?")
+    }
+
+    private fun suggestedCommand(input: String, candidates: List<String>, aliases: Map<String, String>): String? {
+        val normalized = input.lowercase().trim()
+        aliases[normalized]?.let { return it }
+        if (normalized.length < 2) return null
+
+        val maxDistance = if (normalized.length <= 3) 1 else 2
+        return candidates
+            .map { candidate -> candidate to levenshteinDistance(normalized, candidate) }
+            .filter { (_, distance) -> distance in 1..maxDistance }
+            .minWithOrNull(compareBy<Pair<String, Int>> { it.second }.thenBy { it.first })
+            ?.first
+    }
+
+    private fun levenshteinDistance(left: String, right: String): Int {
+        if (left == right) return 0
+        if (left.isEmpty()) return right.length
+        if (right.isEmpty()) return left.length
+
+        var previous = IntArray(right.length + 1) { it }
+        var current = IntArray(right.length + 1)
+
+        for (leftIndex in left.indices) {
+            current[0] = leftIndex + 1
+            for (rightIndex in right.indices) {
+                val substitutionCost = if (left[leftIndex] == right[rightIndex]) 0 else 1
+                current[rightIndex + 1] = minOf(
+                    current[rightIndex] + 1,
+                    previous[rightIndex + 1] + 1,
+                    previous[rightIndex] + substitutionCost,
+                )
+            }
+            val next = previous
+            previous = current
+            current = next
+        }
+
+        return previous[right.length]
     }
 
     private fun commandUsage(command: String): String =
@@ -427,7 +506,9 @@ class KaiosCli(
             "validate" -> validateConfig(args.drop(1), out, err)
             "show" -> showConfig(args.drop(1), out, err)
             else -> {
-                printCommandUsageError(err, "config", "Unknown config command '$subcommand'.")
+                err.println("Unknown config command '$subcommand'.")
+                printSuggestion(err, subcommand, CONFIG_COMMANDS, emptyMap(), "kaios config")
+                printCommandUsageError(err, "config")
             }
         }
     }

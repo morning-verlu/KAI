@@ -29,7 +29,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.24\n", out.toString())
+        assertEquals("kaios 0.1.25\n", out.toString())
     }
 
     @Test
@@ -143,6 +143,20 @@ class KaiosCliSmokeTest {
     }
 
     @Test
+    fun `help command suggests close command names`() {
+        val cli = cliFor(Files.createTempDirectory("kaios-cli-help-suggest"))
+        val err = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("help", "analyse"), PrintStream(ByteArrayOutputStream()), PrintStream(err))
+        val text = err.toString()
+
+        assertEquals(1, code)
+        assertTrue(text.contains("Unknown command 'analyse'"))
+        assertTrue(text.contains("Did you mean 'kaios help analyze'?"))
+        assertTrue(text.contains("Usage: kaios help <command>"))
+    }
+
+    @Test
     fun `unknown command points back to available commands`() {
         val cli = cliFor(Files.createTempDirectory("kaios-cli-unknown"))
         val err = ByteArrayOutputStream()
@@ -154,6 +168,20 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("Unknown command 'wat'"))
         assertTrue(text.contains("Run 'kaios help' for available commands."))
         assertTrue(text.contains("Quick start (3 steps):"))
+    }
+
+    @Test
+    fun `unknown command suggests close command names`() {
+        val cli = cliFor(Files.createTempDirectory("kaios-cli-unknown-suggest"))
+        val err = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("analyse", "."), PrintStream(ByteArrayOutputStream()), PrintStream(err))
+        val text = err.toString()
+
+        assertEquals(1, code)
+        assertTrue(text.contains("Unknown command 'analyse'"))
+        assertTrue(text.contains("Did you mean 'kaios analyze'?"))
+        assertTrue(text.contains("Run 'kaios help' for available commands."))
     }
 
     @Test
@@ -802,6 +830,21 @@ class KaiosCliSmokeTest {
         assertTrue(templatesText.contains("research"))
         assertTrue(templatesText.contains("code-review"))
         assertTrue(templatesText.contains("release"))
+    }
+
+    @Test
+    fun `config command suggests close subcommand names`() {
+        val workspace = Files.createTempDirectory("kaios-cli-config-suggest")
+        val cli = cliFor(workspace)
+        val err = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("config", "shwo"), PrintStream(ByteArrayOutputStream()), PrintStream(err))
+        val text = err.toString()
+
+        assertEquals(1, code)
+        assertTrue(text.contains("Unknown config command 'shwo'"))
+        assertTrue(text.contains("Did you mean 'kaios config show'?"))
+        assertTrue(text.contains("Run 'kaios help config' for examples."))
     }
 
     @Test
