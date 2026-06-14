@@ -1,6 +1,7 @@
 package ai.kaios
 
 import java.nio.file.Files
+import java.nio.file.attribute.FileTime
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -102,12 +103,12 @@ class MemoryEngineTest {
         val store = FileRunSnapshotStore(root)
         val runtime = AgentRuntime(clock)
 
-        listOf("run-list-a", "run-list-b").forEach { value ->
+        listOf("run-list-a", "run-list-b").forEachIndexed { index, value ->
             val runId = RunId(value)
             val process = runtime.spawn(AgentSpec(AgentId("planner")), runId)
             runtime.start(process.pid)
             runtime.succeed(process.pid, TokenUsage(input = 1, output = 2), contextSize = 10)
-            store.save(
+            val path = store.save(
                 task = "task $value",
                 result = WorkflowResult(
                     runId = runId,
@@ -119,10 +120,11 @@ class MemoryEngineTest {
                     events = runtime.events(runId),
                 ),
             )
+            Files.setLastModifiedTime(path, FileTime.fromMillis((index + 1) * 1_000L))
         }
 
         val listed = store.list()
 
-        assertEquals(setOf("run-list-a", "run-list-b"), listed.map { it.runId }.toSet())
+        assertEquals(listOf("run-list-b", "run-list-a"), listed.map { it.runId })
     }
 }

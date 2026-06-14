@@ -5,14 +5,14 @@
 The human-readable form is for terminals and screenshots:
 
 ```bash
-kaios trace <run-id>
+kaios trace latest
 ```
 
 The JSON form is the durable contract for CI, replay, audit logs, visualizers, and future Agent Desktop surfaces:
 
 ```bash
-kaios trace <run-id> --json
-kaios trace <run-id> --json --out artifacts/trace.json --force
+kaios trace latest --json
+kaios trace latest --json --out artifacts/trace.json --force
 ```
 
 Existing output files are protected by default. Pass `--force` when you intentionally want to overwrite a trace artifact.
@@ -80,7 +80,7 @@ kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json 
 You can also generate a trace later from any saved run snapshot:
 
 ```bash
-kaios trace <run-id> --json --out artifacts/trace.json --force
+kaios trace latest --json --out artifacts/trace.json --force
 ```
 
 Downstream checks can inspect `metrics.processCount`, `metrics.syscallCount`, `success`, `eventCounts`, or specific process states without scraping terminal output.

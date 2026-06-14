@@ -33,8 +33,8 @@ Use the process table:
 
 ```bash
 kaios run "analyze crypto market"
-kaios ps <run-id>
-kaios trace <run-id>
+kaios ps latest
+kaios trace latest
 ```
 
 The process table is the visual proof of the idea. The trace is the durable proof: `kaios.process-trace/v1` turns one agent run into a reusable audit, CI, replay, and future UI asset.

@@ -118,7 +118,7 @@ syscall echo: validated:350c4677
 Inspect the agent process table:
 
 ```bash
-kaios ps run-97381ae9
+kaios ps latest
 ```
 
 ```text
@@ -132,15 +132,15 @@ PID     AGENT         STATE       TOKENS    MEMORY    SYSCALLS  DURATION
 Inspect lifecycle events:
 
 ```bash
-kaios inspect run-97381ae9
+kaios inspect latest
 ```
 
 Print the KAI Process Trace:
 
 ```bash
-kaios trace run-97381ae9
-kaios trace run-97381ae9 --json
-kaios trace run-97381ae9 --json --out artifacts/trace.json --force
+kaios trace latest
+kaios trace latest --json
+kaios trace latest --json --out artifacts/trace.json --force
 ```
 
 ```text
@@ -157,14 +157,16 @@ path:
 Generate a standalone Agent Process Manager report:
 
 ```bash
-kaios report run-97381ae9
+kaios report latest
 ```
 
 Export a Markdown artifact:
 
 ```bash
-kaios export run-97381ae9
+kaios export latest
 ```
+
+Use the literal run id when you need to pin an audit trail; use `latest` when you are iterating on the newest local run.
 
 Attach local context files or directories:
 

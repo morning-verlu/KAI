@@ -57,11 +57,11 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.32.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.32/kaios-0.1.32.zip
-unzip kaios-0.1.32.zip
-./kaios-0.1.32/bin/kaios demo
-./kaios-0.1.32/bin/kaios analyze . --out artifacts/analysis.md --force
-./kaios-0.1.32/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+curl -L -o kaios-0.1.33.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.33/kaios-0.1.33.zip
+unzip kaios-0.1.33.zip
+./kaios-0.1.33/bin/kaios demo
+./kaios-0.1.33/bin/kaios analyze . --out artifacts/analysis.md --force
+./kaios-0.1.33/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 ```
 
 ## Build From Source
@@ -82,9 +82,9 @@ kaios analyze . --format json --out artifacts/analysis.json --force
 kaios init --template research
 kaios config show
 kaios run --index . --trace-out artifacts/trace.json --force "summarize this project"
-kaios ps <run-id>
-kaios inspect <run-id>
-kaios trace <run-id>
-kaios trace <run-id> --json
-kaios trace <run-id> --json --out artifacts/trace.json --force
+kaios ps latest
+kaios inspect latest
+kaios trace latest
+kaios trace latest --json
+kaios trace latest --json --out artifacts/trace.json --force
 ```

@@ -75,10 +75,15 @@ class FileRunSnapshotStore(
                 .toList()
                 .asSequence()
                 .filter { path -> path.isRegularFile() && path.extension == "json" }
-                .map { path -> runCatching { json.decodeFromString<StoredRunSnapshot>(path.readText()) }.getOrNull() }
-                .filter { snapshot -> snapshot != null }
-                .map { snapshot -> snapshot!! }
-                .sortedByDescending { snapshot -> snapshot.runId }
+                .mapNotNull { path ->
+                    runCatching { SnapshotFile(path, json.decodeFromString<StoredRunSnapshot>(path.readText())) }
+                        .getOrNull()
+                }
+                .sortedWith(
+                    compareByDescending<SnapshotFile> { snapshotFile -> snapshotFile.modifiedMillis() }
+                        .thenByDescending { snapshotFile -> snapshotFile.snapshot.runId },
+                )
+                .map { snapshotFile -> snapshotFile.snapshot }
                 .toList()
         }
     }
@@ -116,4 +121,12 @@ class FileRunSnapshotStore(
                 )
             },
         )
+
+    private data class SnapshotFile(
+        val path: Path,
+        val snapshot: StoredRunSnapshot,
+    ) {
+        fun modifiedMillis(): Long =
+            runCatching { Files.getLastModifiedTime(path).toMillis() }.getOrDefault(0L)
+    }
 }

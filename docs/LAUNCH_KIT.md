@@ -80,14 +80,14 @@ brew install kaios
 kaios demo
 kaios analyze . --out artifacts/analysis.md --force
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-kaios ps <run-id>
-kaios trace <run-id>
-kaios export <run-id>
+kaios ps latest
+kaios trace latest
+kaios export latest
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.32/kaios-0.1.32.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.33/kaios-0.1.33.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 ```
 
@@ -142,10 +142,10 @@ brew install kaios
 kaios demo
 kaios analyze . --out artifacts/analysis.md --force
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-kaios ps <run-id>
-kaios inspect <run-id>
-kaios trace <run-id>
-kaios report <run-id>
+kaios ps latest
+kaios inspect latest
+kaios trace latest
+kaios report latest
 ```
 
 Hosted installer:
@@ -156,20 +156,20 @@ export PATH="$HOME/.kaios/bin:$PATH"
 kaios demo
 kaios analyze . --out artifacts/analysis.md --force
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-kaios ps <run-id>
-kaios inspect <run-id>
-kaios trace <run-id>
-kaios report <run-id>
+kaios ps latest
+kaios inspect latest
+kaios trace latest
+kaios report latest
 ```
 
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.1.32.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.32/kaios-0.1.32.zip
-unzip kaios-0.1.32.zip
-./kaios-0.1.32/bin/kaios demo
-./kaios-0.1.32/bin/kaios analyze . --out artifacts/analysis.md --force
-./kaios-0.1.32/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+curl -L -o kaios-0.1.33.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.33/kaios-0.1.33.zip
+unzip kaios-0.1.33.zip
+./kaios-0.1.33/bin/kaios demo
+./kaios-0.1.33/bin/kaios analyze . --out artifacts/analysis.md --force
+./kaios-0.1.33/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 ```
 
 Build from source:
@@ -181,10 +181,10 @@ cd KAI
 build/install/kaios-cli/bin/kaios demo
 build/install/kaios-cli/bin/kaios analyze . --out artifacts/analysis.md --force
 build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-build/install/kaios-cli/bin/kaios ps <run-id>
-build/install/kaios-cli/bin/kaios inspect <run-id>
-build/install/kaios-cli/bin/kaios trace <run-id>
-build/install/kaios-cli/bin/kaios report <run-id>
+build/install/kaios-cli/bin/kaios ps latest
+build/install/kaios-cli/bin/kaios inspect latest
+build/install/kaios-cli/bin/kaios trace latest
+build/install/kaios-cli/bin/kaios report latest
 ```
 
 ## Launch Checklist

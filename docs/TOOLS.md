@@ -62,7 +62,7 @@ Run it with:
 ```bash
 export KAIOS_HTTP_ALLOWLIST="example.com"
 kaios run --config http-research.json "summarize https://example.com"
-kaios inspect <run-id>
+kaios inspect latest
 ```
 
 `kaios doctor` prints whether real HTTP syscalls are disabled or which allowlist rules are active.

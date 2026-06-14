@@ -233,13 +233,13 @@ Configured workflows use the same process observability as the built-in workflow
 
 ```bash
 kaios run --config kaios.json --trace-out artifacts/trace.json --force "review this release"
-kaios ps <run-id>
-kaios inspect <run-id>
-kaios trace <run-id>
-kaios trace <run-id> --json
-kaios trace <run-id> --json --out artifacts/trace.json --force
-kaios report <run-id>
-kaios export <run-id>
+kaios ps latest
+kaios inspect latest
+kaios trace latest
+kaios trace latest --json
+kaios trace latest --json --out artifacts/trace.json --force
+kaios report latest
+kaios export latest
 ```
 
 Snapshots are still written under `.kaios/runs/`, so custom workflows can be inspected later without re-running the task. `kaios trace` renders the saved run as `kaios.process-trace/v1`, a stable text/JSON view for CI checks, visualizers, replay tooling, and audit trails.
@@ -250,8 +250,8 @@ Export the run as Markdown when you need a shareable handoff:
 
 ```bash
 kaios run --out artifacts/runtime.md "map the JVM agent runtime"
-kaios export <run-id>
-kaios export <run-id> --out artifacts/run.md
+kaios export latest
+kaios export latest --out artifacts/run.md
 ```
 
-Artifacts include the task, final output, process table, and lifecycle events. The default export path is `.kaios/artifacts/<run-id>.md`. Existing files are protected; use `kaios run --force --out ...` for run-time artifacts and `kaios export <run-id> --force` for exports.
+Artifacts include the task, final output, process table, and lifecycle events. The default export path is `.kaios/artifacts/<run-id>.md`. Existing files are protected; use `kaios run --force --out ...` for run-time artifacts and `kaios export latest --force` for exports.

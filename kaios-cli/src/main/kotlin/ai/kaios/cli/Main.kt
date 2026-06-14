@@ -34,7 +34,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.32"
+private const val KAIOS_VERSION = "0.1.33"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
@@ -283,7 +283,7 @@ class KaiosCli(
                     "No API key is required by default; the mock provider is deterministic.",
                     "Use --trace-out to write kaios.process-trace/v1 JSON during the run.",
                     "Use -- before a task that starts with '-'.",
-                    "After a run, use 'kaios ps <run-id>', 'kaios inspect <run-id>', and 'kaios trace <run-id>'.",
+                    "After a run, use 'kaios ps latest', 'kaios inspect latest', and 'kaios trace latest'.",
                 ),
             )
             "context" -> CommandHelp(
@@ -344,23 +344,31 @@ class KaiosCli(
                 usage = "kaios runs",
                 summary = "List saved run snapshots from .kaios/runs/.",
                 examples = listOf("kaios runs"),
-                notes = listOf("Use a listed run id with ps, inspect, trace, report, or export."),
+                notes = listOf("Use a listed run id, or 'latest', with ps, inspect, trace, report, or export."),
             )
             "ps" -> CommandHelp(
-                usage = "kaios ps <run-id>",
+                usage = "kaios ps <run-id|latest>",
                 summary = "Print the agent process table for a saved run.",
-                examples = listOf("kaios ps run-97381ae9"),
+                examples = listOf(
+                    "kaios ps latest",
+                    "kaios ps run-97381ae9",
+                ),
                 notes = listOf("Tokens behave like CPU, context size like memory, and tool calls like syscalls."),
             )
             "inspect" -> CommandHelp(
-                usage = "kaios inspect <run-id>",
+                usage = "kaios inspect <run-id|latest>",
                 summary = "Print final output and lifecycle events for a saved run.",
-                examples = listOf("kaios inspect run-97381ae9"),
+                examples = listOf(
+                    "kaios inspect latest",
+                    "kaios inspect run-97381ae9",
+                ),
             )
             "trace" -> CommandHelp(
-                usage = "kaios trace <run-id> [--format text|json] [--out trace.json] [--force]",
+                usage = "kaios trace <run-id|latest> [--format text|json] [--out trace.json] [--force]",
                 summary = "Print a KAI Process Trace with process metrics, execution path, event counts, and timeline.",
                 examples = listOf(
+                    "kaios trace latest",
+                    "kaios trace latest --json",
                     "kaios trace run-97381ae9",
                     "kaios trace run-97381ae9 --json",
                     "kaios trace run-97381ae9 --json --out artifacts/trace.json --force",
@@ -371,15 +379,19 @@ class KaiosCli(
                 ),
             )
             "report" -> CommandHelp(
-                usage = "kaios report <run-id>",
+                usage = "kaios report <run-id|latest>",
                 summary = "Generate a standalone HTML Agent Process Manager report.",
-                examples = listOf("kaios report run-97381ae9"),
+                examples = listOf(
+                    "kaios report latest",
+                    "kaios report run-97381ae9",
+                ),
                 notes = listOf("Reports are written under .kaios/reports/ by default."),
             )
             "export" -> CommandHelp(
-                usage = "kaios export <run-id> [--out artifact.md] [--force]",
+                usage = "kaios export <run-id|latest> [--out artifact.md] [--force]",
                 summary = "Export a saved run snapshot as a Markdown artifact.",
                 examples = listOf(
+                    "kaios export latest",
                     "kaios export run-97381ae9",
                     "kaios export run-97381ae9 --out artifacts/run.md --force",
                 ),
@@ -441,8 +453,9 @@ class KaiosCli(
         out.println(result.finalOutput)
         out.println()
         out.println("next:")
-        out.println("  kaios inspect ${result.runId.value}")
-        out.println("  kaios trace ${result.runId.value}")
+        out.println("  kaios ps latest")
+        out.println("  kaios inspect latest")
+        out.println("  kaios trace latest --json")
         out.println("  kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\"")
         return if (result.success) 0 else 2
     }
@@ -628,7 +641,7 @@ class KaiosCli(
         out.println("next:")
         out.println("  kaios config show --config ${displayPath(path)}")
         out.println("  kaios run \"${template.exampleTask}\"")
-        out.println("  kaios ps <run-id>")
+        out.println("  kaios ps latest")
         return 0
     }
 
@@ -777,13 +790,24 @@ class KaiosCli(
         return 1
     }
 
+    private fun resolveRunId(value: String, knownSnapshots: List<StoredRunSnapshot>? = null): RunId {
+        if (value != "latest") return RunId(value)
+
+        val snapshots = knownSnapshots ?: snapshotStore.list()
+        val snapshot = snapshots.firstOrNull() ?: error("Run snapshot 'latest' was not found.")
+        return RunId(snapshot.runId)
+    }
+
     private fun singleLine(value: String): String =
         value.replace(Regex("\\s+"), " ").trim()
 
     private fun printProcessTable(args: List<String>, out: PrintStream, err: PrintStream): Int {
-        val runId = args.firstOrNull()?.let(::RunId)
-        if (runId == null) {
+        val runIdText = args.firstOrNull()
+        if (runIdText == null) {
             return printCommandUsageError(err, "ps", "Run id is required.")
+        }
+        val runId = runCatching { resolveRunId(runIdText) }.getOrElse {
+            return printSnapshotLoadError(err, it)
         }
 
         val snapshot = runCatching { snapshotStore.load(runId) }.getOrElse {
@@ -797,12 +821,15 @@ class KaiosCli(
     }
 
     private fun generateReport(args: List<String>, out: PrintStream, err: PrintStream): Int {
-        val runId = args.firstOrNull()?.let(::RunId)
-        if (runId == null) {
+        val runIdText = args.firstOrNull()
+        if (runIdText == null) {
             return printCommandUsageError(err, "report", "Run id is required.")
         }
 
         val snapshots = snapshotStore.list()
+        val runId = runCatching { resolveRunId(runIdText, snapshots) }.getOrElse {
+            return printSnapshotLoadError(err, it, snapshots)
+        }
         val snapshot = runCatching { snapshotStore.load(runId) }.getOrElse {
             return printSnapshotLoadError(err, it, snapshots)
         }
@@ -824,11 +851,15 @@ class KaiosCli(
             return printCommandUsageError(err, "export", error.message)
         }
 
-        val snapshot = runCatching { snapshotStore.load(command.runId) }.getOrElse { error ->
+        val runId = runCatching { resolveRunId(command.runIdText) }.getOrElse { error ->
             return printSnapshotLoadError(err, error)
         }
+        val snapshot = runCatching { snapshotStore.load(runId) }.getOrElse { error ->
+            return printSnapshotLoadError(err, error)
+        }
+        val outputPath = command.outputPath ?: defaultArtifactPath(runId)
 
-        val path = runCatching { writeArtifact(snapshot, command.outputPath, command.force) }.getOrElse { error ->
+        val path = runCatching { writeArtifact(snapshot, outputPath, command.force) }.getOrElse { error ->
             err.println(error.message)
             return 1
         }
@@ -987,9 +1018,12 @@ class KaiosCli(
     }
 
     private fun inspectRun(args: List<String>, out: PrintStream, err: PrintStream): Int {
-        val runId = args.firstOrNull()?.let(::RunId)
-        if (runId == null) {
+        val runIdText = args.firstOrNull()
+        if (runIdText == null) {
             return printCommandUsageError(err, "inspect", "Run id is required.")
+        }
+        val runId = runCatching { resolveRunId(runIdText) }.getOrElse {
+            return printSnapshotLoadError(err, it)
         }
 
         val snapshot = runCatching { snapshotStore.load(runId) }.getOrElse {
@@ -1016,7 +1050,10 @@ class KaiosCli(
             return printCommandUsageError(err, "trace", error.message)
         }
 
-        val snapshot = runCatching { snapshotStore.load(command.runId) }.getOrElse {
+        val runId = runCatching { resolveRunId(command.runIdText) }.getOrElse {
+            return printSnapshotLoadError(err, it)
+        }
+        val snapshot = runCatching { snapshotStore.load(runId) }.getOrElse {
             return printSnapshotLoadError(err, it)
         }
 
@@ -1177,11 +1214,11 @@ class KaiosCli(
 
               Observability:
                 kaios runs
-                kaios ps <run-id>
-                kaios inspect <run-id>
-                kaios trace <run-id> [--format text|json] [--out trace.json]
-                kaios report <run-id>
-                kaios export <run-id> [--out artifact.md]
+                kaios ps latest
+                kaios inspect latest
+                kaios trace latest [--format text|json] [--out trace.json]
+                kaios report latest
+                kaios export latest [--out artifact.md]
                 kaios doctor
                 kaios --version
                 kaios help <command>
@@ -1712,7 +1749,7 @@ class KaiosCli(
     }
 
     private fun parseExportCommand(args: List<String>): ExportCommand {
-        val runId = args.firstOrNull()?.let(::RunId) ?: error("Run id is required.")
+        val runIdText = args.firstOrNull() ?: error("Run id is required.")
         var outputPath: Path? = null
         var force = false
         var index = 1
@@ -1739,11 +1776,11 @@ class KaiosCli(
             }
         }
 
-        return ExportCommand(runId, outputPath ?: defaultArtifactPath(runId), force)
+        return ExportCommand(runIdText, outputPath, force)
     }
 
     private fun parseTraceCommand(args: List<String>): TraceCommand {
-        var runId: RunId? = null
+        var runIdText: String? = null
         var format = TraceFormat.Text
         var outputPath: Path? = null
         var forceOutput = false
@@ -1783,15 +1820,15 @@ class KaiosCli(
                     index += 1
                 }
                 arg.startsWith("-") -> error("Unknown trace option '$arg'.")
-                runId == null -> {
-                    runId = RunId(arg)
+                runIdText == null -> {
+                    runIdText = arg
                     index += 1
                 }
                 else -> error("Unexpected trace argument '$arg'.")
             }
         }
 
-        return TraceCommand(runId ?: error("Run id is required."), format, outputPath, forceOutput)
+        return TraceCommand(runIdText ?: error("Run id is required."), format, outputPath, forceOutput)
     }
 
     private fun parseTraceFormat(value: String): TraceFormat =
@@ -1835,13 +1872,13 @@ private data class InitCommand(
 )
 
 private data class ExportCommand(
-    val runId: RunId,
-    val outputPath: Path,
+    val runIdText: String,
+    val outputPath: Path?,
     val force: Boolean,
 )
 
 private data class TraceCommand(
-    val runId: RunId,
+    val runIdText: String,
     val format: TraceFormat,
     val outputPath: Path?,
     val forceOutput: Boolean,

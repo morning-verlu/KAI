@@ -83,7 +83,7 @@ When `--index` is used during a run, snapshots and Markdown artifacts include a 
 kaios analyze . --out artifacts/analysis.md --force
 kaios analyze . --format json --out artifacts/analysis.json --force
 kaios run --index . --out artifacts/project.md --force "summarize this project"
-kaios export <run-id>
+kaios export latest
 ```
 
 This keeps handoff artifacts useful without copying the repository into every report.

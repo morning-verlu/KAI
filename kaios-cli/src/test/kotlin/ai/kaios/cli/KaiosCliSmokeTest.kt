@@ -16,6 +16,7 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.attribute.FileTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -30,7 +31,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.32\n", out.toString())
+        assertEquals("kaios 0.1.33\n", out.toString())
     }
 
     @Test
@@ -120,7 +121,9 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("planner"))
         assertTrue(text.contains("executor"))
         assertTrue(text.contains("validator"))
-        assertTrue(text.contains("kaios trace"))
+        assertTrue(text.contains("kaios ps latest"))
+        assertTrue(text.contains("kaios inspect latest"))
+        assertTrue(text.contains("kaios trace latest --json"))
         assertTrue(runId != null)
         assertTrue(tracePath != null)
         assertTrue(artifactPath != null)
@@ -160,8 +163,8 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("Examples:"))
         assertTrue(text.contains("kaios run --index . --out artifacts/project.md --force \"summarize this project\""))
         assertTrue(text.contains("No API key is required by default"))
-        assertTrue(text.contains("kaios ps <run-id>"))
-        assertTrue(text.contains("kaios trace <run-id>"))
+        assertTrue(text.contains("kaios ps latest"))
+        assertTrue(text.contains("kaios trace latest"))
         assertTrue(text.contains("kaios help"))
         assertTrue(!text.contains("run_id:"))
     }
@@ -259,8 +262,89 @@ class KaiosCliSmokeTest {
 
         assertEquals(1, code)
         assertTrue(text.contains("Run id is required."))
-        assertTrue(text.contains("Usage: kaios ps <run-id>"))
+        assertTrue(text.contains("Usage: kaios ps <run-id|latest>"))
         assertTrue(text.contains("Run 'kaios help ps' for examples."))
+    }
+
+    @Test
+    fun `latest run id points to newest saved snapshot`() {
+        val workspace = Files.createTempDirectory("kaios-cli-latest")
+        val cli = cliFor(workspace)
+
+        val firstOut = ByteArrayOutputStream()
+        val firstCode = cli.run(
+            arrayOf("run", "first", "agent", "process"),
+            PrintStream(firstOut),
+            PrintStream(ByteArrayOutputStream()),
+        )
+        val firstRunId = Regex("run_id: (\\S+)").find(firstOut.toString())?.groupValues?.get(1)
+
+        val secondOut = ByteArrayOutputStream()
+        val secondCode = cli.run(
+            arrayOf("run", "second", "agent", "process"),
+            PrintStream(secondOut),
+            PrintStream(ByteArrayOutputStream()),
+        )
+        val secondRunId = Regex("run_id: (\\S+)").find(secondOut.toString())?.groupValues?.get(1)
+
+        assertEquals(0, firstCode)
+        assertEquals(0, secondCode)
+        assertTrue(firstRunId != null)
+        assertTrue(secondRunId != null)
+        Files.setLastModifiedTime(workspace.resolve("runs/$firstRunId.json"), FileTime.fromMillis(1_000))
+        Files.setLastModifiedTime(workspace.resolve("runs/$secondRunId.json"), FileTime.fromMillis(2_000))
+
+        val runsOut = ByteArrayOutputStream()
+        val runsCode = cli.run(arrayOf("runs"), PrintStream(runsOut), PrintStream(ByteArrayOutputStream()))
+        val runsText = runsOut.toString()
+        assertEquals(0, runsCode)
+        assertTrue(runsText.indexOf(secondRunId) < runsText.indexOf(firstRunId))
+
+        val psOut = ByteArrayOutputStream()
+        val psCode = cli.run(arrayOf("ps", "latest"), PrintStream(psOut), PrintStream(ByteArrayOutputStream()))
+        assertEquals(0, psCode)
+        assertTrue(psOut.toString().contains("RUN $secondRunId"))
+
+        val inspectOut = ByteArrayOutputStream()
+        val inspectCode = cli.run(arrayOf("inspect", "latest"), PrintStream(inspectOut), PrintStream(ByteArrayOutputStream()))
+        assertEquals(0, inspectCode)
+        assertTrue(inspectOut.toString().contains("task: second agent process"))
+
+        val traceOut = ByteArrayOutputStream()
+        val traceCode = cli.run(arrayOf("trace", "latest", "--json"), PrintStream(traceOut), PrintStream(ByteArrayOutputStream()))
+        val traceJson = Json.parseToJsonElement(traceOut.toString()).jsonObject
+        assertEquals(0, traceCode)
+        assertEquals(secondRunId, traceJson.getValue("runId").jsonPrimitive.content)
+
+        val reportOut = ByteArrayOutputStream()
+        val reportCode = cli.run(arrayOf("report", "latest"), PrintStream(reportOut), PrintStream(ByteArrayOutputStream()))
+        assertEquals(0, reportCode)
+        assertTrue(Files.exists(workspace.resolve("reports/$secondRunId.html")))
+
+        val artifact = workspace.resolve("artifacts/latest.md")
+        val exportOut = ByteArrayOutputStream()
+        val exportCode = cli.run(
+            arrayOf("export", "latest", "--out", artifact.toString()),
+            PrintStream(exportOut),
+            PrintStream(ByteArrayOutputStream()),
+        )
+        assertEquals(0, exportCode)
+        assertTrue(exportOut.toString().contains("artifact: $artifact"))
+        assertTrue(Files.readString(artifact).contains("second agent process"))
+    }
+
+    @Test
+    fun `latest run id reports friendly error when no snapshots exist`() {
+        val cli = cliFor(Files.createTempDirectory("kaios-cli-latest-empty"))
+        val err = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("ps", "latest"), PrintStream(ByteArrayOutputStream()), PrintStream(err))
+        val text = err.toString()
+
+        assertEquals(1, code)
+        assertTrue(text.contains("Run snapshot 'latest' was not found."))
+        assertTrue(text.contains("No run snapshots are available yet."))
+        assertTrue(text.contains("Run 'kaios run \"task\"' to create one."))
     }
 
     @Test
