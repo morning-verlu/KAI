@@ -35,7 +35,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.69"
+private const val KAIOS_VERSION = "0.1.70"
 private const val CI_AGENT_GATE_ARTIFACT_NAME = "kaios-agent-gate"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val RUN_CAPSULE_SCHEMA = "kaios.run-capsule/v1"
@@ -48,8 +48,10 @@ private const val CONFIG_VALIDATION_SCHEMA = "kaios.config-validation/v1"
 private const val BUG_REPORT_SCHEMA = "kaios.bug-report/v1"
 private const val SETUP_SCHEMA = "kaios.setup/v1"
 private const val VERIFY_SCHEMA = "kaios.verify/v1"
+private const val QUICKSTART_SCHEMA = "kaios.quickstart/v1"
 
 private val TOP_LEVEL_COMMANDS = listOf(
+    "quickstart",
     "setup",
     "verify",
     "init",
@@ -75,6 +77,8 @@ private val TOP_LEVEL_COMMANDS = listOf(
 )
 
 private val TOP_LEVEL_COMMAND_ALIASES = mapOf(
+    "start" to "quickstart",
+    "onboard" to "quickstart",
     "analyse" to "analyze",
     "ls" to "runs",
     "list" to "runs",
@@ -127,6 +131,7 @@ class KaiosCli(
 
         val commandArgs = args.drop(1)
         return when (args.first()) {
+            "quickstart" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("quickstart")) else runQuickstart(commandArgs, out, err)
             "setup" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("setup")) else setupProject(commandArgs, out, err)
             "verify" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("verify")) else verifyProject(commandArgs, out, err)
             "init" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("init")) else initProject(commandArgs, out, err)
@@ -211,6 +216,7 @@ class KaiosCli(
             command == "fix failed checks above" -> "fix-failed-checks"
             command.startsWith("fix ") -> "repair-config"
             command.startsWith("git add ") -> "stage-generated-files"
+            command.startsWith("kaios quickstart") -> "quickstart"
             command.startsWith("kaios setup ") || command == "kaios setup" -> "setup-project"
             command.startsWith("kaios config validate ") -> "validate-config"
             command.startsWith("kaios config show ") -> "show-config"
@@ -237,6 +243,7 @@ class KaiosCli(
             "fix-failed-checks" -> "Resolve failed diagnostics before retrying the workflow."
             "repair-config" -> "Repair the workflow config or regenerate it safely."
             "stage-generated-files" -> "Stage generated config and CI gate files for review."
+            "quickstart" -> "Run the no-key onboarding gate and create inspectable evidence."
             "setup-project" -> "Create a validated local workflow and optional CI gate."
             "validate-config" -> "Check the workflow contract without starting agents."
             "show-config" -> "Inspect agents, tools, dependencies, and fallback routes."
@@ -370,6 +377,21 @@ class KaiosCli(
 
     private fun commandHelpOrNull(command: String): CommandHelp? =
         when (command) {
+            "quickstart" -> CommandHelp(
+                usage = "kaios quickstart [--force] [--json|--format json]",
+                summary = "Run the no-key onboarding path: demo, setup CI, verify evidence, and print one trusted next move.",
+                examples = listOf(
+                    "kaios quickstart",
+                    "kaios quickstart --json",
+                    "kaios quickstart --force",
+                ),
+                notes = listOf(
+                    "The command uses the deterministic mock provider; no API key is required.",
+                    "Existing config and CI files are kept unless --force is passed.",
+                    "Evidence is written to a quickstart-owned capsule so repeated runs stay low-friction.",
+                    "JSON output uses schema $QUICKSTART_SCHEMA for onboarding checks and docs automation.",
+                ),
+            )
             "setup" -> CommandHelp(
                 usage = "kaios setup [--template default|research|code-review|release] [--config kaios.json] [--ci] [--force] [--json|--format json]",
                 summary = "Bootstrap a project workflow, validate it, and print the next useful commands.",
@@ -661,11 +683,168 @@ class KaiosCli(
             else -> null
         }
 
+    private fun runQuickstart(args: List<String>, out: PrintStream, err: PrintStream): Int {
+        val command = runCatching { parseQuickstartCommand(args) }.getOrElse { error ->
+            return printCommandUsageError(err, "quickstart", error.message)
+        }
+        val report = buildQuickstartReport(command)
+
+        when (command.format) {
+            QuickstartFormat.Text -> renderQuickstartText(report, out)
+            QuickstartFormat.Json -> out.println(TRACE_JSON.encodeToString(report))
+        }
+
+        return if (report.status == "ready") 0 else 2
+    }
+
+    private fun buildQuickstartReport(command: QuickstartCommand): QuickstartReport {
+        val errors = mutableListOf<String>()
+        val demo = runCatching { createDemoRun() }
+            .getOrElse { error ->
+                errors += error.message ?: "demo run failed."
+                null
+            }
+        val setup = runCatching {
+            buildSetupReport(
+                SetupCommand(
+                    configPath = defaultConfigPath(),
+                    force = command.force,
+                    templateId = "research",
+                    writeCi = true,
+                    format = SetupFormat.Text,
+                ),
+            )
+        }.getOrElse { error ->
+            errors += error.message ?: "setup failed."
+            null
+        }
+        val verify = setup?.let {
+            runCatching {
+                buildVerifyReport(
+                    VerifyCommand(
+                        configPath = defaultConfigPath(),
+                        format = VerifyFormat.Text,
+                        evidenceOutputPath = defaultQuickstartEvidencePath(),
+                        evidenceForce = true,
+                    ),
+                )
+            }.getOrElse { error ->
+                errors += error.message ?: "verify failed."
+                null
+            }
+        }
+        val setupReady = setup?.let { it.doctor.summary.failed == 0 && it.validation.valid } == true
+        val verifyReady = verify?.let { it.status == "ready" && it.evidence?.valid != false } == true
+        val status = if (errors.isEmpty() && demo?.success == true && setupReady && verifyReady) {
+            "ready"
+        } else {
+            "failed"
+        }
+        val next = quickstartNextCommands(status, setup, verify)
+        return QuickstartReport(
+            schema = QUICKSTART_SCHEMA,
+            version = KAIOS_VERSION,
+            cwd = workingDir.toString(),
+            status = status,
+            demo = demo,
+            setup = setup,
+            verify = verify,
+            errors = (errors + (verify?.errors ?: emptyList())).distinct(),
+            next = next,
+            nextActions = nextActions(next),
+        )
+    }
+
+    private fun quickstartNextCommands(
+        status: String,
+        setup: SetupReport?,
+        verify: VerifyReport?,
+    ): List<String> =
+        buildList {
+            if (status == "ready") {
+                add("kaios ps latest")
+                add("kaios inspect latest")
+                add("kaios trace latest --check")
+                add(firstProjectRunCommand())
+                setup?.ci?.path?.let { ciPath ->
+                    add("git add kaios.json ${displayPath(Paths.get(ciPath))}")
+                }
+            } else {
+                setup?.next?.let(::addAll)
+                verify?.next?.let(::addAll)
+                if (setup == null) add("kaios setup --ci")
+                if (verify == null) add("kaios verify --evidence --force")
+                add("kaios doctor --json")
+            }
+        }.distinct()
+
+    private fun renderQuickstartText(report: QuickstartReport, out: PrintStream) {
+        out.println("KAI OS quickstart")
+        out.println("schema: ${report.schema}")
+        out.println("version: ${report.version}")
+        out.println("cwd: ${report.cwd}")
+        out.println("status: ${report.status}")
+        out.println()
+        out.println("steps:")
+        val demo = report.demo
+        if (demo == null) {
+            out.println("  demo: failed")
+        } else {
+            out.println("  demo: ${if (demo.success) "ready" else "failed"} run=${demo.runId} processes=${demo.processCount}")
+        }
+        val setup = report.setup
+        if (setup == null) {
+            out.println("  setup: failed")
+        } else {
+            out.println("  setup: ${if (setup.validation.valid) "ready" else "failed"} config=${setup.config.action} ci=${setup.ci.action}")
+        }
+        val verify = report.verify
+        if (verify == null) {
+            out.println("  verify: failed")
+        } else {
+            out.println("  verify: ${verify.status} run=${verify.run?.runId ?: "-"} evidence=${verify.evidence?.status ?: "skipped"}")
+        }
+        out.println()
+        out.println("artifacts:")
+        demo?.let {
+            out.println("  demo_snapshot: ${it.snapshot}")
+            out.println("  demo_artifact: ${it.artifact}")
+            out.println("  demo_trace: ${it.trace}")
+        }
+        setup?.let {
+            out.println("  config: ${it.config.path ?: "-"}")
+            out.println("  ci: ${it.ci.path ?: "-"}")
+            it.ciArtifact?.let { artifact ->
+                out.println("  ci_artifact: ${artifact.name}")
+                out.println("  ci_artifact_paths: ${artifact.paths.joinToString(", ")}")
+            }
+        }
+        verify?.run?.let { run -> out.println("  verify_snapshot: ${run.snapshot}") }
+        verify?.evidence?.let { evidence -> out.println("  evidence_capsule: ${evidence.capsulePath}") }
+        if (report.errors.isNotEmpty()) {
+            out.println()
+            out.println("errors:")
+            report.errors.forEach { error -> out.println("  - ${singleLine(error)}") }
+        }
+        out.println()
+        out.println("next:")
+        report.next.forEach { command -> out.println("  $command") }
+    }
+
     private fun runDemo(args: List<String>, out: PrintStream, err: PrintStream): Int {
         if (args.isNotEmpty()) {
             return printCommandUsageError(err, "demo", "Demo does not accept arguments.")
         }
 
+        val demo = runCatching { createDemoRun() }.getOrElse { error ->
+            err.println(error.message)
+            return 1
+        }
+        renderDemoText(demo, out)
+        return if (demo.success) 0 else 2
+    }
+
+    private fun createDemoRun(): DemoRunReport {
         val memory = SessionMemoryStore()
         val runtime = AgentRuntime()
         val tools = toolRegistry()
@@ -679,29 +858,37 @@ class KaiosCli(
         val result = scheduler.run(defaultWorkflow(memory), task)
         val snapshotPath = snapshotStore.save(task, result)
         val snapshot = snapshotStore.load(result.runId)
-        val artifactPath = runCatching { writeArtifact(snapshot, defaultArtifactPath(result.runId), false) }.getOrElse { error ->
-            err.println(error.message)
-            return 1
-        }
-        val tracePath = runCatching { writeTraceJson(snapshot, defaultTracePath(result.runId), false) }.getOrElse { error ->
-            err.println(error.message)
-            return 1
-        }
+        val artifactPath = writeArtifact(snapshot, defaultArtifactPath(result.runId), false)
+        val tracePath = writeTraceJson(snapshot, defaultTracePath(result.runId), false)
+        return DemoRunReport(
+            runId = result.runId.value,
+            success = result.success,
+            snapshot = snapshotPath.toString(),
+            artifact = artifactPath.toString(),
+            trace = tracePath.toString(),
+            processCount = snapshot.processes.size,
+            tokenTotal = snapshot.processes.sumOf { it.tokens },
+            syscallCount = snapshot.processes.sumOf { it.syscallCount },
+            output = result.finalOutput,
+            processes = snapshot.processes,
+        )
+    }
 
+    private fun renderDemoText(demo: DemoRunReport, out: PrintStream) {
         out.println("KAI OS demo")
         out.println("provider: mock (deterministic, no API key)")
-        out.println("run_id: ${result.runId.value}")
-        out.println("success: ${result.success}")
-        out.println("snapshot: $snapshotPath")
-        out.println("artifact: $artifactPath")
-        out.println("trace: $tracePath")
+        out.println("run_id: ${demo.runId}")
+        out.println("success: ${demo.success}")
+        out.println("snapshot: ${demo.snapshot}")
+        out.println("artifact: ${demo.artifact}")
+        out.println("trace: ${demo.trace}")
         out.println()
         out.println("processes:")
         out.println(formatProcessHeader())
-        snapshot.processes.forEach { process -> out.println(formatProcess(process)) }
+        demo.processes.forEach { process -> out.println(formatProcess(process)) }
         out.println()
         out.println("output:")
-        out.println(result.finalOutput)
+        out.println(demo.output)
         out.println()
         out.println("next:")
         out.println("  kaios ps latest")
@@ -709,7 +896,6 @@ class KaiosCli(
         out.println("  kaios trace latest --json")
         out.println("  kaios evidence latest")
         out.println("  kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\"")
-        return if (result.success) 0 else 2
     }
 
     private fun runWorkflow(args: List<String>, out: PrintStream, err: PrintStream): Int {
@@ -872,29 +1058,32 @@ class KaiosCli(
         val command = runCatching { parseSetupCommand(args) }.getOrElse { error ->
             return printCommandUsageError(err, "setup", error.message)
         }
-
-        requireProjectTemplate(command.templateId)
-        val configPath = command.configPath
-        val configFile = runCatching {
-            setupConfigFile(configPath, command.templateId, command.force)
-        }.getOrElse { error ->
+        val report = runCatching { buildSetupReport(command) }.getOrElse { error ->
             err.println(error.message)
             return 1
         }
+
+        when (command.format) {
+            SetupFormat.Text -> renderSetupText(report, out)
+            SetupFormat.Json -> out.println(TRACE_JSON.encodeToString(report))
+        }
+
+        return if (report.doctor.summary.failed > 0 || !report.validation.valid) 1 else 0
+    }
+
+    private fun buildSetupReport(command: SetupCommand): SetupReport {
+        requireProjectTemplate(command.templateId)
+        val configPath = command.configPath
+        val configFile = setupConfigFile(configPath, command.templateId, command.force)
         val validation = buildConfigValidationReport(configPath)
-        val ciFile = runCatching {
-            if (command.writeCi && validation.valid) {
-                setupCiFile(defaultCiWorkflowPath(), configPath, command.force)
-            } else {
-                SetupFileReport(path = null, action = SetupFileAction.Skipped.id)
-            }
-        }.getOrElse { error ->
-            err.println(error.message)
-            return 1
+        val ciFile = if (command.writeCi && validation.valid) {
+            setupCiFile(defaultCiWorkflowPath(), configPath, command.force)
+        } else {
+            SetupFileReport(path = null, action = SetupFileAction.Skipped.id)
         }
         val doctor = buildDoctorReport(configPath, runtimeConfigFailureStatus = DoctorStatus.WARN)
         val next = setupNextCommands(validation, ciFile, command)
-        val report = SetupReport(
+        return SetupReport(
             schema = SETUP_SCHEMA,
             version = KAIOS_VERSION,
             cwd = workingDir.toString(),
@@ -907,13 +1096,6 @@ class KaiosCli(
             next = next,
             nextActions = nextActions(next),
         )
-
-        when (command.format) {
-            SetupFormat.Text -> renderSetupText(report, out)
-            SetupFormat.Json -> out.println(TRACE_JSON.encodeToString(report))
-        }
-
-        return if (doctor.summary.failed > 0 || !validation.valid) 1 else 0
     }
 
     private fun setupConfigFile(path: Path, templateId: String, force: Boolean): SetupFileReport {
@@ -1512,6 +1694,7 @@ class KaiosCli(
     }
 
     private fun printNoRunSnapshotsHint(out: PrintStream) {
+        out.println("Run 'kaios quickstart' to create a no-key onboarding run, project workflow, and evidence capsule.")
         out.println("Run 'kaios demo' to create a no-key sample run.")
         out.println("Run 'kaios setup --ci' to create a project workflow.")
         out.println("Run 'kaios verify --evidence --force' to create an inspectable project run and evidence capsule.")
@@ -1854,6 +2037,7 @@ class KaiosCli(
     private fun doctorNextCommands(failed: Int, configPath: Path, projectConfigStatus: DoctorStatus): List<String> =
         buildList {
             if (failed > 0) add("fix failed checks above")
+            add("kaios quickstart")
             add("kaios demo")
             when {
                 configPath.exists() && projectConfigStatus == DoctorStatus.OK -> add(verifyEvidenceCommand(configPath))
@@ -2921,13 +3105,17 @@ class KaiosCli(
             """
             KAI OS - AI Agent Operating System in Kotlin
 
-            Quick start (3 steps):
+            Quick start (one command):
+              kaios quickstart
+
+            Manual path (3 steps):
               kaios demo
               kaios setup --ci
               kaios verify --evidence --force
 
             Command groups:
               Setup:
+                kaios quickstart
                 kaios setup [--ci]
                 kaios verify [--config kaios.json] [--evidence]
                 kaios init [--template default|research|code-review|release] [--ci]
@@ -3132,6 +3320,9 @@ class KaiosCli(
 
     private fun defaultVerifyEvidencePath(): Path =
         workingDir.resolve("artifacts").resolve("kaios-run.capsule.json").normalize()
+
+    private fun defaultQuickstartEvidencePath(): Path =
+        artifactRoot.resolve("kaios-quickstart.capsule.json").normalize()
 
     private fun writeArtifact(snapshot: StoredRunSnapshot, path: Path, force: Boolean): Path {
         if (path.exists() && !force) {
@@ -3553,6 +3744,48 @@ class KaiosCli(
 
         return SetupCommand(configPath, force, templateId, writeCi, format)
     }
+
+    private fun parseQuickstartCommand(args: List<String>): QuickstartCommand {
+        var force = false
+        var format = QuickstartFormat.Text
+        var index = 0
+
+        while (index < args.size) {
+            val arg = args[index]
+            when {
+                arg == "--force" || arg == "-f" -> {
+                    force = true
+                    index += 1
+                }
+                arg == "--json" -> {
+                    format = QuickstartFormat.Json
+                    index += 1
+                }
+                arg == "--format" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--format requires text or json.")
+                    format = parseQuickstartFormat(value)
+                    index += 2
+                }
+                arg.startsWith("--format=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--format requires text or json." }
+                    format = parseQuickstartFormat(value)
+                    index += 1
+                }
+                arg.startsWith("-") -> error("Unknown quickstart option '$arg'.")
+                else -> error("Unexpected quickstart argument '$arg'.")
+            }
+        }
+
+        return QuickstartCommand(force = force, format = format)
+    }
+
+    private fun parseQuickstartFormat(value: String): QuickstartFormat =
+        when (value.lowercase().trim()) {
+            "text", "plain" -> QuickstartFormat.Text
+            "json" -> QuickstartFormat.Json
+            else -> error("Unknown quickstart format '$value'. Use text or json.")
+        }
 
     private fun parseSetupFormat(value: String): SetupFormat =
         when (value.lowercase().trim()) {
@@ -4396,6 +4629,44 @@ private data class RunCommand(
     val forceOutput: Boolean,
     val contextPaths: List<Path>,
     val indexPaths: List<Path>,
+)
+
+private data class QuickstartCommand(
+    val force: Boolean,
+    val format: QuickstartFormat,
+)
+
+private enum class QuickstartFormat(val id: String) {
+    Text("text"),
+    Json("json"),
+}
+
+@Serializable
+private data class QuickstartReport(
+    val schema: String,
+    val version: String,
+    val cwd: String,
+    val status: String,
+    val demo: DemoRunReport?,
+    val setup: SetupReport?,
+    val verify: VerifyReport?,
+    val errors: List<String>,
+    val next: List<String>,
+    val nextActions: List<NextAction>,
+)
+
+@Serializable
+private data class DemoRunReport(
+    val runId: String,
+    val success: Boolean,
+    val snapshot: String,
+    val artifact: String,
+    val trace: String,
+    val processCount: Int,
+    val tokenTotal: Int,
+    val syscallCount: Int,
+    val output: String,
+    val processes: List<StoredProcess>,
 )
 
 private data class SetupCommand(

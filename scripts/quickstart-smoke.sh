@@ -54,28 +54,26 @@ assert_contains() {
   fi
 }
 
-run_step "kaios demo" "$KAIOS_BIN" demo > demo.out
-assert_contains demo.out "KAI OS demo"
-assert_contains demo.out "processes:"
-assert_contains demo.out "kaios ps latest"
-
-run_step "kaios setup --ci" "$KAIOS_BIN" setup --ci > setup.out
-assert_contains setup.out "schema: kaios.setup/v1"
-assert_contains setup.out "validation: valid"
-assert_contains setup.out "ci: created"
-assert_contains setup.out "ci_artifact: kaios-agent-gate"
-assert_contains setup.out "ci_artifact_paths: artifacts/kaios-verify.json, artifacts/kaios-run.capsule.json, artifacts/kaios-bug-report.json"
+run_step "kaios quickstart" "$KAIOS_BIN" quickstart > quickstart.out
+assert_contains quickstart.out "KAI OS quickstart"
+assert_contains quickstart.out "schema: kaios.quickstart/v1"
+assert_contains quickstart.out "status: ready"
+assert_contains quickstart.out "demo: ready"
+assert_contains quickstart.out "setup: ready config=created ci=created"
+assert_contains quickstart.out "verify: ready"
+assert_contains quickstart.out "ci_artifact: kaios-agent-gate"
+assert_contains quickstart.out "ci_artifact_paths: artifacts/kaios-verify.json, artifacts/kaios-run.capsule.json, artifacts/kaios-bug-report.json"
+assert_contains quickstart.out "evidence_capsule:"
 assert_file kaios.json
 assert_file .github/workflows/kaios.yml
+assert_file .kaios/artifacts/kaios-quickstart.capsule.json
 assert_contains .github/workflows/kaios.yml "kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json"
 assert_contains .github/workflows/kaios.yml "kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force"
 assert_contains .github/workflows/kaios.yml "name: kaios-agent-gate"
 
-run_step "kaios verify --evidence --force" "$KAIOS_BIN" verify --evidence --force > verify.out
-assert_contains verify.out "schema: kaios.verify/v1"
-assert_contains verify.out "status: ready"
-assert_contains verify.out "evidence: valid (kaios.evidence/v1)"
-assert_file artifacts/kaios-run.capsule.json
+run_step "kaios quickstart --json" "$KAIOS_BIN" quickstart --json > quickstart.json
+assert_contains quickstart.json '"schema": "kaios.quickstart/v1"'
+assert_contains quickstart.json '"status": "ready"'
 
 run_step "kaios run --index . --context README.md" "$KAIOS_BIN" run \
   --index . \

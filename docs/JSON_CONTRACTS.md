@@ -13,6 +13,7 @@ The rule of thumb is simple:
 
 | Command | Schema | Primary Use |
 | --- | --- | --- |
+| `kaios quickstart --json` | `kaios.quickstart/v1` | One-command onboarding state across demo, setup, verify, and evidence. |
 | `kaios setup --json` | `kaios.setup/v1` | Bootstrap state, generated files, validation, and next actions. |
 | `kaios verify --json` | `kaios.verify/v1` | One-command local and CI readiness gate. |
 | `kaios config validate --json` | `kaios.config-validation/v1` | Workflow config validation without starting agents. |
@@ -41,6 +42,7 @@ These schemas include both `next` and `nextActions`:
 
 - `kaios.setup/v1`
 - `kaios.verify/v1`
+- `kaios.quickstart/v1`
 - `kaios.config-validation/v1`
 - `kaios.doctor/v1`
 - `kaios.bug-report/v1`
@@ -81,6 +83,7 @@ The `command` value in every `nextActions` item is also present in `next`.
 | `fix-failed-checks` | Resolve failed diagnostics before retrying. |
 | `repair-config` | Repair or regenerate a workflow config. |
 | `stage-generated-files` | Stage generated config and CI files. |
+| `quickstart` | Run the no-key onboarding gate and create inspectable evidence. |
 | `setup-project` | Create a validated workflow and optional CI gate. |
 | `validate-config` | Validate workflow config without running agents. |
 | `show-config` | Inspect agents, tools, dependencies, and fallback routes. |
@@ -102,6 +105,25 @@ The `command` value in every `nextActions` item is also present in `next`.
 | `next` | Generic fallback for uncategorized commands. |
 
 ## Recommended Gates
+
+### Onboarding Gate
+
+Use `kaios.quickstart/v1` when automation or docs need to prove the first-run path works:
+
+```bash
+kaios quickstart --json
+```
+
+Gate on:
+
+- `status == "ready"`
+- `demo.success == true`
+- `setup.validation.valid == true`
+- `verify.status == "ready"`
+- `verify.evidence.valid == true`
+- `errors` is empty
+
+Read `nextActions` to send the user to process inspection, trace validation, or the first project run without parsing terminal text.
 
 ### Bootstrap Gate
 

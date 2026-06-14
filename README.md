@@ -52,12 +52,20 @@ Kotlin gives this model a strong foundation: JVM ecosystem reach, type safety, c
 
 ## Quick Start
 
-Three steps get you from install to a ready local Agent Gate:
+Install, then run the full no-key onboarding gate:
 
 ```bash
 brew tap morning-verlu/tap
 brew install kaios
 
+kaios quickstart
+```
+
+`kaios quickstart` runs the deterministic demo, creates a validated `kaios.json`, writes a no-key GitHub Actions Agent Gate, verifies the workflow, writes a portable evidence capsule, and prints the next command to inspect the agent processes. It is safe to rerun: existing config and CI files are kept unless you pass `--force`.
+
+Prefer the manual path when you want to see each step:
+
+```bash
 kaios demo
 kaios setup --ci
 kaios verify --evidence --force
@@ -78,6 +86,7 @@ Every command has local examples when you need the next move without opening doc
 
 ```bash
 kaios
+kaios help quickstart
 kaios help demo
 kaios help verify
 kaios help run
@@ -99,7 +108,7 @@ kaios bug-report --config workflows/research.json --out artifacts/kaios-bug-repo
 ```
 
 `kaios bug-report` creates a safe-to-paste Markdown report with doctor checks, config validation, latest run metrics, and trace contract status.
-`kaios doctor`, `kaios verify`, and `kaios bug-report` print the same recovery path: `kaios setup --ci` when no project workflow exists, `kaios verify --config kaios.json --evidence --force` when one is valid, or `kaios config validate --config kaios.json --json` plus `kaios setup --ci --force` when an existing config is invalid.
+`kaios doctor`, `kaios verify`, and `kaios bug-report` print the same recovery path: `kaios quickstart` for the full no-key onboarding gate, `kaios setup --ci` when no project workflow exists, `kaios verify --config kaios.json --evidence --force` when one is valid, or `kaios config validate --config kaios.json --json` plus `kaios setup --ci --force` when an existing config is invalid.
 Use `--config` with `doctor` and `bug-report` when your project workflow lives outside the default `kaios.json`; diagnostics and next commands will follow that exact file instead of falling back to the default.
 
 Need a machine-readable workspace report for CI or dashboards?
@@ -156,16 +165,14 @@ Or install with the hosted script:
 ```bash
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
-kaios demo
-kaios setup --ci
-kaios verify --evidence --force
+kaios quickstart
 ```
 
 Or build from source:
 
 ```bash
 ./gradlew test installDist
-build/install/kaios-cli/bin/kaios demo
+build/install/kaios-cli/bin/kaios quickstart
 build/install/kaios-cli/bin/kaios analyze . --out artifacts/analysis.md --force
 build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 ```
@@ -279,7 +286,7 @@ Modules:
 - `tool-runtime`: built-in syscall tools including allowlisted HTTP and scoped files.
 - `memory-engine`: in-memory session memory and JSON run snapshots.
 - `model-providers`: OpenAI-compatible and Ollama model provider implementations.
-- `kaios-cli`: `kaios demo`, `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios replay`, `kaios diff`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
+- `kaios-cli`: `kaios quickstart`, `kaios demo`, `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios replay`, `kaios diff`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
 
 Read the deeper design notes in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Read the JSON automation contracts in [docs/JSON_CONTRACTS.md](docs/JSON_CONTRACTS.md).
@@ -395,6 +402,7 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - Project-aware runs with `kaios context`, `.kaiosignore`, and bounded `kaios run --context <file-or-dir>` ingestion.
 - Session memory and JSON snapshots under `.kaios/runs/`.
 - SQLite memory adapter for persisted agent process memory.
+- No-key `kaios quickstart` that runs demo, setup, verify, evidence, and prints the process inspection path.
 - No-key `kaios demo` that prints the process table and writes a trace artifact.
 - CLI process table, run registry, and run inspector.
 - KAI Process Trace schema with text and JSON output through `kaios trace`.

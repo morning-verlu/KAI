@@ -10,13 +10,14 @@ kaios --version
 
 Running `kaios` with no arguments prints the quick start and exits successfully, so it is safe to use as a first smoke test.
 Mistyped commands show a suggestion when there is a clear match, such as `kaios analyse` pointing to `kaios analyze`.
-If a run id is missing, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios report`, and `kaios export` point back to `kaios runs`; when no snapshots exist yet, the CLI points back to `kaios demo`, `kaios setup --ci`, and `kaios verify --evidence --force`.
+If a run id is missing, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios report`, and `kaios export` point back to `kaios runs`; when no snapshots exist yet, the CLI points back to `kaios quickstart`, `kaios demo`, `kaios setup --ci`, and `kaios verify --evidence --force`.
 If `kaios.json` is missing, `kaios config show` and `kaios config validate` point back to `kaios setup --ci`; use `kaios config templates` when you want to choose a different workflow template before setup.
 
 Every core command also supports local help with examples and notes:
 
 ```bash
 kaios
+kaios quickstart --help
 kaios setup --help
 kaios verify --help
 kaios demo --help
@@ -33,6 +34,12 @@ kaios help bug-report
 brew tap morning-verlu/tap
 brew install kaios
 
+kaios quickstart
+```
+
+Manual path:
+
+```bash
 kaios demo
 kaios setup --ci
 kaios verify --evidence --force
@@ -48,9 +55,7 @@ The installer downloads the release ZIP, verifies the published SHA256 checksum,
 ```bash
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
-kaios demo
-kaios setup --ci
-kaios verify --evidence --force
+kaios quickstart
 ```
 
 Set `KAIOS_INSTALL_DIR` to install somewhere else:
@@ -62,11 +67,9 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.69.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.69/kaios-0.1.69.zip
-unzip kaios-0.1.69.zip
-./kaios-0.1.69/bin/kaios demo
-./kaios-0.1.69/bin/kaios setup --ci
-./kaios-0.1.69/bin/kaios verify --evidence --force
+curl -L -o kaios-0.1.70.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.70/kaios-0.1.70.zip
+unzip kaios-0.1.70.zip
+./kaios-0.1.70/bin/kaios quickstart
 ```
 
 ## Build From Source
@@ -75,15 +78,14 @@ unzip kaios-0.1.69.zip
 git clone https://github.com/morning-verlu/KAI.git
 cd KAI
 ./gradlew test installDist
-build/install/kaios-cli/bin/kaios demo
-build/install/kaios-cli/bin/kaios setup --ci
-build/install/kaios-cli/bin/kaios verify --evidence --force
+build/install/kaios-cli/bin/kaios quickstart
 ```
 
 Useful next commands after the first artifact:
 
 ```bash
 kaios analyze . --format json --out artifacts/analysis.json --force
+kaios quickstart
 kaios doctor --json
 kaios doctor --config workflows/research.json --json
 kaios setup --ci

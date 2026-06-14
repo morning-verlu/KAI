@@ -555,7 +555,7 @@
           </p>
           <div class="actions">
             <a class="button primary" href="https://github.com/morning-verlu/KAI">Star on GitHub</a>
-            <a class="button secondary" href="#quickstart">Run the demo</a>
+            <a class="button secondary" href="#quickstart">Run quickstart</a>
           </div>
           <div class="metaphor" aria-label="KAI OS core metaphor">
             <div>
@@ -716,7 +716,7 @@
         <div class="section-inner quickstart">
           <div class="section-heading">
             <h2>Install it, check it, inspect it.</h2>
-            <p>The v0.1.69 CLI installs locally with no API key. Run the demo, bootstrap a validated workflow, verify the runtime gate, and create portable evidence bundles for audit or future Agent Desktop imports.</p>
+            <p>The v0.1.70 CLI installs locally with no API key. One command runs the demo, bootstraps a validated workflow, verifies the runtime gate, and creates portable evidence for audit or future Agent Desktop imports.</p>
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
@@ -726,12 +726,15 @@
           </div>
           <pre class="command"><code>brew tap morning-verlu/tap
 brew install kaios
+kaios quickstart
+kaios ps latest
+kaios trace latest --check
+kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+
+# manual path:
 kaios demo
 kaios setup --ci
 kaios verify --evidence --force
-kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-kaios ps latest
-kaios trace latest
 # optional when you keep a baseline:
 kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
 kaios export latest
@@ -739,13 +742,11 @@ kaios export latest
 # or:
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
-kaios demo
-kaios setup --ci
-kaios verify --evidence --force
+kaios quickstart
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 kaios ps latest
 kaios inspect latest
-kaios trace latest
+kaios trace latest --check
 # optional when you keep a baseline:
 kaios verify --evidence --baseline artifacts/baseline.capsule.json --check --force
 kaios report latest</code></pre>

@@ -1,6 +1,12 @@
 # Project Setup
 
-Use `kaios setup` when you want the shortest safe path from install to a validated project workflow:
+Use `kaios quickstart` when you want the shortest safe path from install to a validated project workflow and evidence capsule:
+
+```bash
+kaios quickstart
+```
+
+Use `kaios setup` directly when you want to split onboarding into manual steps:
 
 ```bash
 kaios setup --ci
