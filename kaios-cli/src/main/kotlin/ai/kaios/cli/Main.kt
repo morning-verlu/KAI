@@ -34,7 +34,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.45"
+private const val KAIOS_VERSION = "0.1.46"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val DOCTOR_SCHEMA = "kaios.doctor/v1"
 private const val RUNS_SCHEMA = "kaios.runs/v1"
@@ -723,7 +723,7 @@ class KaiosCli(
             return 1
         }
         val validation = buildConfigValidationReport(configPath)
-        val doctor = buildDoctorReport()
+        val doctor = buildDoctorReport(configPath)
         val report = SetupReport(
             schema = SETUP_SCHEMA,
             version = KAIOS_VERSION,
@@ -827,7 +827,7 @@ class KaiosCli(
     }
 
     private fun buildVerifyReport(configPath: Path): VerifyReport {
-        val doctor = buildDoctorReport()
+        val doctor = buildDoctorReport(configPath)
         val config = buildConfigValidationReport(configPath)
         val errors = mutableListOf<String>()
         var run: VerifyRun? = null
@@ -1489,7 +1489,7 @@ class KaiosCli(
         report.next.forEach { command -> appendLine("- `$command`") }
     }.trimEnd()
 
-    private fun buildDoctorReport(): DoctorReport {
+    private fun buildDoctorReport(configPath: Path = defaultConfigPath()): DoctorReport {
         val checks = listOf(
             javaCheck(),
             directoryCheck("runs directory", snapshotRoot),
@@ -1498,7 +1498,7 @@ class KaiosCli(
             modelProviderCheck(),
             httpAllowlistCheck(),
             memoryStoreCheck(),
-            configCheck(),
+            configCheck(configPath),
             snapshotsCheck(),
         )
 
@@ -1639,10 +1639,13 @@ class KaiosCli(
                 },
             )
 
-    private fun configCheck(): DoctorCheck {
-        val path = defaultConfigPath()
+    private fun configCheck(path: Path): DoctorCheck {
         if (!path.exists()) {
-            return DoctorCheck("project config", DoctorStatus.OK, "no $KAIOS_CONFIG_FILE found; using built-in default workflow")
+            return if (path == defaultConfigPath()) {
+                DoctorCheck("project config", DoctorStatus.OK, "no $KAIOS_CONFIG_FILE found; using built-in default workflow")
+            } else {
+                DoctorCheck("project config", DoctorStatus.FAIL, "config file '$path' was not found")
+            }
         }
 
         return runCatching { loadProjectWorkflow(path, SessionMemoryStore(), toolRegistry()) }
