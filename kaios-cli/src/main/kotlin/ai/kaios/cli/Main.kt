@@ -26,6 +26,7 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
@@ -35,7 +36,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.74"
+private const val KAIOS_VERSION = "0.1.75"
 private const val CI_AGENT_GATE_ARTIFACT_NAME = "kaios-agent-gate"
 private const val CI_WORKFLOW_PUSH_NOTE = "Pushing .github/workflows/kaios.yml may require GitHub workflow permission/scope."
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
@@ -423,11 +424,12 @@ class KaiosCli(
                 ),
             )
             "gate" -> CommandHelp(
-                usage = "kaios gate [--config kaios.json] [--baseline capsule.json] [--check] [--json|--format json]",
+                usage = "kaios gate [--config kaios.json] [--baseline capsule.json] [--check] [--summary-out summary.md] [--json|--format json]",
                 summary = "Run the production Agent Gate with readiness checks and portable evidence enabled by default.",
                 examples = listOf(
                     "kaios gate",
                     "kaios gate --json",
+                    "kaios gate --summary-out \$GITHUB_STEP_SUMMARY",
                     "kaios gate --baseline artifacts/baseline.capsule.json --check",
                     "kaios gate --config workflows/research.json",
                 ),
@@ -435,16 +437,18 @@ class KaiosCli(
                     "Equivalent to 'kaios verify --evidence --force' with the same $VERIFY_SCHEMA JSON contract.",
                     "The gate validates doctor diagnostics, project config, a deterministic mock smoke workflow, the process trace contract, offline replay, and optional baseline diff.",
                     "It writes artifacts/kaios-run.capsule.json by default and overwrites that gate artifact safely on repeat runs.",
+                    "Use --summary-out to append a Markdown Agent Gate summary to a local file or \$GITHUB_STEP_SUMMARY in CI.",
                     "Use 'kaios verify' when you need lower-level control over evidence output protection.",
                 ),
             )
             "verify" -> CommandHelp(
-                usage = "kaios verify [--config kaios.json] [--evidence|--evidence-out capsule.json] [--baseline capsule.json] [--check] [--force] [--json|--format json]",
+                usage = "kaios verify [--config kaios.json] [--evidence|--evidence-out capsule.json] [--baseline capsule.json] [--check] [--force] [--summary-out summary.md] [--json|--format json]",
                 summary = "Run the one-command readiness and evidence gate for local projects and CI.",
                 examples = listOf(
                     "kaios verify",
                     "kaios verify --config kaios.json",
                     "kaios verify --config kaios.json --evidence --force",
+                    "kaios verify --config kaios.json --evidence --summary-out artifacts/kaios-summary.md --force",
                     "kaios verify --config kaios.json --evidence --baseline artifacts/baseline.capsule.json --check --force",
                     "kaios verify --config kaios.json --evidence-out artifacts/custom.capsule.json --force",
                     "kaios verify --json",
@@ -452,6 +456,7 @@ class KaiosCli(
                 notes = listOf(
                     "The gate checks doctor diagnostics, validates project config, runs a deterministic mock smoke workflow, and validates the process trace contract.",
                     "Use --evidence to write artifacts/kaios-run.capsule.json, or --evidence-out for a custom capsule path.",
+                    "Use --summary-out to append a Markdown summary for GitHub Actions step summaries or release notes.",
                     "--check exits 1 when the baseline evidence differs, and 2 when readiness or evidence validation fails.",
                     "It writes a normal run snapshot under .kaios/runs/ so ps, inspect, trace, capsule, evidence, and bug-report keep working.",
                     "JSON output uses schema $VERIFY_SCHEMA for CI and release gates.",
@@ -1190,7 +1195,7 @@ class KaiosCli(
         }.distinct()
 
     private fun verifyEvidenceCommand(configPath: Path): String =
-        "kaios verify --config ${displayPath(configPath)} --evidence --force"
+        "kaios gate --config ${displayPath(configPath)}"
 
     private fun bugReportCommand(configPath: Path): String =
         if (configPath.toAbsolutePath().normalize() == defaultConfigPath().toAbsolutePath().normalize()) {
@@ -1311,9 +1316,15 @@ class KaiosCli(
             return printCommandUsageError(err, commandName, error.message)
         }
         val report = buildVerifyReport(command)
+        val summaryPath = command.summaryOutputPath?.let { outputPath ->
+            runCatching { appendVerifySummary(report, title, outputPath) }.getOrElse { error ->
+                err.println(error.message)
+                return 1
+            }
+        }
 
         when (command.format) {
-            VerifyFormat.Text -> renderVerifyText(report, out, title)
+            VerifyFormat.Text -> renderVerifyText(report, out, title, summaryPath)
             VerifyFormat.Json -> out.println(TRACE_JSON.encodeToString(report))
         }
 
@@ -1446,7 +1457,12 @@ class KaiosCli(
             add(bugReportCommand(configPath))
         }.distinct()
 
-    private fun renderVerifyText(report: VerifyReport, out: PrintStream, title: String = "KAI OS verify") {
+    private fun renderVerifyText(
+        report: VerifyReport,
+        out: PrintStream,
+        title: String = "KAI OS verify",
+        summaryPath: Path? = null,
+    ) {
         out.println(title)
         out.println("schema: ${report.schema}")
         out.println("version: ${report.version}")
@@ -1484,6 +1500,7 @@ class KaiosCli(
             out.println("replay: ${evidence.replay.status}")
             out.println("diff: ${evidence.diff.status}")
         }
+        summaryPath?.let { out.println("summary: $it") }
         val warnings = doctorWarnings(report.doctor)
         if (warnings.isNotEmpty()) {
             out.println()
@@ -3411,6 +3428,68 @@ class KaiosCli(
         return path
     }
 
+    private fun appendVerifySummary(report: VerifyReport, title: String, path: Path): Path {
+        path.parent?.let { Files.createDirectories(it) }
+        val prefix = if (path.exists() && Files.size(path) > 0L) "\n" else ""
+        Files.writeString(
+            path,
+            "$prefix${renderVerifySummaryMarkdown(report, title)}\n",
+            StandardOpenOption.CREATE,
+            StandardOpenOption.APPEND,
+        )
+        return path
+    }
+
+    private fun renderVerifySummaryMarkdown(report: VerifyReport, title: String): String = buildString {
+        appendLine("## $title")
+        appendLine()
+        appendLine("| Check | Status | Detail |")
+        appendLine("| --- | --- | --- |")
+        appendLine("| Readiness | `${report.status}` | `${report.schema}` `${report.version}` |")
+        appendLine("| Doctor | `${doctorSummaryText(report.doctor.summary)}` | `${report.doctor.summary.failed}` failed, `${report.doctor.summary.warnings}` warning(s) |")
+        appendLine("| Config | `${if (report.config.valid) "valid" else "invalid"}` | `${markdownCell(report.config.config)}` workflow `${report.config.workflowName ?: "-"}` |")
+        val run = report.run
+        if (run == null) {
+            appendLine("| Run | `skipped` | no smoke workflow was executed |")
+        } else {
+            appendLine(
+                "| Run | `${if (run.success) "passed" else "failed"}` | `${run.runId}` workflow `${markdownCell(run.workflowName)}` |",
+            )
+            appendLine("| Process metrics | `recorded` | `${run.processCount}` processes, `${run.tokenTotal}` tokens, `${run.syscallCount}` syscalls, `${run.contextBytes}` context bytes, `${run.durationMillis}` ms |")
+        }
+        val trace = report.trace
+        if (trace == null) {
+            appendLine("| Process trace | `skipped` | no trace was produced |")
+        } else {
+            appendLine("| Process trace | `${if (trace.valid) "valid" else "invalid"}` | `${trace.schema}`, `${trace.processCount}` processes, `${trace.eventCount}` events |")
+        }
+        val evidence = report.evidence
+        if (evidence == null) {
+            appendLine("| Evidence | `skipped` | run `kaios gate` or `kaios verify --evidence --force` to write a capsule |")
+        } else {
+            appendLine("| Evidence | `${evidence.status}` | capsule `${markdownCell(evidence.capsulePath)}`, replay `${evidence.replay.status}`, diff `${evidence.diff.status}` |")
+        }
+        val warnings = doctorWarnings(report.doctor)
+        if (warnings.isNotEmpty()) {
+            appendLine()
+            appendLine("### Warnings")
+            warnings.forEach { warning -> appendLine("- ${markdownCell(singleLine(warning))}") }
+        }
+        if (report.errors.isNotEmpty()) {
+            appendLine()
+            appendLine("### Errors")
+            report.errors.forEach { error -> appendLine("- ${markdownCell(singleLine(error))}") }
+        }
+        if (report.next.isNotEmpty()) {
+            appendLine()
+            appendLine("### Next Commands")
+            report.next.forEach { command -> appendLine("- `$command`") }
+        }
+    }.trimEnd()
+
+    private fun markdownCell(value: String): String =
+        singleLine(value).replace("|", "\\|")
+
     private fun writeTraceJson(snapshot: StoredRunSnapshot, path: Path, force: Boolean): Path =
         writeTextOutput("${TRACE_JSON.encodeToString(buildProcessTrace(snapshot))}\n", path, force)
 
@@ -3524,7 +3603,7 @@ class KaiosCli(
                     run: |
                       set -euo pipefail
                       mkdir -p artifacts
-                      kaios verify --config $config --evidence --json --force | tee artifacts/kaios-verify.json
+                      kaios gate --config $config --summary-out "${'$'}GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json
 
                   - name: Collect KAI OS support report
                     if: failure()
@@ -3876,6 +3955,7 @@ class KaiosCli(
         var evidenceDefault = false
         var evidenceCheck = false
         var evidenceForce = false
+        var summaryOutputPath: Path? = null
         var index = 0
 
         while (index < args.size) {
@@ -3941,6 +4021,17 @@ class KaiosCli(
                     evidenceForce = true
                     index += 1
                 }
+                arg == "--summary-out" || arg == "--summary-output" -> {
+                    val value = args.getOrNull(index + 1) ?: error("$arg requires a path.")
+                    summaryOutputPath = resolvePath(value)
+                    index += 2
+                }
+                arg.startsWith("--summary-out=") || arg.startsWith("--summary-output=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "$arg requires a path." }
+                    summaryOutputPath = resolvePath(value)
+                    index += 1
+                }
                 arg.startsWith("-") -> error("Unknown $commandName option '$arg'.")
                 else -> error("Unexpected $commandName argument '$arg'.")
             }
@@ -3962,6 +4053,7 @@ class KaiosCli(
             evidenceBaselinePath = evidenceBaselinePath,
             evidenceCheck = evidenceCheck,
             evidenceForce = evidenceForce,
+            summaryOutputPath = summaryOutputPath,
         )
     }
 
@@ -4804,6 +4896,7 @@ private data class VerifyCommand(
     val evidenceBaselinePath: Path? = null,
     val evidenceCheck: Boolean = false,
     val evidenceForce: Boolean = false,
+    val summaryOutputPath: Path? = null,
 ) {
     val evidenceRequested: Boolean
         get() = evidenceOutputPath != null || evidenceBaselinePath != null

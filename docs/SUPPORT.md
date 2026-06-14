@@ -45,7 +45,7 @@ The report's `next` commands and structured `nextActions` use the same onboardin
 For the full JSON command matrix and shared action ids, see [JSON_CONTRACTS.md](JSON_CONTRACTS.md).
 
 - missing project config: `kaios setup --ci`.
-- valid project config: `kaios verify --config kaios.json --evidence --force`.
+- valid project config: `kaios gate --config kaios.json`.
 - existing but invalid project config: `kaios config validate --config kaios.json --json`, then fix the file or rerun `kaios setup --ci --force`.
 
 ## Better Reproduction
@@ -60,8 +60,8 @@ kaios bug-report --out artifacts/kaios-bug-report.md --force
 For project-specific issues, include the workflow, trace, and capsule evidence:
 
 ```bash
-kaios verify --evidence --force
+kaios gate
 kaios bug-report --out artifacts/kaios-bug-report.md --force
-kaios verify --config workflows/research.json --evidence --force
+kaios gate --config workflows/research.json
 kaios bug-report --config workflows/research.json --out artifacts/kaios-bug-report.md --force
 ```

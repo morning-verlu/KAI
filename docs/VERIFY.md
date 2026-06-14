@@ -40,6 +40,14 @@ The lower-level equivalent is:
 kaios verify --evidence --force
 ```
 
+When a GitHub Actions workflow wants a human-readable PR summary and a clean JSON artifact at the same time:
+
+```bash
+kaios gate --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json
+```
+
+`--summary-out` appends Markdown, so it works with GitHub Step Summary files and local release-note artifacts without changing the `kaios.verify/v1` JSON printed to stdout.
+
 If your repository keeps a known-good baseline capsule:
 
 ```bash
@@ -78,7 +86,7 @@ The same `--config` path is honored by `doctor` and `bug-report`, so support dia
 
 ```bash
 mkdir -p artifacts
-kaios verify --config kaios.json --evidence --json --force | tee artifacts/kaios-verify.json
+kaios gate --config kaios.json --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json
 ```
 
-The uploaded `kaios-agent-gate` artifact includes the verify JSON, the generated evidence capsule, and a failure-time JSON bug report. That makes failures reproducible locally before pushing and gives maintainers one artifact to attach when asking for support.
+The uploaded `kaios-agent-gate` artifact includes the verify JSON, the generated evidence capsule, and a failure-time JSON bug report. The workflow also appends a Markdown summary to the GitHub Actions run, which makes the agent process metrics visible before anyone downloads artifacts.

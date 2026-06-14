@@ -25,8 +25,9 @@ This command:
 - validates the workflow with `kaios.config-validation/v1`.
 - runs readiness checks and warns about optional real-provider or persisted-memory env problems.
 - writes `.github/workflows/kaios.yml` when `--ci` is passed and the project config is valid.
-- points the generated Agent Gate at `kaios verify --config kaios.json --evidence --json --force`.
+- points the generated Agent Gate at `kaios gate --config kaios.json --summary-out "$GITHUB_STEP_SUMMARY" --json`.
 - uploads verify JSON, a portable capsule, and a failure-time bug report as `kaios-agent-gate`.
+- appends a Markdown Agent Gate summary to the GitHub Actions run.
 - prints `ci_artifact` and `ci_artifact_paths` so automation and maintainers know which GitHub Actions artifact to open.
 - prints a workflow permission note because pushing `.github/workflows/kaios.yml` may require GitHub workflow scope.
 - prints the next useful commands.

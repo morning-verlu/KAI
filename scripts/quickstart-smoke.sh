@@ -68,7 +68,7 @@ assert_contains quickstart.out "evidence_capsule:"
 assert_file kaios.json
 assert_file .github/workflows/kaios.yml
 assert_file .kaios/artifacts/kaios-quickstart.capsule.json
-assert_contains .github/workflows/kaios.yml "kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json"
+assert_contains .github/workflows/kaios.yml "kaios gate --config 'kaios.json' --summary-out \"\$GITHUB_STEP_SUMMARY\" --json | tee artifacts/kaios-verify.json"
 assert_contains .github/workflows/kaios.yml "kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force"
 assert_contains .github/workflows/kaios.yml "name: kaios-agent-gate"
 

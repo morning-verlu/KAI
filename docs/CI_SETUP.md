@@ -14,21 +14,21 @@ kaios setup --ci
 git add kaios.json .github/workflows/kaios.yml
 ```
 
-The generated `.github/workflows/kaios.yml` is intentionally no-key by default. It pins the current KAI OS CLI version, sets `KAIOS_MODEL_PROVIDER=mock`, runs the verify evidence gate as JSON, and uploads a small audit bundle:
+The generated `.github/workflows/kaios.yml` is intentionally no-key by default. It pins the current KAI OS CLI version, sets `KAIOS_MODEL_PROVIDER=mock`, runs the Agent Gate as JSON, appends a Markdown step summary, and uploads a small audit bundle:
 
 ```bash
 mkdir -p artifacts
-kaios verify --config kaios.json --evidence --json --force | tee artifacts/kaios-verify.json
+kaios gate --config kaios.json --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json
 ```
 
-The uploaded `kaios-agent-gate` artifact includes `kaios-verify.json`, `kaios-run.capsule.json`, and, when the gate fails, `kaios-bug-report.json`. This gives teams a stable gate for environment readiness, editable workflow validation, deterministic runtime execution, process trace contract checks, portable evidence, and support handoff. The same command runs locally before pushing.
+The uploaded `kaios-agent-gate` artifact includes `kaios-verify.json`, `kaios-run.capsule.json`, and, when the gate fails, `kaios-bug-report.json`. The step summary shows readiness, process metrics, trace status, and capsule path directly in the GitHub Actions UI. This gives teams a stable gate for environment readiness, editable workflow validation, deterministic runtime execution, process trace contract checks, portable evidence, and support handoff. The same `kaios gate --config kaios.json` command runs locally before pushing.
 
 For a copyable workflow file matching the generated gate, see [../examples/github-actions-agent-gate.yml](../examples/github-actions-agent-gate.yml). The CLI smoke tests compare that file with the generated default workflow so documentation drift is caught during development.
 
 If the repository keeps a known-good baseline capsule, add a regression diff gate:
 
 ```bash
-kaios verify --config kaios.json --evidence --baseline artifacts/baseline.capsule.json --check --force
+kaios gate --config kaios.json --baseline artifacts/baseline.capsule.json --check
 ```
 
 ## Repository CI

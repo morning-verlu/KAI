@@ -74,7 +74,7 @@ kaios gate
 ```
 
 `kaios setup --ci` creates a validated `kaios.json` and a no-key GitHub Actions Agent Gate without overwriting existing files. The setup output names the uploaded `kaios-agent-gate` artifact and its evidence files so CI failures are easy to inspect.
-`kaios gate` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, leaves a normal run snapshot for `ps`, `inspect`, and `trace`, and writes a portable proof package at `artifacts/kaios-run.capsule.json`. It is the short product path for `kaios verify --evidence --force`.
+`kaios gate` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, leaves a normal run snapshot for `ps`, `inspect`, and `trace`, writes a portable proof package at `artifacts/kaios-run.capsule.json`, and can append a PR-visible Markdown summary with `--summary-out "$GITHUB_STEP_SUMMARY"`. It is the short product path for `kaios verify --evidence --force`.
 
 When the gate is ready, create a project artifact:
 
@@ -112,7 +112,7 @@ kaios bug-report --config workflows/research.json --out artifacts/kaios-bug-repo
 ```
 
 `kaios bug-report` creates a safe-to-paste Markdown report with doctor checks, config validation, latest run metrics, and trace contract status.
-`kaios doctor`, `kaios verify`, and `kaios bug-report` print the same recovery path: `kaios quickstart` for the full no-key onboarding gate, `kaios setup --ci` when no project workflow exists, `kaios verify --config kaios.json --evidence --force` when one is valid, or `kaios config validate --config kaios.json --json` plus `kaios setup --ci --force` when an existing config is invalid.
+`kaios doctor`, `kaios gate`, `kaios verify`, and `kaios bug-report` print the same recovery path: `kaios quickstart` for the full no-key onboarding gate, `kaios setup --ci` when no project workflow exists, `kaios gate --config kaios.json` when one is valid, or `kaios config validate --config kaios.json --json` plus `kaios setup --ci --force` when an existing config is invalid.
 Use `--config` with `doctor` and `bug-report` when your project workflow lives outside the default `kaios.json`; diagnostics and next commands will follow that exact file instead of falling back to the default.
 
 Need a machine-readable workspace report for CI or dashboards?
@@ -162,7 +162,7 @@ kaios gate
 kaios run --out artifacts/runtime.md "map the JVM agent runtime"
 ```
 
-`kaios setup --ci` also writes `.github/workflows/kaios.yml`, a no-key Agent Gate that installs KAI OS, runs `kaios verify --config kaios.json --evidence --json --force`, saves the verify JSON plus capsule artifact, and collects a JSON bug report when the gate fails.
+`kaios setup --ci` also writes `.github/workflows/kaios.yml`, a no-key Agent Gate that installs KAI OS, runs `kaios gate --config kaios.json --summary-out "$GITHUB_STEP_SUMMARY" --json`, saves the verify JSON plus capsule artifact, appends a PR-visible Markdown summary, and collects a JSON bug report when the gate fails.
 
 Or install with the hosted script:
 
@@ -397,11 +397,11 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - Permissioned tools: `echo`, `clock`, `mock-http`, allowlisted `http`, scoped `file`.
 - Project workflow templates, retry policy, config validation, config graph display, and auto-detected `kaios.json` runs.
 - `kaios setup` bootstraps a validated project workflow and can add the CI Agent Gate in one command.
-- Default GitHub Actions Agent Gate with verify JSON, evidence capsule, and failure-time bug report.
+- Default GitHub Actions Agent Gate with PR-visible Markdown summary, verify JSON, evidence capsule, and failure-time bug report.
 - `kaios gate` runs the product Agent Gate: readiness checks, trace validation, evidence capsule, offline replay, and optional baseline diff.
 - `kaios verify` emits `kaios.verify/v1`, runs the no-key readiness gate, can write `kaios.evidence/v1`, and saves a normal run snapshot for inspection.
 - `kaios config validate --json` emits `kaios.config-validation/v1` with `next` commands and structured `nextActions` for CI and release gates.
-- `kaios init --ci` writes a GitHub Actions Agent Gate that uses the same local `kaios verify --config kaios.json --evidence --force` contract and stores machine-readable artifacts for automation.
+- `kaios init --ci` writes a GitHub Actions Agent Gate that uses the same local `kaios gate --config kaios.json` contract and stores machine-readable artifacts for automation.
 - Deterministic workspace analysis with `kaios analyze` for no-key Markdown and JSON project reports.
 - Workspace Index with `kaios index` and `kaios run --index <path>` for language stats, notable files, and project source maps.
 - Project-aware runs with `kaios context`, `.kaiosignore`, and bounded `kaios run --context <file-or-dir>` ingestion.

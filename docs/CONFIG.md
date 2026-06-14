@@ -5,7 +5,7 @@ KAI OS can run the built-in `planner -> executor -> validator` workflow, or load
 ```bash
 kaios config templates
 kaios setup --ci
-kaios verify --evidence --force
+kaios gate
 kaios config validate
 kaios config show
 kaios run "map the JVM agent runtime"
@@ -26,7 +26,7 @@ kaios init --template research --ci
 git add kaios.json .github/workflows/kaios.yml
 ```
 
-The generated Agent Gate installs KAI OS, uses the deterministic mock provider, and runs `kaios verify --config kaios.json --evidence --json --force`. That single gate validates the config as `kaios.config-validation/v1`, executes one smoke workflow, checks the saved process trace with `kaios.process-trace/v1`, uploads a portable evidence capsule, and collects a JSON bug report when the gate fails.
+The generated Agent Gate installs KAI OS, uses the deterministic mock provider, and runs `kaios gate --config kaios.json --summary-out "$GITHUB_STEP_SUMMARY" --json`. That single gate validates the config as `kaios.config-validation/v1`, executes one smoke workflow, checks the saved process trace with `kaios.process-trace/v1`, appends a Markdown summary, uploads a portable evidence capsule, and collects a JSON bug report when the gate fails.
 
 When `kaios.json` exists in the current directory, `kaios run "task"` uses it automatically. Use `--default` to force the built-in workflow:
 
@@ -38,7 +38,7 @@ Use a different path with `--config`:
 
 ```bash
 kaios init --template research --config workflows/research.json
-kaios verify --config workflows/research.json --evidence --force
+kaios gate --config workflows/research.json
 kaios doctor --config workflows/research.json
 kaios bug-report --config workflows/research.json
 kaios run --config workflows/research.json "analyze a release plan"

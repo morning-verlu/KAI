@@ -13,7 +13,7 @@ jobs:
     name: Validate agent workflow
     runs-on: ubuntu-latest
     env:
-      KAIOS_VERSION: "0.1.74"
+      KAIOS_VERSION: "0.1.75"
       KAIOS_MODEL_PROVIDER: mock
     steps:
       - name: Checkout
@@ -34,7 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json
+          kaios gate --config 'kaios.json' --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json
 
       - name: Collect KAI OS support report
         if: failure()
