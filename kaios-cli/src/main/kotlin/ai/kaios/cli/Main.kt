@@ -36,7 +36,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.76"
+private const val KAIOS_VERSION = "0.1.77"
 private const val CI_AGENT_GATE_ARTIFACT_NAME = "kaios-agent-gate"
 private const val CI_WORKFLOW_PUSH_NOTE = "Pushing .github/workflows/kaios.yml may require GitHub workflow permission/scope."
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
@@ -51,6 +51,7 @@ private const val BUG_REPORT_SCHEMA = "kaios.bug-report/v1"
 private const val SETUP_SCHEMA = "kaios.setup/v1"
 private const val VERIFY_SCHEMA = "kaios.verify/v1"
 private const val QUICKSTART_SCHEMA = "kaios.quickstart/v1"
+private const val EVIDENCE_DIFF_CHANGE_LIMIT = 5
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "quickstart",
@@ -2636,6 +2637,7 @@ class KaiosCli(
                 leftStableSha256 = diff?.left?.stableSha256,
                 rightStableSha256 = diff?.right?.stableSha256,
                 differences = diff?.differences?.size ?: 0,
+                changes = diff?.differences?.take(EVIDENCE_DIFF_CHANGE_LIMIT) ?: emptyList(),
                 issues = diff?.issues ?: emptyList(),
             ),
             next = next,
@@ -2670,6 +2672,12 @@ class KaiosCli(
         report.diff.rightStableSha256?.let { out.println("current_stable_sha256: $it") }
         if (report.diff.status != "skipped") {
             out.println("differences: ${report.diff.differences}")
+            if (report.diff.changes.isNotEmpty()) {
+                out.println("changes:")
+                report.diff.changes.forEach { change ->
+                    out.println("  - ${change.field}: ${abbreviate(singleLine(change.left), 80)} -> ${abbreviate(singleLine(change.right), 80)}")
+                }
+            }
         }
         val issues = (report.capsule.issues.map { "capsule: $it" } +
             report.replay.issues.map { "replay: $it" } +
@@ -3467,6 +3475,24 @@ class KaiosCli(
                 appendLine()
                 appendLine(nextActionReason(nextActionId(fixFirst)))
             }
+            val changes = verifySummaryDiffChanges(report)
+            if (changes.isNotEmpty()) {
+                appendLine()
+                appendLine("### What Changed")
+                appendLine()
+                appendLine("| Field | Baseline | Current |")
+                appendLine("| --- | --- | --- |")
+                changes.forEach { change ->
+                    appendLine(
+                        "| `${markdownCell(change.field)}` | `${markdownCell(abbreviate(singleLine(change.left), 96))}` | `${markdownCell(abbreviate(singleLine(change.right), 96))}` |",
+                    )
+                }
+                val total = report.evidence?.diff?.differences ?: changes.size
+                if (total > changes.size) {
+                    appendLine()
+                    appendLine("_Showing ${changes.size} of $total stable runtime difference(s)._")
+                }
+            }
         }
         appendLine()
         appendLine("| Check | Status | Detail |")
@@ -3562,6 +3588,13 @@ class KaiosCli(
         }
         return report.next.firstOrNull()
     }
+
+    private fun verifySummaryDiffChanges(report: VerifyReport): List<RunDiffDifference> =
+        report.evidence
+            ?.diff
+            ?.takeIf { diff -> diff.same == false }
+            ?.changes
+            .orEmpty()
 
     private fun markdownCell(value: String): String =
         singleLine(value).replace("|", "\\|")
@@ -5279,6 +5312,7 @@ private data class EvidenceDiffStatus(
     val leftStableSha256: String?,
     val rightStableSha256: String?,
     val differences: Int,
+    val changes: List<RunDiffDifference>,
     val issues: List<String>,
 )
 

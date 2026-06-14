@@ -162,7 +162,7 @@ kaios gate
 kaios run --out artifacts/runtime.md "map the JVM agent runtime"
 ```
 
-`kaios setup --ci` also writes `.github/workflows/kaios.yml`, a no-key Agent Gate that installs KAI OS, runs `kaios gate --config kaios.json --summary-out "$GITHUB_STEP_SUMMARY" --json`, saves the verify JSON plus capsule artifact, appends a PR-visible Markdown summary with Verdict, Why It Failed, and Fix First sections, and collects a JSON bug report when the gate fails.
+`kaios setup --ci` also writes `.github/workflows/kaios.yml`, a no-key Agent Gate that installs KAI OS, runs `kaios gate --config kaios.json --summary-out "$GITHUB_STEP_SUMMARY" --json`, saves the verify JSON plus capsule artifact, appends a PR-visible Markdown summary with Verdict, Why It Failed, Fix First, and baseline What Changed sections, and collects a JSON bug report when the gate fails.
 
 Or install with the hosted script:
 

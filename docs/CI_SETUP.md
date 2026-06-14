@@ -21,7 +21,7 @@ mkdir -p artifacts
 kaios gate --config kaios.json --summary-out "$GITHUB_STEP_SUMMARY" --json | tee artifacts/kaios-verify.json
 ```
 
-The uploaded `kaios-agent-gate` artifact includes `kaios-verify.json`, `kaios-run.capsule.json`, and, when the gate fails, `kaios-bug-report.json`. The step summary shows readiness, process metrics, trace status, and capsule path directly in the GitHub Actions UI. Failed summaries put Why It Failed and Fix First above the metrics table, which keeps common config and baseline issues actionable from the PR page. This gives teams a stable gate for environment readiness, editable workflow validation, deterministic runtime execution, process trace contract checks, portable evidence, and support handoff. The same `kaios gate --config kaios.json` command runs locally before pushing.
+The uploaded `kaios-agent-gate` artifact includes `kaios-verify.json`, `kaios-run.capsule.json`, and, when the gate fails, `kaios-bug-report.json`. The step summary shows readiness, process metrics, trace status, and capsule path directly in the GitHub Actions UI. Failed summaries put Why It Failed and Fix First above the metrics table, and baseline failures include a What Changed table with stable runtime differences. This keeps common config and regression issues actionable from the PR page. The same `kaios gate --config kaios.json` command runs locally before pushing.
 
 For a copyable workflow file matching the generated gate, see [../examples/github-actions-agent-gate.yml](../examples/github-actions-agent-gate.yml). The CLI smoke tests compare that file with the generated default workflow so documentation drift is caught during development.
 
