@@ -133,6 +133,7 @@ Print the KAI Process Trace:
 ```bash
 kaios trace run-97381ae9
 kaios trace run-97381ae9 --json
+kaios trace run-97381ae9 --json --out artifacts/trace.json --force
 ```
 
 ```text
@@ -198,6 +199,7 @@ Modules:
 - `kaios-cli`: `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
 
 Read the deeper design notes in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Read the trace schema contract in [docs/TRACE.md](docs/TRACE.md).
 
 ## Kotlin DSL
 

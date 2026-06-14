@@ -29,7 +29,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.29\n", out.toString())
+        assertEquals("kaios 0.1.30\n", out.toString())
     }
 
     @Test
@@ -384,6 +384,39 @@ class KaiosCliSmokeTest {
         assertEquals(3, traceJson.getValue("metrics").jsonObject.getValue("processCount").jsonPrimitive.int)
         assertEquals(3, traceJson.getValue("path").jsonArray.size)
         assertEquals(3, traceJson.getValue("processes").jsonArray.size)
+
+        val tracePath = artifactRoot.resolve("$runId-trace.json")
+        val traceFileOut = ByteArrayOutputStream()
+        val traceFileCode = cli.run(
+            arrayOf("trace", runId, "--format", "json", "--out", tracePath.toString()),
+            PrintStream(traceFileOut),
+            PrintStream(ByteArrayOutputStream()),
+        )
+        val traceFileJson = Json.parseToJsonElement(Files.readString(tracePath)).jsonObject
+
+        assertEquals(0, traceFileCode)
+        assertTrue(traceFileOut.toString().contains("trace: $tracePath"))
+        assertTrue(traceFileOut.toString().contains("format: json"))
+        assertEquals("kaios.process-trace/v1", traceFileJson.getValue("schema").jsonPrimitive.content)
+
+        val traceFileErr = ByteArrayOutputStream()
+        val protectedTraceCode = cli.run(
+            arrayOf("trace", runId, "--json", "--out", tracePath.toString()),
+            PrintStream(ByteArrayOutputStream()),
+            PrintStream(traceFileErr),
+        )
+
+        assertEquals(1, protectedTraceCode)
+        assertTrue(traceFileErr.toString().contains("already exists"))
+        assertTrue(traceFileErr.toString().contains("Use --force"))
+
+        val forcedTraceCode = cli.run(
+            arrayOf("trace", runId, "--json", "--out", tracePath.toString(), "--force"),
+            PrintStream(ByteArrayOutputStream()),
+            PrintStream(ByteArrayOutputStream()),
+        )
+
+        assertEquals(0, forcedTraceCode)
 
         val runsOut = ByteArrayOutputStream()
         val runsCode = cli.run(

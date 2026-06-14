@@ -56,11 +56,11 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.29.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.29/kaios-0.1.29.zip
-unzip kaios-0.1.29.zip
-./kaios-0.1.29/bin/kaios doctor
-./kaios-0.1.29/bin/kaios analyze . --out artifacts/analysis.md --force
-./kaios-0.1.29/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
+curl -L -o kaios-0.1.30.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.30/kaios-0.1.30.zip
+unzip kaios-0.1.30.zip
+./kaios-0.1.30/bin/kaios doctor
+./kaios-0.1.30/bin/kaios analyze . --out artifacts/analysis.md --force
+./kaios-0.1.30/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 ```
 
 ## Build From Source
@@ -84,4 +84,5 @@ kaios ps <run-id>
 kaios inspect <run-id>
 kaios trace <run-id>
 kaios trace <run-id> --json
+kaios trace <run-id> --json --out artifacts/trace.json --force
 ```

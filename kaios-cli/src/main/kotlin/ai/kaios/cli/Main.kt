@@ -34,7 +34,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.29"
+private const val KAIOS_VERSION = "0.1.30"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
@@ -345,13 +345,17 @@ class KaiosCli(
                 examples = listOf("kaios inspect run-97381ae9"),
             )
             "trace" -> CommandHelp(
-                usage = "kaios trace <run-id> [--format text|json]",
+                usage = "kaios trace <run-id> [--format text|json] [--out trace.json] [--force]",
                 summary = "Print a KAI Process Trace with process metrics, execution path, event counts, and timeline.",
                 examples = listOf(
                     "kaios trace run-97381ae9",
                     "kaios trace run-97381ae9 --json",
+                    "kaios trace run-97381ae9 --json --out artifacts/trace.json --force",
                 ),
-                notes = listOf("Trace JSON uses schema kaios.process-trace/v1 for CI, UI, replay, and audit tooling."),
+                notes = listOf(
+                    "Trace JSON uses schema kaios.process-trace/v1 for CI, UI, replay, and audit tooling.",
+                    "Existing trace files are protected unless --force is passed.",
+                ),
             )
             "report" -> CommandHelp(
                 usage = "kaios report <run-id>",
@@ -942,9 +946,22 @@ class KaiosCli(
         }
 
         val trace = buildProcessTrace(snapshot)
-        when (command.format) {
-            TraceFormat.Text -> out.println(renderProcessTrace(trace))
-            TraceFormat.Json -> out.println(TRACE_JSON.encodeToString(trace))
+        val rendered = when (command.format) {
+            TraceFormat.Text -> renderProcessTrace(trace)
+            TraceFormat.Json -> TRACE_JSON.encodeToString(trace)
+        }
+
+        val outputPath = command.outputPath
+        if (outputPath == null) {
+            out.println(rendered)
+        } else {
+            val path = runCatching { writeTextOutput("$rendered\n", outputPath, command.forceOutput) }.getOrElse { error ->
+                err.println(error.message)
+                return 1
+            }
+            out.println("trace: $path")
+            out.println("format: ${command.format.id}")
+            out.println("schema: ${trace.schema}")
         }
         return 0
     }
@@ -1086,7 +1103,7 @@ class KaiosCli(
                 kaios runs
                 kaios ps <run-id>
                 kaios inspect <run-id>
-                kaios trace <run-id> [--format text|json]
+                kaios trace <run-id> [--format text|json] [--out trace.json]
                 kaios report <run-id>
                 kaios export <run-id> [--out artifact.md]
                 kaios doctor
@@ -1634,6 +1651,8 @@ class KaiosCli(
     private fun parseTraceCommand(args: List<String>): TraceCommand {
         var runId: RunId? = null
         var format = TraceFormat.Text
+        var outputPath: Path? = null
+        var forceOutput = false
         var index = 0
 
         while (index < args.size) {
@@ -1654,6 +1673,21 @@ class KaiosCli(
                     format = parseTraceFormat(value)
                     index += 1
                 }
+                arg == "--out" || arg == "--output" -> {
+                    val value = args.getOrNull(index + 1) ?: error("$arg requires a path.")
+                    outputPath = resolvePath(value)
+                    index += 2
+                }
+                arg.startsWith("--out=") || arg.startsWith("--output=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "$arg requires a path." }
+                    outputPath = resolvePath(value)
+                    index += 1
+                }
+                arg == "--force" || arg == "-f" -> {
+                    forceOutput = true
+                    index += 1
+                }
                 arg.startsWith("-") -> error("Unknown trace option '$arg'.")
                 runId == null -> {
                     runId = RunId(arg)
@@ -1663,7 +1697,7 @@ class KaiosCli(
             }
         }
 
-        return TraceCommand(runId ?: error("Run id is required."), format)
+        return TraceCommand(runId ?: error("Run id is required."), format, outputPath, forceOutput)
     }
 
     private fun parseTraceFormat(value: String): TraceFormat =
@@ -1714,11 +1748,13 @@ private data class ExportCommand(
 private data class TraceCommand(
     val runId: RunId,
     val format: TraceFormat,
+    val outputPath: Path?,
+    val forceOutput: Boolean,
 )
 
-private enum class TraceFormat {
-    Text,
-    Json,
+private enum class TraceFormat(val id: String) {
+    Text("text"),
+    Json("json"),
 }
 
 @Serializable

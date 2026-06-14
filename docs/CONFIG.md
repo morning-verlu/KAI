@@ -236,6 +236,7 @@ kaios ps <run-id>
 kaios inspect <run-id>
 kaios trace <run-id>
 kaios trace <run-id> --json
+kaios trace <run-id> --json --out artifacts/trace.json --force
 kaios report <run-id>
 kaios export <run-id>
 ```
