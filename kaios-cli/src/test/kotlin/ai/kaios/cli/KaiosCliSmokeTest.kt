@@ -31,7 +31,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.38\n", out.toString())
+        assertEquals("kaios 0.1.39\n", out.toString())
     }
 
     @Test
@@ -1646,6 +1646,35 @@ class KaiosCliSmokeTest {
     }
 
     @Test
+    fun `doctor json reports stable machine readable diagnostics`() {
+        val root = Files.createTempDirectory("kaios-cli-doctor-json-runs")
+        val reportRoot = Files.createTempDirectory("kaios-cli-doctor-json-reports")
+        val artifactRoot = Files.createTempDirectory("kaios-cli-doctor-json-artifacts")
+        val cli = KaiosCli(FileRunSnapshotStore(root), reportRoot, artifactRoot = artifactRoot, snapshotRoot = root)
+        val out = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("doctor", "--json"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
+        val json = Json.parseToJsonElement(out.toString()).jsonObject
+        val summary = json.getValue("summary").jsonObject
+        val checks = json.getValue("checks").jsonArray
+        val next = json.getValue("next").jsonArray
+
+        assertEquals(0, code)
+        assertEquals("kaios.doctor/v1", json.getValue("schema").jsonPrimitive.content)
+        assertEquals("0.1.39", json.getValue("version").jsonPrimitive.content)
+        assertEquals("ready", summary.getValue("status").jsonPrimitive.content)
+        assertEquals(0, summary.getValue("failed").jsonPrimitive.int)
+        assertTrue(checks.any { check ->
+            val item = check.jsonObject
+            item.getValue("name").jsonPrimitive.content == "model provider" &&
+                item.getValue("status").jsonPrimitive.content == "OK" &&
+                item.getValue("detail").jsonPrimitive.content.contains("mock")
+        })
+        assertTrue(next.any { command -> command.jsonPrimitive.content == "kaios demo" })
+        assertTrue(next.any { command -> command.jsonPrimitive.content.contains("kaios run --index .") })
+    }
+
+    @Test
     fun `doctor reports configured http allowlist without secrets`() {
         val workspace = Files.createTempDirectory("kaios-cli-doctor-http")
         val cli = KaiosCli(
@@ -1694,6 +1723,18 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("[FAIL] model provider"))
         assertTrue(text.contains("OPENAI_MODEL is required"))
         assertTrue(!text.contains("secret-key"))
+
+        val jsonOut = ByteArrayOutputStream()
+        val jsonCode = cli.run(arrayOf("doctor", "--format", "json"), PrintStream(jsonOut), PrintStream(ByteArrayOutputStream()))
+        val jsonText = jsonOut.toString()
+        val json = Json.parseToJsonElement(jsonText).jsonObject
+        val summary = json.getValue("summary").jsonObject
+
+        assertEquals(2, jsonCode)
+        assertEquals("failed", summary.getValue("status").jsonPrimitive.content)
+        assertEquals(1, summary.getValue("failed").jsonPrimitive.int)
+        assertTrue(jsonText.contains("OPENAI_MODEL is required"))
+        assertTrue(!jsonText.contains("secret-key"))
     }
 }
 

@@ -57,11 +57,11 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.38.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.38/kaios-0.1.38.zip
-unzip kaios-0.1.38.zip
-./kaios-0.1.38/bin/kaios demo
-./kaios-0.1.38/bin/kaios analyze . --out artifacts/analysis.md --force
-./kaios-0.1.38/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+curl -L -o kaios-0.1.39.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.39/kaios-0.1.39.zip
+unzip kaios-0.1.39.zip
+./kaios-0.1.39/bin/kaios demo
+./kaios-0.1.39/bin/kaios analyze . --out artifacts/analysis.md --force
+./kaios-0.1.39/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 ```
 
 ## Build From Source
@@ -79,6 +79,7 @@ Useful next commands after the first artifact:
 
 ```bash
 kaios analyze . --format json --out artifacts/analysis.json --force
+kaios doctor --json
 kaios init --template research
 kaios config show
 kaios run --index . --trace-out artifacts/trace.json --force "summarize this project"

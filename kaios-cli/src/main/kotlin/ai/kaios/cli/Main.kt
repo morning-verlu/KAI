@@ -34,8 +34,9 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.38"
+private const val KAIOS_VERSION = "0.1.39"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
+private const val DOCTOR_SCHEMA = "kaios.doctor/v1"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
@@ -109,9 +110,7 @@ class KaiosCli(
             "trace" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("trace")) else traceRun(commandArgs, out, err)
             "report" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("report")) else generateReport(commandArgs, out, err)
             "export" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("export")) else exportRun(commandArgs, out, err)
-            "doctor" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("doctor")) else {
-                if (rejectUnexpectedArguments(commandArgs, "doctor", err)) 1 else doctor(out)
-            }
+            "doctor" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("doctor")) else doctor(commandArgs, out, err)
             "version", "--version", "-V" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("version")) else {
                 if (rejectUnexpectedArguments(commandArgs, "version", err)) 1 else version(out)
             }
@@ -412,10 +411,16 @@ class KaiosCli(
                 ),
             )
             "doctor" -> CommandHelp(
-                usage = "kaios doctor",
+                usage = "kaios doctor [--json|--format json]",
                 summary = "Check the local Java runtime, writable KAI OS directories, provider config, and project config.",
-                examples = listOf("kaios doctor"),
-                notes = listOf("Run this first when a command behaves differently across machines."),
+                examples = listOf(
+                    "kaios doctor",
+                    "kaios doctor --json",
+                ),
+                notes = listOf(
+                    "Run this first when a command behaves differently across machines.",
+                    "JSON output uses schema $DOCTOR_SCHEMA for CI and issue diagnostics.",
+                ),
             )
             "version" -> CommandHelp(
                 usage = "kaios --version",
@@ -896,7 +901,21 @@ class KaiosCli(
         return 0
     }
 
-    private fun doctor(out: PrintStream): Int {
+    private fun doctor(args: List<String>, out: PrintStream, err: PrintStream): Int {
+        val command = runCatching { parseDoctorCommand(args) }.getOrElse { error ->
+            return printCommandUsageError(err, "doctor", error.message)
+        }
+        val report = buildDoctorReport()
+
+        when (command.format) {
+            DoctorFormat.Text -> renderDoctorText(report, out)
+            DoctorFormat.Json -> out.println(TRACE_JSON.encodeToString(report))
+        }
+
+        return if (report.summary.failed > 0) 2 else 0
+    }
+
+    private fun buildDoctorReport(): DoctorReport {
         val checks = listOf(
             javaCheck(),
             directoryCheck("runs directory", snapshotRoot),
@@ -909,32 +928,53 @@ class KaiosCli(
             snapshotsCheck(),
         )
 
+        val failed = checks.count { it.status == DoctorStatus.FAIL }
+        val warnings = checks.count { it.status == DoctorStatus.WARN }
+        val next = buildList {
+            if (failed > 0) add("fix failed checks above")
+            add("kaios demo")
+            add("kaios analyze . --out artifacts/analysis.md --force")
+            add(firstProjectRunCommand())
+        }
+
+        return DoctorReport(
+            schema = DOCTOR_SCHEMA,
+            version = KAIOS_VERSION,
+            cwd = workingDir.toString(),
+            summary = DoctorSummary(
+                status = if (failed > 0) "failed" else "ready",
+                failed = failed,
+                warnings = warnings,
+            ),
+            checks = checks.map { check ->
+                DoctorReportCheck(
+                    name = check.name,
+                    status = check.status.name,
+                    detail = check.detail,
+                )
+            },
+            next = next,
+        )
+    }
+
+    private fun renderDoctorText(report: DoctorReport, out: PrintStream) {
         out.println("KAI OS doctor")
-        out.println("version: $KAIOS_VERSION")
-        out.println("cwd: $workingDir")
+        out.println("version: ${report.version}")
+        out.println("cwd: ${report.cwd}")
         out.println()
-        checks.forEach { check ->
-            out.println("[${check.status.name}] ${check.name}: ${check.detail}")
+        report.checks.forEach { check ->
+            out.println("[${check.status}] ${check.name}: ${check.detail}")
         }
         out.println()
 
-        val failed = checks.count { it.status == DoctorStatus.FAIL }
-        val warnings = checks.count { it.status == DoctorStatus.WARN }
         when {
-            failed > 0 -> out.println("summary: $failed failed, $warnings warning(s)")
-            warnings > 0 -> out.println("summary: ready with $warnings warning(s)")
+            report.summary.failed > 0 -> out.println("summary: ${report.summary.failed} failed, ${report.summary.warnings} warning(s)")
+            report.summary.warnings > 0 -> out.println("summary: ready with ${report.summary.warnings} warning(s)")
             else -> out.println("summary: ready")
         }
         out.println()
         out.println("next:")
-        if (failed > 0) {
-            out.println("  fix failed checks above")
-        }
-        out.println("  kaios demo")
-        out.println("  kaios analyze . --out artifacts/analysis.md --force")
-        out.println("  ${firstProjectRunCommand()}")
-
-        return if (failed > 0) 2 else 0
+        report.next.forEach { next -> out.println("  $next") }
     }
 
     private fun version(out: PrintStream): Int {
@@ -1965,6 +2005,43 @@ class KaiosCli(
             else -> error("Unknown trace format '$value'. Use text or json.")
         }
 
+    private fun parseDoctorCommand(args: List<String>): DoctorCommand {
+        var format = DoctorFormat.Text
+        var index = 0
+
+        while (index < args.size) {
+            val arg = args[index]
+            when {
+                arg == "--json" -> {
+                    format = DoctorFormat.Json
+                    index += 1
+                }
+                arg == "--format" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--format requires text or json.")
+                    format = parseDoctorFormat(value)
+                    index += 2
+                }
+                arg.startsWith("--format=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--format requires text or json." }
+                    format = parseDoctorFormat(value)
+                    index += 1
+                }
+                arg.startsWith("-") -> error("Unknown doctor option '$arg'.")
+                else -> error("Unexpected doctor argument '$arg'.")
+            }
+        }
+
+        return DoctorCommand(format)
+    }
+
+    private fun parseDoctorFormat(value: String): DoctorFormat =
+        when (value.lowercase().trim()) {
+            "text", "plain" -> DoctorFormat.Text
+            "json" -> DoctorFormat.Json
+            else -> error("Unknown doctor format '$value'. Use text or json.")
+        }
+
     private fun printTemplates(out: PrintStream) {
         out.println("TEMPLATES")
         projectConfigTemplates.forEach { template ->
@@ -2078,6 +2155,39 @@ private enum class AnalyzeFormat(val id: String) {
     Markdown("markdown"),
     Json("json"),
 }
+
+private data class DoctorCommand(
+    val format: DoctorFormat,
+)
+
+private enum class DoctorFormat(val id: String) {
+    Text("text"),
+    Json("json"),
+}
+
+@Serializable
+private data class DoctorReport(
+    val schema: String,
+    val version: String,
+    val cwd: String,
+    val summary: DoctorSummary,
+    val checks: List<DoctorReportCheck>,
+    val next: List<String>,
+)
+
+@Serializable
+private data class DoctorSummary(
+    val status: String,
+    val failed: Int,
+    val warnings: Int,
+)
+
+@Serializable
+private data class DoctorReportCheck(
+    val name: String,
+    val status: String,
+    val detail: String,
+)
 
 private enum class DoctorStatus {
     OK,

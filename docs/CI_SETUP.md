@@ -43,6 +43,8 @@ jobs:
           arguments: clean test installDist
 ```
 
+After installing KAI OS in downstream projects, `kaios doctor --json` can be used as a machine-readable readiness check. It emits `kaios.doctor/v1` with a summary, check list, and safe next commands without printing API secrets.
+
 After pushing the workflow, restore this README badge if desired:
 
 ```markdown

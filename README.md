@@ -65,6 +65,13 @@ kaios help config show
 
 If you mistype a command, KAI OS suggests the closest safe next command instead of guessing and running it.
 
+Need a support-friendly environment check?
+
+```bash
+kaios doctor
+kaios doctor --json
+```
+
 Need a machine-readable workspace report for CI or dashboards?
 
 ```bash
@@ -304,7 +311,7 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - CLI process table and run inspector.
 - KAI Process Trace schema with text and JSON output through `kaios trace`.
 - Markdown run artifacts with `kaios run --out` and `kaios export`.
-- `kaios doctor` environment diagnostics for Java, provider, memory, snapshots, and writable runtime directories.
+- `kaios doctor` and `kaios doctor --json` environment diagnostics for Java, provider, memory, snapshots, and writable runtime directories.
 - Static Agent Process Manager HTML reports under `.kaios/reports/`.
 - README-ready terminal process preview for launch sharing.
 - CLI demo GIF for README, launch site, and social posts.
