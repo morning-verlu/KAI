@@ -10,7 +10,7 @@ kaios --version
 
 Running `kaios` with no arguments prints the quick start and exits successfully, so it is safe to use as a first smoke test.
 Mistyped commands show a suggestion when there is a clear match, such as `kaios analyse` pointing to `kaios analyze`.
-If a run id is missing, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios report`, and `kaios export` point back to `kaios runs`; when no snapshots exist yet, the CLI points back to `kaios demo`, `kaios setup --ci`, and `kaios verify`.
+If a run id is missing, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios report`, and `kaios export` point back to `kaios runs`; when no snapshots exist yet, the CLI points back to `kaios demo`, `kaios setup --ci`, and `kaios verify`.
 If `kaios.json` is missing, `kaios config show` and `kaios config validate` point back to `kaios init` and `kaios config templates`.
 
 Every core command also supports local help with examples and notes:
@@ -23,6 +23,7 @@ kaios demo --help
 kaios run --help
 kaios help run
 kaios help config show
+kaios help capsule
 kaios help bug-report
 ```
 
@@ -61,11 +62,11 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.50.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.50/kaios-0.1.50.zip
-unzip kaios-0.1.50.zip
-./kaios-0.1.50/bin/kaios demo
-./kaios-0.1.50/bin/kaios setup --ci
-./kaios-0.1.50/bin/kaios verify
+curl -L -o kaios-0.1.51.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.51/kaios-0.1.51.zip
+unzip kaios-0.1.51.zip
+./kaios-0.1.51/bin/kaios demo
+./kaios-0.1.51/bin/kaios setup --ci
+./kaios-0.1.51/bin/kaios verify
 ```
 
 ## Build From Source
@@ -95,5 +96,8 @@ kaios inspect latest
 kaios trace latest
 kaios trace latest --json
 kaios trace latest --json --out artifacts/trace.json --force
+kaios capsule latest
+kaios capsule latest --check
+kaios capsule latest --out artifacts/run.capsule.json --force
 kaios bug-report --out artifacts/kaios-bug-report.md --force
 ```

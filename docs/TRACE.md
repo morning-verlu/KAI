@@ -93,6 +93,15 @@ kaios trace latest --json --out artifacts/trace.json --force
 
 Downstream checks can inspect `metrics.processCount`, `metrics.syscallCount`, `success`, `eventCounts`, or specific process states without scraping terminal output.
 
+When you need a full portable evidence package, use a run capsule. It embeds the saved snapshot, generated trace, provenance hashes, validation status, and replay commands:
+
+```bash
+kaios capsule latest
+kaios capsule latest --check
+```
+
+Capsule JSON uses schema `kaios.run-capsule/v1`; see [CAPSULE.md](CAPSULE.md).
+
 For a simple gate, validate the contract directly:
 
 ```bash

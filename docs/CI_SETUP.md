@@ -22,6 +22,13 @@ kaios verify --config kaios.json
 
 This gives teams a stable gate for environment readiness, editable workflow validation, deterministic runtime execution, and process trace contract checks. The same command runs locally before pushing.
 
+If the CI job should retain a portable run evidence package, add:
+
+```bash
+kaios capsule latest --check
+kaios capsule latest --out artifacts/kaios-run.capsule.json --force
+```
+
 ## Repository CI
 
 This source repository is ready for GitHub Actions. If workflow-file pushes are blocked, refresh the GitHub CLI session with the `workflow` scope:

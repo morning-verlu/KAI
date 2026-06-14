@@ -26,6 +26,7 @@ import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
 import kotlin.io.path.createDirectories
@@ -34,8 +35,9 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.50"
+private const val KAIOS_VERSION = "0.1.51"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
+private const val RUN_CAPSULE_SCHEMA = "kaios.run-capsule/v1"
 private const val DOCTOR_SCHEMA = "kaios.doctor/v1"
 private const val RUNS_SCHEMA = "kaios.runs/v1"
 private const val CONFIG_VALIDATION_SCHEMA = "kaios.config-validation/v1"
@@ -57,6 +59,7 @@ private val TOP_LEVEL_COMMANDS = listOf(
     "ps",
     "inspect",
     "trace",
+    "capsule",
     "report",
     "export",
     "doctor",
@@ -90,6 +93,7 @@ class KaiosCli(
     private val reportRoot: Path = defaultReportRoot(),
     private val reportRenderer: ProcessReportRenderer = ProcessReportRenderer(),
     private val artifactRoot: Path = defaultArtifactRoot(),
+    private val capsuleRoot: Path = defaultCapsuleRoot(),
     private val artifactExporter: ArtifactExporter = ArtifactExporter(),
     private val snapshotRoot: Path = defaultSnapshotRoot(),
     private val workingDir: Path = Paths.get("").toAbsolutePath().normalize(),
@@ -116,6 +120,7 @@ class KaiosCli(
             "ps" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("ps")) else printProcessTable(commandArgs, out, err)
             "inspect" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("inspect")) else inspectRun(commandArgs, out, err)
             "trace" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("trace")) else traceRun(commandArgs, out, err)
+            "capsule" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("capsule")) else capsuleRun(commandArgs, out, err)
             "report" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("report")) else generateReport(commandArgs, out, err)
             "export" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("export")) else exportRun(commandArgs, out, err)
             "doctor" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("doctor")) else doctor(commandArgs, out, err)
@@ -296,7 +301,7 @@ class KaiosCli(
                 ),
                 notes = listOf(
                     "The gate checks doctor diagnostics, validates project config, runs a deterministic mock smoke workflow, and validates the process trace contract.",
-                    "It writes a normal run snapshot under .kaios/runs/ so ps, inspect, trace, and bug-report keep working.",
+                    "It writes a normal run snapshot under .kaios/runs/ so ps, inspect, trace, capsule, and bug-report keep working.",
                     "JSON output uses schema $VERIFY_SCHEMA for CI and release gates.",
                 ),
             )
@@ -337,7 +342,7 @@ class KaiosCli(
                     "No API key is required by default; the mock provider is deterministic.",
                     "Use --trace-out to write kaios.process-trace/v1 JSON during the run.",
                     "Use -- before a task that starts with '-'.",
-                    "After a run, use 'kaios ps latest', 'kaios inspect latest', and 'kaios trace latest'.",
+                    "After a run, use 'kaios ps latest', 'kaios inspect latest', 'kaios trace latest', and 'kaios capsule latest'.",
                 ),
             )
             "context" -> CommandHelp(
@@ -404,7 +409,7 @@ class KaiosCli(
                     "kaios runs --json",
                 ),
                 notes = listOf(
-                    "Use a listed run id, or 'latest', with ps, inspect, trace, report, or export.",
+                    "Use a listed run id, or 'latest', with ps, inspect, trace, capsule, report, or export.",
                     "JSON output uses schema $RUNS_SCHEMA for Agent Desktop, CI, and local tooling.",
                 ),
             )
@@ -440,6 +445,21 @@ class KaiosCli(
                     "Trace JSON uses schema $PROCESS_TRACE_SCHEMA for CI, UI, replay, and audit tooling.",
                     "Use --check in CI to validate the trace contract without writing an artifact.",
                     "Existing trace files are protected unless --force is passed.",
+                ),
+            )
+            "capsule" -> CommandHelp(
+                usage = "kaios capsule <run-id|latest> [--json] [--out capsule.json] [--force] [--check]",
+                summary = "Build a portable run capsule with snapshot, trace, provenance hashes, and replay commands.",
+                examples = listOf(
+                    "kaios capsule latest",
+                    "kaios capsule latest --check",
+                    "kaios capsule latest --json",
+                    "kaios capsule run-97381ae9 --out artifacts/run.capsule.json --force",
+                ),
+                notes = listOf(
+                    "Capsule JSON uses schema $RUN_CAPSULE_SCHEMA for audit, replay, CI, and future Agent Desktop imports.",
+                    "The capsule is generated from an existing .kaios/runs snapshot; it does not re-run agents.",
+                    "Existing capsule files are protected unless --force is passed.",
                 ),
             )
             "report" -> CommandHelp(
@@ -540,6 +560,7 @@ class KaiosCli(
         out.println("  kaios ps latest")
         out.println("  kaios inspect latest")
         out.println("  kaios trace latest --json")
+        out.println("  kaios capsule latest")
         out.println("  kaios run --index . --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\"")
         return if (result.success) 0 else 2
     }
@@ -626,6 +647,7 @@ class KaiosCli(
         out.println("  kaios ps latest")
         out.println("  kaios inspect latest")
         out.println("  kaios trace latest")
+        out.println("  kaios capsule latest")
         out.println("  kaios report latest")
         out.println("  kaios export latest")
         return if (result.success) 0 else 2
@@ -923,6 +945,9 @@ class KaiosCli(
             }
             if (trace != null) {
                 add(if (trace.valid) "kaios trace latest --check" else "kaios trace latest")
+            }
+            if (run != null) {
+                add("kaios capsule latest --check")
             }
             add("kaios bug-report")
         }.distinct()
@@ -1415,6 +1440,7 @@ class KaiosCli(
             } else {
                 add("kaios ps latest")
                 add("kaios trace latest --check")
+                add("kaios capsule latest --check")
                 add("kaios inspect latest")
             }
             add("kaios doctor --json")
@@ -1771,6 +1797,177 @@ class KaiosCli(
         return 0
     }
 
+    private fun capsuleRun(args: List<String>, out: PrintStream, err: PrintStream): Int {
+        val command = runCatching { parseCapsuleCommand(args) }.getOrElse { error ->
+            return printCommandUsageError(err, "capsule", error.message)
+        }
+
+        val runId = runCatching { resolveRunId(command.runIdText) }.getOrElse {
+            return printSnapshotLoadError(err, it)
+        }
+        val snapshot = runCatching { snapshotStore.load(runId) }.getOrElse {
+            return printSnapshotLoadError(err, it)
+        }
+        val capsule = buildRunCapsule(snapshot)
+
+        if (command.check) {
+            return checkRunCapsule(capsule, out, err)
+        }
+
+        val rendered = TRACE_JSON.encodeToString(capsule)
+        if (command.printJson) {
+            out.println(rendered)
+            return 0
+        }
+
+        val outputPath = command.outputPath ?: defaultCapsulePath(runId)
+        val path = runCatching { writeTextOutput("$rendered\n", outputPath, command.forceOutput) }.getOrElse { error ->
+            err.println(error.message)
+            return 1
+        }
+
+        out.println("capsule: $path")
+        out.println("schema: ${capsule.schema}")
+        out.println("run: ${capsule.run.runId}")
+        out.println("valid: ${capsule.validation.valid}")
+        out.println("snapshot_sha256: ${capsule.provenance.snapshotSha256}")
+        out.println("trace_sha256: ${capsule.provenance.traceSha256}")
+        out.println("next:")
+        out.println("  kaios capsule ${capsule.run.runId} --check")
+        out.println("  kaios trace ${capsule.run.runId} --check")
+        return 0
+    }
+
+    private fun buildRunCapsule(snapshot: StoredRunSnapshot): RunCapsule {
+        val runId = RunId(snapshot.runId)
+        val snapshotPath = snapshotStore.pathFor(runId).toAbsolutePath().normalize()
+        val snapshotText = runCatching { Files.readString(snapshotPath) }
+            .getOrElse { TRACE_JSON.encodeToString(snapshot) }
+        val trace = buildProcessTrace(snapshot)
+        val traceText = TRACE_JSON.encodeToString(trace)
+        val traceIssues = validateProcessTrace(trace)
+        val configPath = defaultConfigPath()
+        val configText = if (configPath.exists()) {
+            runCatching { Files.readString(configPath) }.getOrNull()
+        } else {
+            null
+        }
+        val config = buildConfigValidationReport(configPath)
+        val capsule = RunCapsule(
+            schema = RUN_CAPSULE_SCHEMA,
+            version = KAIOS_VERSION,
+            generatedAt = Instant.now().toString(),
+            cwd = workingDir.toString(),
+            run = RunCapsuleRun(
+                runId = snapshot.runId,
+                workflowName = snapshot.workflowName,
+                success = snapshot.success,
+                task = snapshot.task,
+                processCount = snapshot.processes.size,
+                tokenTotal = snapshot.processes.sumOf { it.tokens },
+                syscallCount = snapshot.processes.sumOf { it.syscallCount },
+                contextBytes = snapshot.processes.sumOf { it.contextSize },
+                durationMillis = snapshot.processes.sumOf { it.durationMillis },
+            ),
+            provenance = RunCapsuleProvenance(
+                snapshotPath = snapshotPath.toString(),
+                snapshotSha256 = sha256Hex(snapshotText),
+                traceSha256 = sha256Hex(traceText),
+                configPath = configPath.toAbsolutePath().normalize().toString(),
+                configSha256 = configText?.let(::sha256Hex),
+                configValid = config.valid,
+                configWorkflowName = config.workflowName,
+                configAgentIds = config.agentIds,
+            ),
+            replay = RunCapsuleReplay(
+                commands = listOf(
+                    "kaios ps ${snapshot.runId}",
+                    "kaios inspect ${snapshot.runId}",
+                    "kaios trace ${snapshot.runId} --check",
+                    "kaios report ${snapshot.runId}",
+                    "kaios export ${snapshot.runId}",
+                ),
+                note = "Capsules are generated from saved run snapshots and can be inspected without re-running agents.",
+            ),
+            validation = RunCapsuleValidation(
+                valid = traceIssues.isEmpty(),
+                issues = traceIssues,
+                checkedAt = Instant.now().toString(),
+            ),
+            snapshot = snapshot,
+            trace = trace,
+        )
+        val issues = validateRunCapsule(capsule)
+        return capsule.copy(validation = capsule.validation.copy(valid = issues.isEmpty(), issues = issues))
+    }
+
+    private fun checkRunCapsule(capsule: RunCapsule, out: PrintStream, err: PrintStream): Int {
+        val issues = validateRunCapsule(capsule)
+        if (issues.isEmpty()) {
+            out.println("capsule: ${capsule.run.runId}")
+            out.println("schema: ${capsule.schema}")
+            out.println("status: valid")
+            out.println("snapshot_sha256: ${capsule.provenance.snapshotSha256}")
+            out.println("trace_sha256: ${capsule.provenance.traceSha256}")
+            out.println("processes: ${capsule.run.processCount}")
+            out.println("events: ${capsule.trace.metrics.eventCount}")
+            return 0
+        }
+
+        err.println("capsule: ${capsule.run.runId}")
+        err.println("schema: ${capsule.schema}")
+        err.println("status: invalid")
+        err.println("issues:")
+        issues.forEach { issue -> err.println("  - $issue") }
+        return 2
+    }
+
+    private fun validateRunCapsule(capsule: RunCapsule): List<String> {
+        val issues = mutableListOf<String>()
+        fun requireCapsule(condition: Boolean, message: String) {
+            if (!condition) issues += message
+        }
+
+        requireCapsule(capsule.schema == RUN_CAPSULE_SCHEMA, "schema must be $RUN_CAPSULE_SCHEMA.")
+        requireCapsule(capsule.version.isNotBlank(), "version must not be blank.")
+        requireCapsule(capsule.run.runId.isNotBlank(), "run.runId must not be blank.")
+        requireCapsule(capsule.snapshot.runId == capsule.run.runId, "snapshot.runId must match run.runId.")
+        requireCapsule(capsule.trace.runId == capsule.run.runId, "trace.runId must match run.runId.")
+        requireCapsule(capsule.snapshot.workflowName == capsule.run.workflowName, "snapshot.workflowName must match run.workflowName.")
+        requireCapsule(capsule.trace.workflowName == capsule.run.workflowName, "trace.workflowName must match run.workflowName.")
+        requireCapsule(capsule.run.processCount == capsule.snapshot.processes.size, "run.processCount must equal snapshot.processes.size.")
+        requireCapsule(capsule.run.processCount == capsule.trace.metrics.processCount, "run.processCount must equal trace.metrics.processCount.")
+        requireCapsule(capsule.run.tokenTotal == capsule.trace.metrics.tokenTotal, "run.tokenTotal must equal trace.metrics.tokenTotal.")
+        requireCapsule(capsule.run.syscallCount == capsule.trace.metrics.syscallCount, "run.syscallCount must equal trace.metrics.syscallCount.")
+        requireCapsule(capsule.run.contextBytes == capsule.trace.metrics.contextBytes, "run.contextBytes must equal trace.metrics.contextBytes.")
+        requireCapsule(capsule.provenance.snapshotSha256.length == 64, "provenance.snapshotSha256 must be a SHA-256 hex digest.")
+        requireCapsule(capsule.provenance.traceSha256.length == 64, "provenance.traceSha256 must be a SHA-256 hex digest.")
+        requireCapsule(
+            capsule.provenance.traceSha256 == sha256Hex(TRACE_JSON.encodeToString(capsule.trace)),
+            "provenance.traceSha256 must match the embedded trace.",
+        )
+        val snapshotPath = Paths.get(capsule.provenance.snapshotPath)
+        if (snapshotPath.exists()) {
+            requireCapsule(
+                capsule.provenance.snapshotSha256 == sha256Hex(Files.readString(snapshotPath)),
+                "provenance.snapshotSha256 must match the saved snapshot file.",
+            )
+        }
+        requireCapsule(
+            capsule.replay.commands.any { it == "kaios trace ${capsule.run.runId} --check" },
+            "replay.commands must include trace contract validation.",
+        )
+
+        val traceIssues = validateProcessTrace(capsule.trace)
+        requireCapsule(
+            capsule.validation.valid == traceIssues.isEmpty(),
+            "validation.valid must match the trace contract result.",
+        )
+        traceIssues.forEach { issue -> requireCapsule(false, "trace: $issue") }
+
+        return issues.distinct()
+    }
+
     private fun checkProcessTrace(trace: ProcessTrace, out: PrintStream, err: PrintStream): Int {
         val issues = validateProcessTrace(trace)
         if (issues.isEmpty()) {
@@ -1993,6 +2190,7 @@ class KaiosCli(
                 kaios ps latest
                 kaios inspect latest
                 kaios trace latest [--format text|json] [--out trace.json] [--check]
+                kaios capsule latest [--json] [--out capsule.json] [--check]
                 kaios report latest
                 kaios export latest [--out artifact.md]
                 kaios doctor
@@ -2163,6 +2361,9 @@ class KaiosCli(
 
     private fun defaultTracePath(runId: RunId): Path =
         artifactRoot.resolve("${runId.value}.trace.json").normalize()
+
+    private fun defaultCapsulePath(runId: RunId): Path =
+        capsuleRoot.resolve("${runId.value}.capsule.json").normalize()
 
     private fun writeArtifact(snapshot: StoredRunSnapshot, path: Path, force: Boolean): Path {
         if (path.exists() && !force) {
@@ -2850,6 +3051,88 @@ class KaiosCli(
             else -> error("Unknown trace format '$value'. Use text or json.")
         }
 
+    private fun parseCapsuleCommand(args: List<String>): CapsuleCommand {
+        var runIdText: String? = null
+        var outputPath: Path? = null
+        var forceOutput = false
+        var printJson = false
+        var check = false
+        var index = 0
+
+        while (index < args.size) {
+            val arg = args[index]
+            when {
+                arg == "--json" -> {
+                    printJson = true
+                    index += 1
+                }
+                arg == "--format" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--format requires json.")
+                    parseCapsuleFormat(value)
+                    printJson = true
+                    index += 2
+                }
+                arg.startsWith("--format=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--format requires json." }
+                    parseCapsuleFormat(value)
+                    printJson = true
+                    index += 1
+                }
+                arg == "--out" || arg == "--output" -> {
+                    val value = args.getOrNull(index + 1) ?: error("$arg requires a path.")
+                    outputPath = resolvePath(value)
+                    index += 2
+                }
+                arg.startsWith("--out=") || arg.startsWith("--output=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "$arg requires a path." }
+                    outputPath = resolvePath(value)
+                    index += 1
+                }
+                arg == "--force" || arg == "-f" -> {
+                    forceOutput = true
+                    index += 1
+                }
+                arg == "--check" -> {
+                    check = true
+                    index += 1
+                }
+                arg.startsWith("-") -> error("Unknown capsule option '$arg'.")
+                runIdText == null -> {
+                    runIdText = arg
+                    index += 1
+                }
+                else -> error("Unexpected capsule argument '$arg'.")
+            }
+        }
+
+        if (check && outputPath != null) {
+            error("--check does not write output; omit --out.")
+        }
+        if (check && forceOutput) {
+            error("--check does not write output; omit --force.")
+        }
+        if (check && printJson) {
+            error("--check prints status text; omit --json.")
+        }
+
+        return CapsuleCommand(
+            runIdText = runIdText ?: error("Run id is required."),
+            outputPath = outputPath,
+            forceOutput = forceOutput,
+            printJson = printJson,
+            check = check,
+        )
+    }
+
+    private fun parseCapsuleFormat(value: String) {
+        when (value.lowercase().trim()) {
+            "json" -> Unit
+            else -> error("Unknown capsule format '$value'. Use json.")
+        }
+    }
+
     private fun parseDoctorCommand(args: List<String>): DoctorCommand {
         var format = DoctorFormat.Text
         var index = 0
@@ -3113,10 +3396,70 @@ private data class TraceCommand(
     val check: Boolean,
 )
 
+private data class CapsuleCommand(
+    val runIdText: String,
+    val outputPath: Path?,
+    val forceOutput: Boolean,
+    val printJson: Boolean,
+    val check: Boolean,
+)
+
 private enum class TraceFormat(val id: String) {
     Text("text"),
     Json("json"),
 }
+
+@Serializable
+private data class RunCapsule(
+    val schema: String,
+    val version: String,
+    val generatedAt: String,
+    val cwd: String,
+    val run: RunCapsuleRun,
+    val provenance: RunCapsuleProvenance,
+    val replay: RunCapsuleReplay,
+    val validation: RunCapsuleValidation,
+    val snapshot: StoredRunSnapshot,
+    val trace: ProcessTrace,
+)
+
+@Serializable
+private data class RunCapsuleRun(
+    val runId: String,
+    val workflowName: String,
+    val success: Boolean,
+    val task: String,
+    val processCount: Int,
+    val tokenTotal: Int,
+    val syscallCount: Int,
+    val contextBytes: Int,
+    val durationMillis: Long,
+)
+
+@Serializable
+private data class RunCapsuleProvenance(
+    val snapshotPath: String,
+    val snapshotSha256: String,
+    val traceSha256: String,
+    val configPath: String,
+    val configSha256: String?,
+    val configValid: Boolean,
+    val configWorkflowName: String?,
+    val configAgentIds: List<String>,
+)
+
+@Serializable
+private data class RunCapsuleReplay(
+    val commands: List<String>,
+    val note: String,
+)
+
+@Serializable
+private data class RunCapsuleValidation(
+    val valid: Boolean,
+    val issues: List<String>,
+    val checkedAt: String,
+)
 
 @Serializable
 private data class ProcessTrace(
@@ -3394,3 +3737,12 @@ private fun defaultReportRoot() =
 private fun defaultArtifactRoot() =
     System.getenv("KAIOS_ARTIFACTS_DIR")?.takeIf { it.isNotBlank() }?.let { Paths.get(it) }
         ?: Paths.get(".kaios", "artifacts")
+
+private fun defaultCapsuleRoot() =
+    System.getenv("KAIOS_CAPSULES_DIR")?.takeIf { it.isNotBlank() }?.let { Paths.get(it) }
+        ?: Paths.get(".kaios", "capsules")
+
+private fun sha256Hex(text: String): String =
+    MessageDigest.getInstance("SHA-256")
+        .digest(text.toByteArray(Charsets.UTF_8))
+        .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }

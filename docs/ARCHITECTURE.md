@@ -90,6 +90,8 @@ Snapshots are JSON files under `.kaios/runs/` and are used by the CLI to inspect
 - `kaios trace latest`
 - `kaios trace latest --json`
 - `kaios trace latest --json --out artifacts/trace.json --force`
+- `kaios capsule latest`
+- `kaios capsule latest --check`
 - `kaios report latest`
 - `kaios export latest`
 
@@ -98,6 +100,8 @@ Snapshots are JSON files under `.kaios/runs/` and are used by the CLI to inspect
 Reports are static HTML files generated from JSON snapshots under `.kaios/runs/`. They render a run list, process table, workflow graph, lifecycle event timeline, and final output without a web server. `kaios runs --json` emits `kaios.runs/v1`, a stable run registry for Agent Desktop, CI, and local tooling.
 
 Process traces are text or JSON views generated from the same snapshots. `kaios trace` emits `kaios.process-trace/v1` with process metrics, the observed execution path, event counts, and lifecycle timeline for CI, replay, visualizers, audit logs, and future Agent Desktop surfaces. See [TRACE.md](TRACE.md) for the schema contract and output-file workflow.
+
+Run capsules are portable JSON evidence packages generated from the same snapshots. `kaios capsule` emits `kaios.run-capsule/v1` with the full snapshot, full process trace, provenance hashes, config validation metadata, replay commands, and contract validation status. See [CAPSULE.md](CAPSULE.md) for the schema contract.
 
 Artifacts are Markdown files generated with `kaios run --out <path>` or `kaios export latest`. They are designed for handoff into issues, pull requests, docs, and release notes, and default to `.kaios/artifacts/<run-id>.md`.
 

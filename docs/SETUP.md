@@ -59,9 +59,10 @@ Run the readiness gate:
 kaios verify
 kaios ps latest
 kaios trace latest --check
+kaios capsule latest --check
 ```
 
-`kaios verify` checks the local runtime, validates the project workflow, runs a deterministic mock smoke workflow, validates the process trace contract, and saves a normal run snapshot.
+`kaios verify` checks the local runtime, validates the project workflow, runs a deterministic mock smoke workflow, validates the process trace contract, and saves a normal run snapshot. `kaios capsule latest --check` confirms the saved run can become a portable audit package.
 
 Create a project artifact when the gate is ready:
 

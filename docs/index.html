@@ -690,8 +690,8 @@
             </article>
             <article class="feature">
               <h3>CLI process manager</h3>
-              <p>Run workflows, list runs, print process tables, inspect lifecycle events, emit process traces, render reports, and export Markdown artifacts.</p>
-              <span class="tag">kaios trace</span>
+              <p>Run workflows, list runs, print process tables, inspect lifecycle events, emit process traces, package run capsules, render reports, and export Markdown artifacts.</p>
+              <span class="tag">kaios capsule</span>
             </article>
             <article class="feature">
               <h3>Project context</h3>
@@ -716,7 +716,7 @@
         <div class="section-inner quickstart">
           <div class="section-heading">
             <h2>Install it, check it, inspect it.</h2>
-            <p>The v0.1.50 CLI installs locally with no API key. Run the demo, bootstrap a validated workflow with setup, verify the runtime gate, or create a safe bug report for support.</p>
+            <p>The v0.1.51 CLI installs locally with no API key. Run the demo, bootstrap a validated workflow, verify the runtime gate, and package a portable run capsule for audit or future Agent Desktop imports.</p>
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
@@ -730,6 +730,7 @@ kaios verify
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 kaios ps latest
 kaios trace latest
+kaios capsule latest --check
 kaios export latest
 
 # or:
@@ -742,6 +743,7 @@ kaios run --index . --context README.md --out artifacts/project.md --trace-out a
 kaios ps latest
 kaios inspect latest
 kaios trace latest
+kaios capsule latest
 kaios report latest</code></pre>
         </div>
       </section>

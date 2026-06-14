@@ -13,7 +13,7 @@ The command runs the same no-key checks locally and in CI:
 - project workflow validation from `kaios.config-validation/v1`.
 - a deterministic `MockModelProvider` smoke workflow.
 - process trace contract validation for `kaios.process-trace/v1`.
-- a normal run snapshot under `.kaios/runs/` for `ps`, `inspect`, `trace`, and `bug-report`.
+- a normal run snapshot under `.kaios/runs/` for `ps`, `inspect`, `trace`, `capsule`, and `bug-report`.
 
 `kaios verify` always runs the smoke workflow with the deterministic mock provider and session memory. If optional real-provider or persisted-memory environment variables are misconfigured, verify reports them as warnings instead of blocking the no-key gate. Use `kaios doctor` when you want those optional runtime settings to be checked strictly.
 
@@ -62,3 +62,10 @@ kaios verify --config kaios.json
 ```
 
 That makes failures reproducible locally before pushing.
+
+For a stronger audit artifact after the gate, package the saved smoke run:
+
+```bash
+kaios capsule latest --check
+kaios capsule latest --out artifacts/kaios-run.capsule.json --force
+```

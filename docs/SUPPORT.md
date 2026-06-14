@@ -13,6 +13,7 @@ The default output is Markdown you can paste into a GitHub issue. It includes:
 - `kaios.config-validation/v1` status for `kaios.json`.
 - latest run summary when a saved run exists.
 - latest process trace contract status from `kaios.process-trace/v1`.
+- next command for `kaios.run-capsule/v1` evidence packaging when a saved run exists.
 - safe next commands.
 
 It does not print API keys, tokens, or secret environment values. Do not manually add secrets when pasting the report into an issue.
@@ -42,9 +43,10 @@ kaios demo
 kaios bug-report --out artifacts/kaios-bug-report.md --force
 ```
 
-For project-specific issues, include the workflow and trace:
+For project-specific issues, include the workflow, trace, and capsule check:
 
 ```bash
 kaios verify
+kaios capsule latest --check
 kaios bug-report --out artifacts/kaios-bug-report.md --force
 ```
