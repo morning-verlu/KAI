@@ -34,7 +34,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.48"
+private const val KAIOS_VERSION = "0.1.49"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val DOCTOR_SCHEMA = "kaios.doctor/v1"
 private const val RUNS_SCHEMA = "kaios.runs/v1"
@@ -1404,10 +1404,13 @@ class KaiosCli(
 
     private fun bugReportNextCommands(config: ConfigValidationReport, latestRun: BugReportRun?): List<String> =
         buildList {
-            if (!config.valid) add("kaios init --template research --ci")
+            if (!config.valid) {
+                add("kaios setup --ci")
+            } else {
+                add("kaios verify --config ${displayPath(Paths.get(config.config))}")
+            }
             if (latestRun == null) {
                 add("kaios demo")
-                add(firstProjectRunCommand())
             } else {
                 add("kaios ps latest")
                 add("kaios trace latest --check")

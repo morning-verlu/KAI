@@ -31,7 +31,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.48\n", out.toString())
+        assertEquals("kaios 0.1.49\n", out.toString())
     }
 
     @Test
@@ -1327,7 +1327,7 @@ class KaiosCliSmokeTest {
 
         assertEquals(0, code)
         assertEquals("kaios.setup/v1", json.getValue("schema").jsonPrimitive.content)
-        assertEquals("0.1.48", json.getValue("version").jsonPrimitive.content)
+        assertEquals("0.1.49", json.getValue("version").jsonPrimitive.content)
         assertEquals("code-review", json.getValue("requestedTemplate").jsonPrimitive.content)
         assertEquals("created", config.getValue("action").jsonPrimitive.content)
         assertEquals("created", ci.getValue("action").jsonPrimitive.content)
@@ -1335,7 +1335,7 @@ class KaiosCliSmokeTest {
         assertEquals("code-review", validation.getValue("workflowName").jsonPrimitive.content)
         assertTrue(validation.getValue("valid").jsonPrimitive.content == "true")
         assertEquals("ready", doctor.getValue("summary").jsonObject.getValue("status").jsonPrimitive.content)
-        assertTrue(workflowText.contains("KAIOS_VERSION: \"0.1.48\""))
+        assertTrue(workflowText.contains("KAIOS_VERSION: \"0.1.49\""))
         assertTrue(workflowText.contains("kaios verify --config 'kaios.json'"))
         assertTrue(!workflowText.contains("kaios config validate --config 'kaios.json' --json"))
     }
@@ -1419,7 +1419,7 @@ class KaiosCliSmokeTest {
         assertEquals(0, setupCode)
         assertEquals(0, code)
         assertEquals("kaios.verify/v1", json.getValue("schema").jsonPrimitive.content)
-        assertEquals("0.1.48", json.getValue("version").jsonPrimitive.content)
+        assertEquals("0.1.49", json.getValue("version").jsonPrimitive.content)
         assertEquals("ready", json.getValue("status").jsonPrimitive.content)
         assertEquals("code-review", config.getValue("workflowName").jsonPrimitive.content)
         assertTrue(config.getValue("valid").jsonPrimitive.content == "true")
@@ -1579,7 +1579,7 @@ class KaiosCliSmokeTest {
         assertTrue(outputText.contains("kaios config validate --config kaios.json --json"))
         assertTrue(outputText.contains("kaios verify --config kaios.json"))
         assertTrue(workflowText.contains("name: KAI OS Agent Gate"))
-        assertTrue(workflowText.contains("KAIOS_VERSION: \"0.1.48\""))
+        assertTrue(workflowText.contains("KAIOS_VERSION: \"0.1.49\""))
         assertTrue(workflowText.contains("KAIOS_MODEL_PROVIDER: mock"))
         assertTrue(workflowText.contains("kaios verify --config 'kaios.json'"))
         assertTrue(!workflowText.contains("kaios doctor --json"))
@@ -2097,7 +2097,7 @@ class KaiosCliSmokeTest {
 
         assertEquals(0, code)
         assertEquals("kaios.doctor/v1", json.getValue("schema").jsonPrimitive.content)
-        assertEquals("0.1.48", json.getValue("version").jsonPrimitive.content)
+        assertEquals("0.1.49", json.getValue("version").jsonPrimitive.content)
         assertEquals("ready", summary.getValue("status").jsonPrimitive.content)
         assertEquals(0, summary.getValue("failed").jsonPrimitive.int)
         assertTrue(checks.any { check ->
@@ -2142,11 +2142,15 @@ class KaiosCliSmokeTest {
         assertEquals(0, code)
         assertTrue(text.contains("# KAI OS Bug Report"))
         assertTrue(text.contains("schema: `kaios.bug-report/v1`"))
-        assertTrue(text.contains("version: `0.1.48`"))
+        assertTrue(text.contains("version: `0.1.49`"))
         assertTrue(text.contains("## What Happened"))
         assertTrue(text.contains("## Doctor"))
         assertTrue(text.contains("No saved run snapshot was found."))
         assertTrue(text.contains("Config file '${workspace.resolve("kaios.json")}' was not found."))
+        assertTrue(text.contains("- `kaios setup --ci`"))
+        assertTrue(text.contains("- `kaios demo`"))
+        assertTrue(!text.contains("kaios init --template research --ci"))
+        assertTrue(!text.contains("kaios run --index ."))
         assertTrue(!text.contains("secret-key"))
     }
 
@@ -2168,7 +2172,7 @@ class KaiosCliSmokeTest {
         assertEquals(0, demoCode)
         assertEquals(0, code)
         assertEquals("kaios.bug-report/v1", json.getValue("schema").jsonPrimitive.content)
-        assertEquals("0.1.48", json.getValue("version").jsonPrimitive.content)
+        assertEquals("0.1.49", json.getValue("version").jsonPrimitive.content)
         assertEquals(runId, latestRun.getValue("runId").jsonPrimitive.content)
         assertEquals("default", latestRun.getValue("workflowName").jsonPrimitive.content)
         assertEquals(3, latestRun.getValue("processCount").jsonPrimitive.int)
@@ -2177,6 +2181,35 @@ class KaiosCliSmokeTest {
         assertEquals(3, trace.getValue("processCount").jsonPrimitive.int)
         assertEquals("kaios.config-validation/v1", config.getValue("schema").jsonPrimitive.content)
         assertTrue(config.getValue("valid").jsonPrimitive.content == "false")
+        val next = json.getValue("next").jsonArray.map { it.jsonPrimitive.content }
+        assertTrue(next.contains("kaios setup --ci"))
+        assertTrue(next.contains("kaios ps latest"))
+        assertTrue(next.contains("kaios trace latest --check"))
+        assertTrue(next.contains("kaios inspect latest"))
+        assertTrue(!next.any { it.contains("kaios init --template research --ci") })
+        assertTrue(!next.any { it.contains("kaios run --index .") })
+    }
+
+    @Test
+    fun `bug report recommends verify when project config is valid`() {
+        val workspace = Files.createTempDirectory("kaios-cli-bug-report-config-next")
+        val cli = cliFor(workspace)
+        val setupCode = cli.run(arrayOf("setup"), PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()))
+        val out = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("bug-report", "--json"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
+        val json = Json.parseToJsonElement(out.toString()).jsonObject
+        val config = json.getValue("config").jsonObject
+        val next = json.getValue("next").jsonArray.map { it.jsonPrimitive.content }
+
+        assertEquals(0, setupCode)
+        assertEquals(0, code)
+        assertTrue(config.getValue("valid").jsonPrimitive.content == "true")
+        assertTrue(next.contains("kaios verify --config kaios.json"))
+        assertTrue(next.contains("kaios demo"))
+        assertTrue(next.contains("kaios doctor --json"))
+        assertTrue(!next.contains("kaios setup --ci"))
+        assertTrue(!next.any { it.contains("kaios run --index .") })
     }
 
     @Test

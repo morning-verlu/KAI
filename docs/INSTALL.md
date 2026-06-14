@@ -61,11 +61,11 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.48.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.48/kaios-0.1.48.zip
-unzip kaios-0.1.48.zip
-./kaios-0.1.48/bin/kaios demo
-./kaios-0.1.48/bin/kaios setup --ci
-./kaios-0.1.48/bin/kaios verify
+curl -L -o kaios-0.1.49.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.49/kaios-0.1.49.zip
+unzip kaios-0.1.49.zip
+./kaios-0.1.49/bin/kaios demo
+./kaios-0.1.49/bin/kaios setup --ci
+./kaios-0.1.49/bin/kaios verify
 ```
 
 ## Build From Source
