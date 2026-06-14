@@ -123,6 +123,8 @@ kaios.evidence/v1
 
 It includes the generated capsule path, capsule validation status, offline replay status, optional baseline diff status, stable evidence hashes, issue lists, `next` commands, and structured `nextActions` with stable action ids. It is intentionally compact so CI logs can show the result without embedding the full capsule again.
 
+For the full JSON command matrix and shared `nextActions` rules, see [JSON_CONTRACTS.md](JSON_CONTRACTS.md).
+
 ## Why It Matters
 
 Run capsules make KAI OS harder to reduce to a chatbot or wrapper:

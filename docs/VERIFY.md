@@ -32,7 +32,7 @@ JSON output is designed for CI, release gates, dashboards, and future Agent Desk
 kaios verify --json
 ```
 
-The JSON schema is `kaios.verify/v1`. It keeps the existing `next` command list and adds structured `nextActions` with stable ids, commands, and reasons so CI, dashboards, and future Agent Desktop views do not need to parse shell text.
+The JSON schema is `kaios.verify/v1`. It keeps the existing `next` command list and adds structured `nextActions` with stable ids, commands, and reasons so CI, dashboards, and future Agent Desktop views do not need to parse shell text. See [JSON_CONTRACTS.md](JSON_CONTRACTS.md) for the full automation contract matrix.
 
 When you want CI to retain a portable proof package from the same smoke run:
 

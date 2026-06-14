@@ -102,6 +102,8 @@ kaios evidence latest --out artifacts/run.capsule.json --baseline artifacts/base
 
 Evidence JSON uses schema `kaios.evidence/v1`. The embedded capsule still uses schema `kaios.run-capsule/v1`; offline replay uses `kaios.run-replay/v1`, and offline capsule diff uses `kaios.run-diff/v1`; see [CAPSULE.md](CAPSULE.md).
 
+For the full JSON command matrix and shared `nextActions` rules, see [JSON_CONTRACTS.md](JSON_CONTRACTS.md).
+
 For a simple gate, validate the contract directly:
 
 ```bash

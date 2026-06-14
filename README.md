@@ -273,6 +273,7 @@ Modules:
 - `kaios-cli`: `kaios demo`, `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios replay`, `kaios diff`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
 
 Read the deeper design notes in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Read the JSON automation contracts in [docs/JSON_CONTRACTS.md](docs/JSON_CONTRACTS.md).
 Read the trace schema contract in [docs/TRACE.md](docs/TRACE.md).
 Read the capsule schema contract in [docs/CAPSULE.md](docs/CAPSULE.md).
 
