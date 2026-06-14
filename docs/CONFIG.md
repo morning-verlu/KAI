@@ -271,7 +271,7 @@ kaios report latest
 kaios export latest
 ```
 
-Snapshots are still written under `.kaios/runs/`, so custom workflows can be inspected later without re-running the task. `kaios trace` renders the saved run as `kaios.process-trace/v1`, a stable text/JSON view for CI checks, visualizers, replay tooling, and audit trails. `kaios capsule` packages the snapshot and trace into `kaios.run-capsule/v1` with provenance hashes and replay commands.
+Snapshots are still written under `.kaios/runs/`, so custom workflows can be inspected later without re-running the task. `kaios trace` renders the saved run as `kaios.process-trace/v1`, a stable text/JSON view for CI checks, visualizers, replay tooling, and audit trails. `kaios capsule` packages the snapshot and trace into `kaios.run-capsule/v1` with provenance hashes and replay commands. `kaios replay --file <capsule.json>` rebuilds the trace from the embedded snapshot and emits `kaios.run-replay/v1` for offline evidence checks.
 
 ## Artifacts
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-VERSION="${KAIOS_VERSION:-0.1.52}"
+VERSION="${KAIOS_VERSION:-0.1.53}"
 REPO="morning-verlu/KAI"
 BASE_URL="https://github.com/${REPO}/releases/download/v${VERSION}"
 ARCHIVE="kaios-${VERSION}.zip"
@@ -82,7 +82,9 @@ if command -v kaios >/dev/null 2>&1; then
   echo "  ${PROJECT_RUN}"
   echo "  kaios ps latest"
   echo "  kaios trace latest"
-  echo "  kaios capsule latest --check"
+  echo "  kaios capsule latest --out artifacts/run.capsule.json --force"
+  echo "  kaios capsule --file artifacts/run.capsule.json --check"
+  echo "  kaios replay --file artifacts/run.capsule.json"
 else
   if [ -f README.md ]; then
     PROJECT_RUN="${BIN_DIR}/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force \"summarize this project\""
@@ -99,5 +101,7 @@ else
   echo "  ${PROJECT_RUN}"
   echo "  ${BIN_DIR}/kaios ps latest"
   echo "  ${BIN_DIR}/kaios trace latest"
-  echo "  ${BIN_DIR}/kaios capsule latest --check"
+  echo "  ${BIN_DIR}/kaios capsule latest --out artifacts/run.capsule.json --force"
+  echo "  ${BIN_DIR}/kaios capsule --file artifacts/run.capsule.json --check"
+  echo "  ${BIN_DIR}/kaios replay --file artifacts/run.capsule.json"
 fi

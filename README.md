@@ -35,6 +35,7 @@ Most agent frameworks model AI work as chains, prompts, or chat sessions. KAI OS
 - Persist run snapshots for inspection and debugging.
 - Emit KAI Process Trace JSON for CI, UI, replay, and audit tooling.
 - Package runs as portable KAI Run Capsules with snapshots, traces, provenance hashes, and replay commands.
+- Replay shared capsules offline by rebuilding traces from embedded snapshots.
 
 Kotlin gives this model a strong foundation: JVM ecosystem reach, type safety, coroutines-ready concurrency, DSL ergonomics, and a path toward Kotlin Multiplatform.
 
@@ -106,7 +107,9 @@ Need a portable audit package for CI, review, or future Agent Desktop imports?
 kaios capsule latest
 kaios capsule latest --check
 kaios capsule latest --json
+kaios capsule latest --out artifacts/run.capsule.json --force
 kaios capsule --file .kaios/capsules/<run-id>.capsule.json --check
+kaios replay --file artifacts/run.capsule.json
 ```
 
 Create a local workflow config when you want your own agent process graph:
@@ -202,6 +205,8 @@ Package the run as a portable KAI Run Capsule:
 ```bash
 kaios capsule latest
 kaios capsule latest --check
+kaios capsule latest --out artifacts/run.capsule.json --force
+kaios replay --file artifacts/run.capsule.json
 ```
 
 Export a Markdown artifact:
@@ -365,6 +370,7 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - CLI process table, run registry, and run inspector.
 - KAI Process Trace schema with text and JSON output through `kaios trace`.
 - KAI Run Capsule schema with snapshot, trace, provenance hashes, replay commands, and validation status through `kaios capsule`.
+- Offline Capsule Replay schema with deterministic trace rebuild checks through `kaios replay`.
 - `kaios runs --json` emits `kaios.runs/v1` for Agent Desktop, CI, and local tooling.
 - Markdown run artifacts with `kaios run --out` and `kaios export`.
 - `kaios doctor` and `kaios doctor --json` environment diagnostics for Java, provider, memory, snapshots, and writable runtime directories.

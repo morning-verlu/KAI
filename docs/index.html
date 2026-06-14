@@ -716,7 +716,7 @@
         <div class="section-inner quickstart">
           <div class="section-heading">
             <h2>Install it, check it, inspect it.</h2>
-            <p>The v0.1.52 CLI installs locally with no API key. Run the demo, bootstrap a validated workflow, verify the runtime gate, and package a portable run capsule for audit or future Agent Desktop imports.</p>
+            <p>The v0.1.53 CLI installs locally with no API key. Run the demo, bootstrap a validated workflow, verify the runtime gate, and package or replay a portable run capsule for audit or future Agent Desktop imports.</p>
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
@@ -732,6 +732,7 @@ kaios ps latest
 kaios trace latest
 kaios capsule latest --out artifacts/run.capsule.json --force
 kaios capsule --file artifacts/run.capsule.json --check
+kaios replay --file artifacts/run.capsule.json
 kaios export latest
 
 # or:
@@ -746,6 +747,7 @@ kaios inspect latest
 kaios trace latest
 kaios capsule latest --out artifacts/run.capsule.json --force
 kaios capsule --file artifacts/run.capsule.json --check
+kaios replay --file artifacts/run.capsule.json
 kaios report latest</code></pre>
         </div>
       </section>

@@ -35,9 +35,10 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.52"
+private const val KAIOS_VERSION = "0.1.53"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val RUN_CAPSULE_SCHEMA = "kaios.run-capsule/v1"
+private const val RUN_REPLAY_SCHEMA = "kaios.run-replay/v1"
 private const val DOCTOR_SCHEMA = "kaios.doctor/v1"
 private const val RUNS_SCHEMA = "kaios.runs/v1"
 private const val CONFIG_VALIDATION_SCHEMA = "kaios.config-validation/v1"
@@ -60,6 +61,7 @@ private val TOP_LEVEL_COMMANDS = listOf(
     "inspect",
     "trace",
     "capsule",
+    "replay",
     "report",
     "export",
     "doctor",
@@ -127,6 +129,7 @@ class KaiosCli(
             "inspect" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("inspect")) else inspectRun(commandArgs, out, err)
             "trace" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("trace")) else traceRun(commandArgs, out, err)
             "capsule" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("capsule")) else capsuleRun(commandArgs, out, err)
+            "replay" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("replay")) else replayCapsule(commandArgs, out, err)
             "report" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("report")) else generateReport(commandArgs, out, err)
             "export" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("export")) else exportRun(commandArgs, out, err)
             "doctor" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("doctor")) else doctor(commandArgs, out, err)
@@ -468,6 +471,20 @@ class KaiosCli(
                     "The capsule is generated from an existing .kaios/runs snapshot; it does not re-run agents.",
                     "Use --file to validate a shared capsule without the original .kaios/runs snapshot.",
                     "Existing capsule files are protected unless --force is passed.",
+                ),
+            )
+            "replay" -> CommandHelp(
+                usage = "kaios replay <capsule.json>|--file capsule.json [--json|--format json]",
+                summary = "Replay a run capsule offline by rebuilding its trace from the embedded snapshot.",
+                examples = listOf(
+                    "kaios replay artifacts/run.capsule.json",
+                    "kaios replay --file artifacts/run.capsule.json",
+                    "kaios replay --file artifacts/run.capsule.json --json",
+                ),
+                notes = listOf(
+                    "Replay never calls a model provider and does not require the original .kaios/runs snapshot.",
+                    "JSON output uses schema $RUN_REPLAY_SCHEMA for CI, issue triage, and future Agent Desktop imports.",
+                    "The replay is valid only when the capsule contract passes and the rebuilt trace matches the embedded trace.",
                 ),
             )
             "report" -> CommandHelp(
@@ -1863,8 +1880,97 @@ class KaiosCli(
         capsule.provenance.embeddedSnapshotSha256?.let { out.println("embedded_snapshot_sha256: $it") }
         out.println("trace_sha256: ${capsule.provenance.traceSha256}")
         out.println("next:")
+        out.println("  kaios replay --file $capsulePath")
         out.println("  kaios capsule ${capsule.run.runId} --check")
         out.println("  kaios trace ${capsule.run.runId} --check")
+    }
+
+    private fun replayCapsule(args: List<String>, out: PrintStream, err: PrintStream): Int {
+        val command = runCatching { parseReplayCommand(args) }.getOrElse { error ->
+            return printCommandUsageError(err, "replay", error.message)
+        }
+
+        val capsule = runCatching { loadRunCapsule(command.inputPath) }.getOrElse { error ->
+            err.println(error.message)
+            return 1
+        }
+        val report = buildRunReplayReport(capsule, command.inputPath)
+
+        if (command.format == ReplayFormat.Json) {
+            out.println(CAPSULE_JSON.encodeToString(report))
+            return if (report.valid) 0 else 2
+        }
+
+        val stream = if (report.valid) out else err
+        printRunReplaySummary(report, stream)
+        return if (report.valid) 0 else 2
+    }
+
+    private fun buildRunReplayReport(capsule: RunCapsule, source: Path): RunReplayReport {
+        val capsuleIssues = validateRunCapsule(capsule)
+        val rebuiltTrace = buildProcessTrace(capsule.snapshot)
+        val rebuiltTraceSha256 = sha256Hex(CAPSULE_JSON.encodeToString(rebuiltTrace))
+        val embeddedTraceSha256 = sha256Hex(CAPSULE_JSON.encodeToString(capsule.trace))
+        val embeddedSnapshotSha256 = capsule.provenance.embeddedSnapshotSha256
+        val embeddedSnapshotHashMatches = embeddedSnapshotSha256 == sha256Hex(CAPSULE_JSON.encodeToString(capsule.snapshot))
+        val traceHashMatches = capsule.provenance.traceSha256 == embeddedTraceSha256
+        val rebuiltTraceMatchesEmbedded = rebuiltTrace == capsule.trace
+        val savedSnapshotHashChecked = Paths.get(capsule.provenance.snapshotPath).exists()
+
+        val replayIssues = buildList {
+            if (!rebuiltTraceMatchesEmbedded) {
+                add("replay.trace must match the trace rebuilt from the embedded snapshot.")
+            }
+        }
+        val issues = (capsuleIssues + replayIssues).distinct()
+
+        return RunReplayReport(
+            schema = RUN_REPLAY_SCHEMA,
+            version = KAIOS_VERSION,
+            replayedAt = Instant.now().toString(),
+            source = source.toAbsolutePath().normalize().toString(),
+            capsuleSchema = capsule.schema,
+            run = capsule.run,
+            valid = issues.isEmpty(),
+            deterministic = rebuiltTraceMatchesEmbedded && traceHashMatches && capsuleIssues.isEmpty(),
+            issues = issues,
+            checks = RunReplayChecks(
+                capsuleContract = capsuleIssues.isEmpty(),
+                embeddedSnapshotHash = embeddedSnapshotHashMatches,
+                traceHash = traceHashMatches,
+                rebuiltTraceMatchesEmbedded = rebuiltTraceMatchesEmbedded,
+                savedSnapshotHashChecked = savedSnapshotHashChecked,
+            ),
+            provenance = RunReplayProvenance(
+                snapshotSha256 = capsule.provenance.snapshotSha256,
+                embeddedSnapshotSha256 = embeddedSnapshotSha256,
+                traceSha256 = capsule.provenance.traceSha256,
+                rebuiltTraceSha256 = rebuiltTraceSha256,
+            ),
+            metrics = rebuiltTrace.metrics,
+            path = rebuiltTrace.path,
+        )
+    }
+
+    private fun printRunReplaySummary(report: RunReplayReport, out: PrintStream) {
+        out.println("KAI CAPSULE REPLAY")
+        out.println("schema: ${report.schema}")
+        out.println("capsule: ${report.source}")
+        out.println("run: ${report.run.runId}")
+        out.println("status: ${if (report.valid) "valid" else "invalid"}")
+        out.println("deterministic: ${report.deterministic}")
+        out.println("snapshot_sha256: ${report.provenance.snapshotSha256}")
+        report.provenance.embeddedSnapshotSha256?.let { out.println("embedded_snapshot_sha256: $it") }
+        out.println("trace_sha256: ${report.provenance.traceSha256}")
+        out.println("rebuilt_trace_sha256: ${report.provenance.rebuiltTraceSha256}")
+        out.println("processes: ${report.metrics.processCount}")
+        out.println("events: ${report.metrics.eventCount}")
+        val pathText = if (report.path.isEmpty()) "<input>" else "<input> -> ${report.path.joinToString(" -> ")}"
+        out.println("path: $pathText")
+        if (report.issues.isNotEmpty()) {
+            out.println("issues:")
+            report.issues.forEach { issue -> out.println("  - $issue") }
+        }
     }
 
     private fun loadRunCapsule(path: Path): RunCapsule {
@@ -1916,6 +2022,8 @@ class KaiosCli(
             ),
             replay = RunCapsuleReplay(
                 commands = listOf(
+                    "kaios replay --file <capsule.json>",
+                    "kaios capsule --file <capsule.json> --check",
                     "kaios ps ${snapshot.runId}",
                     "kaios inspect ${snapshot.runId}",
                     "kaios trace ${snapshot.runId} --check",
@@ -2233,6 +2341,7 @@ class KaiosCli(
                 kaios inspect latest
                 kaios trace latest [--format text|json] [--out trace.json] [--check]
                 kaios capsule latest [--json] [--out capsule.json] [--check]
+                kaios replay --file capsule.json [--json]
                 kaios report latest
                 kaios export latest [--out artifact.md]
                 kaios doctor
@@ -3191,6 +3300,62 @@ class KaiosCli(
         }
     }
 
+    private fun parseReplayCommand(args: List<String>): ReplayCommand {
+        var inputPath: Path? = null
+        var format = ReplayFormat.Text
+        var index = 0
+
+        while (index < args.size) {
+            val arg = args[index]
+            when {
+                arg == "--json" -> {
+                    format = ReplayFormat.Json
+                    index += 1
+                }
+                arg == "--format" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--format requires text or json.")
+                    format = parseReplayFormat(value)
+                    index += 2
+                }
+                arg.startsWith("--format=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--format requires text or json." }
+                    format = parseReplayFormat(value)
+                    index += 1
+                }
+                arg == "--file" || arg == "--from" || arg == "--input" -> {
+                    val value = args.getOrNull(index + 1) ?: error("$arg requires a path.")
+                    inputPath = resolvePath(value)
+                    index += 2
+                }
+                arg.startsWith("--file=") || arg.startsWith("--from=") || arg.startsWith("--input=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "$arg requires a path." }
+                    inputPath = resolvePath(value)
+                    index += 1
+                }
+                arg == "--check" -> {
+                    index += 1
+                }
+                arg.startsWith("-") -> error("Unknown replay option '$arg'.")
+                inputPath == null -> {
+                    inputPath = resolvePath(arg)
+                    index += 1
+                }
+                else -> error("Unexpected replay argument '$arg'.")
+            }
+        }
+
+        return ReplayCommand(inputPath ?: error("Capsule file is required."), format)
+    }
+
+    private fun parseReplayFormat(value: String): ReplayFormat =
+        when (value.lowercase().trim()) {
+            "text", "plain" -> ReplayFormat.Text
+            "json" -> ReplayFormat.Json
+            else -> error("Unknown replay format '$value'. Use text or json.")
+        }
+
     private fun parseDoctorCommand(args: List<String>): DoctorCommand {
         var format = DoctorFormat.Text
         var index = 0
@@ -3463,7 +3628,17 @@ private data class CapsuleCommand(
     val check: Boolean,
 )
 
+private data class ReplayCommand(
+    val inputPath: Path,
+    val format: ReplayFormat,
+)
+
 private enum class TraceFormat(val id: String) {
+    Text("text"),
+    Json("json"),
+}
+
+private enum class ReplayFormat(val id: String) {
     Text("text"),
     Json("json"),
 }
@@ -3519,6 +3694,40 @@ private data class RunCapsuleValidation(
     val valid: Boolean,
     val issues: List<String>,
     val checkedAt: String,
+)
+
+@Serializable
+private data class RunReplayReport(
+    val schema: String,
+    val version: String,
+    val replayedAt: String,
+    val source: String,
+    val capsuleSchema: String,
+    val run: RunCapsuleRun,
+    val valid: Boolean,
+    val deterministic: Boolean,
+    val issues: List<String>,
+    val checks: RunReplayChecks,
+    val provenance: RunReplayProvenance,
+    val metrics: ProcessTraceMetrics,
+    val path: List<String>,
+)
+
+@Serializable
+private data class RunReplayChecks(
+    val capsuleContract: Boolean,
+    val embeddedSnapshotHash: Boolean,
+    val traceHash: Boolean,
+    val rebuiltTraceMatchesEmbedded: Boolean,
+    val savedSnapshotHashChecked: Boolean,
+)
+
+@Serializable
+private data class RunReplayProvenance(
+    val snapshotSha256: String,
+    val embeddedSnapshotSha256: String?,
+    val traceSha256: String,
+    val rebuiltTraceSha256: String,
 )
 
 @Serializable

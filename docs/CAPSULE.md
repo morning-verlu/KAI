@@ -50,6 +50,15 @@ Print a shared capsule file back as normalized JSON:
 kaios capsule --file artifacts/run.capsule.json --json
 ```
 
+Replay a shared capsule offline:
+
+```bash
+kaios replay --file artifacts/run.capsule.json
+kaios replay --file artifacts/run.capsule.json --json
+```
+
+Replay validates the capsule contract, rebuilds `kaios.process-trace/v1` from the embedded snapshot, and checks that the rebuilt trace matches the embedded trace. It does not call a model provider and does not need the original `.kaios/runs/` directory.
+
 ## Schema
 
 Current schema id:
@@ -73,6 +82,14 @@ Top-level fields:
 | `snapshot` | Full saved `.kaios/runs/<run-id>.json` payload. |
 | `trace` | Full `kaios.process-trace/v1` payload generated from the snapshot. |
 
+Replay output uses schema:
+
+```text
+kaios.run-replay/v1
+```
+
+It includes the capsule source path, run summary, deterministic replay status, contract issues, replay checks, provenance hashes, rebuilt trace hash, metrics, and path.
+
 ## Why It Matters
 
 Run capsules make KAI OS harder to reduce to a chatbot or wrapper:
@@ -82,6 +99,7 @@ Run capsules make KAI OS harder to reduce to a chatbot or wrapper:
 - Teams can attach a single JSON file to issues, pull requests, release notes, or future Agent Desktop imports.
 - Replays do not need API keys because capsules are generated from saved snapshots.
 - Shared capsules can be validated with `--file` even when the original run directory is not present.
+- `kaios replay` proves the embedded snapshot can deterministically rebuild the embedded trace.
 
 ## CI Pattern
 
@@ -92,6 +110,7 @@ kaios verify
 kaios capsule latest --check
 kaios capsule latest --out artifacts/kaios-run.capsule.json --force
 kaios capsule --file artifacts/kaios-run.capsule.json --check
+kaios replay --file artifacts/kaios-run.capsule.json --json
 ```
 
-The first command proves the runtime can execute a deterministic workflow. The capsule commands prove the saved run can produce and re-validate a stable audit package.
+The first command proves the runtime can execute a deterministic workflow. The capsule commands prove the saved run can produce and re-validate a stable audit package. The replay command proves the shared JSON file is enough to rebuild the trace evidence offline.

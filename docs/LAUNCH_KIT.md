@@ -27,6 +27,7 @@ No API key needed for the first demo.
 
 It can also emit a KAI Process Trace (`kaios.process-trace/v1`) for CI, replay, audit, and future UI surfaces.
 It can package a KAI Run Capsule (`kaios.run-capsule/v1`) with snapshot, trace, provenance hashes, and replay commands.
+It can replay a shared capsule offline (`kaios.run-replay/v1`) by rebuilding the trace from the embedded snapshot.
 It can generate a static Agent Process Manager report for screenshots.
 The README now includes a terminal process-table preview for quick sharing.
 There is a short CLI demo GIF for run -> ps -> inspect.
@@ -96,12 +97,13 @@ kaios ps latest
 kaios trace latest
 kaios capsule latest --out artifacts/run.capsule.json --force
 kaios capsule --file artifacts/run.capsule.json --check
+kaios replay --file artifacts/run.capsule.json
 kaios export latest
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.52/kaios-0.1.52.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.53/kaios-0.1.53.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 ```
 
@@ -162,6 +164,7 @@ kaios inspect latest
 kaios trace latest
 kaios capsule latest --out artifacts/run.capsule.json --force
 kaios capsule --file artifacts/run.capsule.json --check
+kaios replay --file artifacts/run.capsule.json
 kaios report latest
 ```
 
@@ -179,20 +182,22 @@ kaios inspect latest
 kaios trace latest
 kaios capsule latest --out artifacts/run.capsule.json --force
 kaios capsule --file artifacts/run.capsule.json --check
+kaios replay --file artifacts/run.capsule.json
 kaios report latest
 ```
 
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.1.52.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.52/kaios-0.1.52.zip
-unzip kaios-0.1.52.zip
-./kaios-0.1.52/bin/kaios demo
-./kaios-0.1.52/bin/kaios setup --ci
-./kaios-0.1.52/bin/kaios verify
-./kaios-0.1.52/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-./kaios-0.1.52/bin/kaios capsule latest --out artifacts/run.capsule.json --force
-./kaios-0.1.52/bin/kaios capsule --file artifacts/run.capsule.json --check
+curl -L -o kaios-0.1.53.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.53/kaios-0.1.53.zip
+unzip kaios-0.1.53.zip
+./kaios-0.1.53/bin/kaios demo
+./kaios-0.1.53/bin/kaios setup --ci
+./kaios-0.1.53/bin/kaios verify
+./kaios-0.1.53/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+./kaios-0.1.53/bin/kaios capsule latest --out artifacts/run.capsule.json --force
+./kaios-0.1.53/bin/kaios capsule --file artifacts/run.capsule.json --check
+./kaios-0.1.53/bin/kaios replay --file artifacts/run.capsule.json
 ```
 
 Build from source:
@@ -210,6 +215,7 @@ build/install/kaios-cli/bin/kaios inspect latest
 build/install/kaios-cli/bin/kaios trace latest
 build/install/kaios-cli/bin/kaios capsule latest --out artifacts/run.capsule.json --force
 build/install/kaios-cli/bin/kaios capsule --file artifacts/run.capsule.json --check
+build/install/kaios-cli/bin/kaios replay --file artifacts/run.capsule.json
 build/install/kaios-cli/bin/kaios report latest
 ```
 

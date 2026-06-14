@@ -99,9 +99,10 @@ When you need a full portable evidence package, use a run capsule. It embeds the
 kaios capsule latest
 kaios capsule latest --check
 kaios capsule --file artifacts/run.capsule.json --check
+kaios replay --file artifacts/run.capsule.json
 ```
 
-Capsule JSON uses schema `kaios.run-capsule/v1`; see [CAPSULE.md](CAPSULE.md).
+Capsule JSON uses schema `kaios.run-capsule/v1`. Offline replay output uses schema `kaios.run-replay/v1`; see [CAPSULE.md](CAPSULE.md).
 
 For a simple gate, validate the contract directly:
 
