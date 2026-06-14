@@ -98,6 +98,7 @@ When you need a full portable evidence package, use a run capsule. It embeds the
 ```bash
 kaios capsule latest
 kaios capsule latest --check
+kaios capsule --file artifacts/run.capsule.json --check
 ```
 
 Capsule JSON uses schema `kaios.run-capsule/v1`; see [CAPSULE.md](CAPSULE.md).

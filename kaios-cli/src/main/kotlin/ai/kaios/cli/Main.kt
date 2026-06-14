@@ -35,7 +35,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.51"
+private const val KAIOS_VERSION = "0.1.52"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val RUN_CAPSULE_SCHEMA = "kaios.run-capsule/v1"
 private const val DOCTOR_SCHEMA = "kaios.doctor/v1"
@@ -81,6 +81,12 @@ private val CONFIG_COMMANDS = listOf("templates", "validate", "show")
 private val TRACE_JSON = Json {
     prettyPrint = true
     encodeDefaults = true
+}
+
+private val CAPSULE_JSON = Json {
+    prettyPrint = true
+    encodeDefaults = true
+    ignoreUnknownKeys = true
 }
 
 fun main(args: Array<String>) {
@@ -448,17 +454,19 @@ class KaiosCli(
                 ),
             )
             "capsule" -> CommandHelp(
-                usage = "kaios capsule <run-id|latest> [--json] [--out capsule.json] [--force] [--check]",
+                usage = "kaios capsule <run-id|latest>|--file capsule.json [--json] [--out capsule.json] [--force] [--check]",
                 summary = "Build a portable run capsule with snapshot, trace, provenance hashes, and replay commands.",
                 examples = listOf(
                     "kaios capsule latest",
                     "kaios capsule latest --check",
                     "kaios capsule latest --json",
+                    "kaios capsule --file artifacts/run.capsule.json --check",
                     "kaios capsule run-97381ae9 --out artifacts/run.capsule.json --force",
                 ),
                 notes = listOf(
                     "Capsule JSON uses schema $RUN_CAPSULE_SCHEMA for audit, replay, CI, and future Agent Desktop imports.",
                     "The capsule is generated from an existing .kaios/runs snapshot; it does not re-run agents.",
+                    "Use --file to validate a shared capsule without the original .kaios/runs snapshot.",
                     "Existing capsule files are protected unless --force is passed.",
                 ),
             )
@@ -1802,49 +1810,75 @@ class KaiosCli(
             return printCommandUsageError(err, "capsule", error.message)
         }
 
-        val runId = runCatching { resolveRunId(command.runIdText) }.getOrElse {
-            return printSnapshotLoadError(err, it)
+        val capsule = if (command.inputPath != null) {
+            runCatching { loadRunCapsule(command.inputPath) }.getOrElse { error ->
+                err.println(error.message)
+                return 1
+            }
+        } else {
+            val runIdText = command.runIdText ?: return printCommandUsageError(err, "capsule", "Run id or --file is required.")
+            val runId = runCatching { resolveRunId(runIdText) }.getOrElse {
+                return printSnapshotLoadError(err, it)
+            }
+            val snapshot = runCatching { snapshotStore.load(runId) }.getOrElse {
+                return printSnapshotLoadError(err, it)
+            }
+            buildRunCapsule(snapshot)
         }
-        val snapshot = runCatching { snapshotStore.load(runId) }.getOrElse {
-            return printSnapshotLoadError(err, it)
-        }
-        val capsule = buildRunCapsule(snapshot)
 
         if (command.check) {
             return checkRunCapsule(capsule, out, err)
         }
 
-        val rendered = TRACE_JSON.encodeToString(capsule)
+        val rendered = CAPSULE_JSON.encodeToString(capsule)
         if (command.printJson) {
             out.println(rendered)
             return 0
         }
 
-        val outputPath = command.outputPath ?: defaultCapsulePath(runId)
-        val path = runCatching { writeTextOutput("$rendered\n", outputPath, command.forceOutput) }.getOrElse { error ->
-            err.println(error.message)
-            return 1
+        val outputPath = command.outputPath ?: if (command.inputPath == null) {
+            defaultCapsulePath(RunId(capsule.run.runId))
+        } else {
+            null
+        }
+        if (outputPath != null) {
+            val path = runCatching { writeTextOutput("$rendered\n", outputPath, command.forceOutput) }.getOrElse { error ->
+                err.println(error.message)
+                return 1
+            }
+            printRunCapsuleSummary(capsule, out, path.toString())
+            return 0
         }
 
-        out.println("capsule: $path")
+        printRunCapsuleSummary(capsule, out, command.inputPath.toString())
+        return 0
+    }
+
+    private fun printRunCapsuleSummary(capsule: RunCapsule, out: PrintStream, capsulePath: String) {
+        out.println("capsule: $capsulePath")
         out.println("schema: ${capsule.schema}")
         out.println("run: ${capsule.run.runId}")
         out.println("valid: ${capsule.validation.valid}")
         out.println("snapshot_sha256: ${capsule.provenance.snapshotSha256}")
+        capsule.provenance.embeddedSnapshotSha256?.let { out.println("embedded_snapshot_sha256: $it") }
         out.println("trace_sha256: ${capsule.provenance.traceSha256}")
         out.println("next:")
         out.println("  kaios capsule ${capsule.run.runId} --check")
         out.println("  kaios trace ${capsule.run.runId} --check")
-        return 0
+    }
+
+    private fun loadRunCapsule(path: Path): RunCapsule {
+        require(path.exists()) { "Capsule file '$path' was not found." }
+        return CAPSULE_JSON.decodeFromString(Files.readString(path))
     }
 
     private fun buildRunCapsule(snapshot: StoredRunSnapshot): RunCapsule {
         val runId = RunId(snapshot.runId)
         val snapshotPath = snapshotStore.pathFor(runId).toAbsolutePath().normalize()
         val snapshotText = runCatching { Files.readString(snapshotPath) }
-            .getOrElse { TRACE_JSON.encodeToString(snapshot) }
+            .getOrElse { CAPSULE_JSON.encodeToString(snapshot) }
         val trace = buildProcessTrace(snapshot)
-        val traceText = TRACE_JSON.encodeToString(trace)
+        val traceText = CAPSULE_JSON.encodeToString(trace)
         val traceIssues = validateProcessTrace(trace)
         val configPath = defaultConfigPath()
         val configText = if (configPath.exists()) {
@@ -1872,6 +1906,7 @@ class KaiosCli(
             provenance = RunCapsuleProvenance(
                 snapshotPath = snapshotPath.toString(),
                 snapshotSha256 = sha256Hex(snapshotText),
+                embeddedSnapshotSha256 = sha256Hex(CAPSULE_JSON.encodeToString(snapshot)),
                 traceSha256 = sha256Hex(traceText),
                 configPath = configPath.toAbsolutePath().normalize().toString(),
                 configSha256 = configText?.let(::sha256Hex),
@@ -1941,9 +1976,16 @@ class KaiosCli(
         requireCapsule(capsule.run.syscallCount == capsule.trace.metrics.syscallCount, "run.syscallCount must equal trace.metrics.syscallCount.")
         requireCapsule(capsule.run.contextBytes == capsule.trace.metrics.contextBytes, "run.contextBytes must equal trace.metrics.contextBytes.")
         requireCapsule(capsule.provenance.snapshotSha256.length == 64, "provenance.snapshotSha256 must be a SHA-256 hex digest.")
+        capsule.provenance.embeddedSnapshotSha256?.let { embeddedSnapshotSha256 ->
+            requireCapsule(embeddedSnapshotSha256.length == 64, "provenance.embeddedSnapshotSha256 must be a SHA-256 hex digest.")
+            requireCapsule(
+                embeddedSnapshotSha256 == sha256Hex(CAPSULE_JSON.encodeToString(capsule.snapshot)),
+                "provenance.embeddedSnapshotSha256 must match the embedded snapshot.",
+            )
+        }
         requireCapsule(capsule.provenance.traceSha256.length == 64, "provenance.traceSha256 must be a SHA-256 hex digest.")
         requireCapsule(
-            capsule.provenance.traceSha256 == sha256Hex(TRACE_JSON.encodeToString(capsule.trace)),
+            capsule.provenance.traceSha256 == sha256Hex(CAPSULE_JSON.encodeToString(capsule.trace)),
             "provenance.traceSha256 must match the embedded trace.",
         )
         val snapshotPath = Paths.get(capsule.provenance.snapshotPath)
@@ -3053,6 +3095,7 @@ class KaiosCli(
 
     private fun parseCapsuleCommand(args: List<String>): CapsuleCommand {
         var runIdText: String? = null
+        var inputPath: Path? = null
         var outputPath: Path? = null
         var forceOutput = false
         var printJson = false
@@ -3077,6 +3120,17 @@ class KaiosCli(
                     require(value.isNotBlank()) { "--format requires json." }
                     parseCapsuleFormat(value)
                     printJson = true
+                    index += 1
+                }
+                arg == "--file" || arg == "--from" || arg == "--input" -> {
+                    val value = args.getOrNull(index + 1) ?: error("$arg requires a path.")
+                    inputPath = resolvePath(value)
+                    index += 2
+                }
+                arg.startsWith("--file=") || arg.startsWith("--from=") || arg.startsWith("--input=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "$arg requires a path." }
+                    inputPath = resolvePath(value)
                     index += 1
                 }
                 arg == "--out" || arg == "--output" -> {
@@ -3116,9 +3170,13 @@ class KaiosCli(
         if (check && printJson) {
             error("--check prints status text; omit --json.")
         }
+        if (runIdText != null && inputPath != null) {
+            error("Use either a run id or --file, not both.")
+        }
 
         return CapsuleCommand(
-            runIdText = runIdText ?: error("Run id is required."),
+            runIdText = runIdText,
+            inputPath = inputPath,
             outputPath = outputPath,
             forceOutput = forceOutput,
             printJson = printJson,
@@ -3397,7 +3455,8 @@ private data class TraceCommand(
 )
 
 private data class CapsuleCommand(
-    val runIdText: String,
+    val runIdText: String?,
+    val inputPath: Path?,
     val outputPath: Path?,
     val forceOutput: Boolean,
     val printJson: Boolean,
@@ -3440,6 +3499,7 @@ private data class RunCapsuleRun(
 private data class RunCapsuleProvenance(
     val snapshotPath: String,
     val snapshotSha256: String,
+    val embeddedSnapshotSha256: String? = null,
     val traceSha256: String,
     val configPath: String,
     val configSha256: String?,

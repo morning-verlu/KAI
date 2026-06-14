@@ -27,6 +27,7 @@ If the CI job should retain a portable run evidence package, add:
 ```bash
 kaios capsule latest --check
 kaios capsule latest --out artifacts/kaios-run.capsule.json --force
+kaios capsule --file artifacts/kaios-run.capsule.json --check
 ```
 
 ## Repository CI

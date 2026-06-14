@@ -38,6 +38,18 @@ Validate the capsule contract without writing a file:
 kaios capsule latest --check
 ```
 
+Validate a shared capsule file without the original `.kaios/runs/` snapshot:
+
+```bash
+kaios capsule --file artifacts/run.capsule.json --check
+```
+
+Print a shared capsule file back as normalized JSON:
+
+```bash
+kaios capsule --file artifacts/run.capsule.json --json
+```
+
 ## Schema
 
 Current schema id:
@@ -55,7 +67,7 @@ Top-level fields:
 | `generatedAt` | ISO-8601 generation time. |
 | `cwd` | Working directory used by the CLI. |
 | `run` | Compact run summary with workflow, success, process count, tokens, context bytes, syscalls, and duration. |
-| `provenance` | Snapshot path, snapshot SHA-256, trace SHA-256, and optional project config hash/validation metadata. |
+| `provenance` | Snapshot path, saved snapshot SHA-256, embedded snapshot SHA-256, trace SHA-256, and optional project config hash/validation metadata. |
 | `replay` | Commands for inspecting the same run without re-running agents. |
 | `validation` | Capsule and trace contract status. |
 | `snapshot` | Full saved `.kaios/runs/<run-id>.json` payload. |
@@ -69,6 +81,7 @@ Run capsules make KAI OS harder to reduce to a chatbot or wrapper:
 - CI can keep stable evidence for each agent workflow.
 - Teams can attach a single JSON file to issues, pull requests, release notes, or future Agent Desktop imports.
 - Replays do not need API keys because capsules are generated from saved snapshots.
+- Shared capsules can be validated with `--file` even when the original run directory is not present.
 
 ## CI Pattern
 
@@ -78,6 +91,7 @@ After a readiness gate:
 kaios verify
 kaios capsule latest --check
 kaios capsule latest --out artifacts/kaios-run.capsule.json --force
+kaios capsule --file artifacts/kaios-run.capsule.json --check
 ```
 
-The first command proves the runtime can execute a deterministic workflow. The capsule commands prove the saved run can produce a stable audit package.
+The first command proves the runtime can execute a deterministic workflow. The capsule commands prove the saved run can produce and re-validate a stable audit package.

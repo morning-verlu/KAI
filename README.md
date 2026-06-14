@@ -106,6 +106,7 @@ Need a portable audit package for CI, review, or future Agent Desktop imports?
 kaios capsule latest
 kaios capsule latest --check
 kaios capsule latest --json
+kaios capsule --file .kaios/capsules/<run-id>.capsule.json --check
 ```
 
 Create a local workflow config when you want your own agent process graph:

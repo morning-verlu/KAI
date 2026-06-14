@@ -35,10 +35,11 @@ Use the process table:
 kaios run "analyze crypto market"
 kaios ps latest
 kaios trace latest
-kaios capsule latest --check
+kaios capsule latest --out artifacts/run.capsule.json --force
+kaios capsule --file artifacts/run.capsule.json --check
 ```
 
-The process table is the visual proof of the idea. The trace is the durable proof: `kaios.process-trace/v1` turns one agent run into a reusable audit, CI, replay, and future UI asset. The capsule is the moat proof: `kaios.run-capsule/v1` packages the snapshot, trace, provenance hashes, and replay commands as a portable runtime artifact.
+The process table is the visual proof of the idea. The trace is the durable proof: `kaios.process-trace/v1` turns one agent run into a reusable audit, CI, replay, and future UI asset. The capsule is the moat proof: `kaios.run-capsule/v1` packages the snapshot, trace, provenance hashes, and replay commands as a portable runtime artifact that can be validated from a shared JSON file.
 
 ## First-Star Checklist
 

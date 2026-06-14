@@ -94,13 +94,14 @@ kaios run --index . --context README.md --out artifacts/project.md --trace-out a
 kaios runs --json
 kaios ps latest
 kaios trace latest
-kaios capsule latest --check
+kaios capsule latest --out artifacts/run.capsule.json --force
+kaios capsule --file artifacts/run.capsule.json --check
 kaios export latest
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.51/kaios-0.1.51.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.52/kaios-0.1.52.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 ```
 
@@ -118,7 +119,7 @@ The core metaphor:
 - Tool = Syscall
 - Memory = Process state
 
-The current v0.1 demo runs a planner -> executor -> validator workflow and lets you inspect each agent process with PID, token usage, context size, syscall count, duration, lifecycle events, optional Workspace Index source maps, project context sources, retry attempts, a reusable `kaios.process-trace/v1` trace, and a portable `kaios.run-capsule/v1` evidence package. You can generate no-key Markdown or JSON project reports with `kaios analyze`, preview project shape with `kaios index`, preview context with `kaios context`, exclude local noise with `.kaiosignore`, opt into real HTTP syscalls with `KAIOS_HTTP_ALLOWLIST`, and let real providers request tools through `KAIOS_SYSCALL` directives.
+The current v0.1 demo runs a planner -> executor -> validator workflow and lets you inspect each agent process with PID, token usage, context size, syscall count, duration, lifecycle events, optional Workspace Index source maps, project context sources, retry attempts, a reusable `kaios.process-trace/v1` trace, and a portable `kaios.run-capsule/v1` evidence package that can be validated from a shared JSON file. You can generate no-key Markdown or JSON project reports with `kaios analyze`, preview project shape with `kaios index`, preview context with `kaios context`, exclude local noise with `.kaiosignore`, opt into real HTTP syscalls with `KAIOS_HTTP_ALLOWLIST`, and let real providers request tools through `KAIOS_SYSCALL` directives.
 
 It uses a deterministic mock model provider, so no API key is needed.
 
@@ -159,7 +160,8 @@ kaios run --index . --context README.md --out artifacts/project.md --trace-out a
 kaios ps latest
 kaios inspect latest
 kaios trace latest
-kaios capsule latest --check
+kaios capsule latest --out artifacts/run.capsule.json --force
+kaios capsule --file artifacts/run.capsule.json --check
 kaios report latest
 ```
 
@@ -175,20 +177,22 @@ kaios run --index . --context README.md --out artifacts/project.md --trace-out a
 kaios ps latest
 kaios inspect latest
 kaios trace latest
-kaios capsule latest --check
+kaios capsule latest --out artifacts/run.capsule.json --force
+kaios capsule --file artifacts/run.capsule.json --check
 kaios report latest
 ```
 
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.1.51.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.51/kaios-0.1.51.zip
-unzip kaios-0.1.51.zip
-./kaios-0.1.51/bin/kaios demo
-./kaios-0.1.51/bin/kaios setup --ci
-./kaios-0.1.51/bin/kaios verify
-./kaios-0.1.51/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-./kaios-0.1.51/bin/kaios capsule latest --check
+curl -L -o kaios-0.1.52.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.52/kaios-0.1.52.zip
+unzip kaios-0.1.52.zip
+./kaios-0.1.52/bin/kaios demo
+./kaios-0.1.52/bin/kaios setup --ci
+./kaios-0.1.52/bin/kaios verify
+./kaios-0.1.52/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+./kaios-0.1.52/bin/kaios capsule latest --out artifacts/run.capsule.json --force
+./kaios-0.1.52/bin/kaios capsule --file artifacts/run.capsule.json --check
 ```
 
 Build from source:
@@ -204,7 +208,8 @@ build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifa
 build/install/kaios-cli/bin/kaios ps latest
 build/install/kaios-cli/bin/kaios inspect latest
 build/install/kaios-cli/bin/kaios trace latest
-build/install/kaios-cli/bin/kaios capsule latest --check
+build/install/kaios-cli/bin/kaios capsule latest --out artifacts/run.capsule.json --force
+build/install/kaios-cli/bin/kaios capsule --file artifacts/run.capsule.json --check
 build/install/kaios-cli/bin/kaios report latest
 ```
 
