@@ -593,7 +593,7 @@
               <div class="runtime-row">
                 <div class="module">
                   <h3>Agent Runtime</h3>
-                  <p>Spawn, start, suspend, resume, cancel, succeed, and fail agent processes with event traces.</p>
+                  <p>Spawn, start, suspend, resume, cancel, succeed, and fail agent processes with durable event traces.</p>
                   <code>AgentProcess(pid, state)</code>
                 </div>
                 <div class="module">
@@ -653,7 +653,7 @@
         <div class="section-inner">
           <div class="section-heading">
             <h2>Watch a run become processes.</h2>
-            <p>The default workflow and editable project configs emit process metrics and lifecycle events that can be inspected after the run.</p>
+              <p>The default workflow and editable project configs emit process metrics, lifecycle events, and KAI Process Trace JSON that can be inspected after the run.</p>
           </div>
           <div class="terminal-frame demo-frame">
             <img src="assets/kaios-demo.gif" alt="Animated KAI OS CLI demo showing run, ps, and inspect commands">
@@ -690,8 +690,8 @@
             </article>
             <article class="feature">
               <h3>CLI process manager</h3>
-              <p>Run workflows, list runs, print process tables, inspect lifecycle events, render reports, and export Markdown artifacts.</p>
-              <span class="tag">kaios ps</span>
+              <p>Run workflows, list runs, print process tables, inspect lifecycle events, emit process traces, render reports, and export Markdown artifacts.</p>
+              <span class="tag">kaios trace</span>
             </article>
             <article class="feature">
               <h3>Project context</h3>
@@ -716,7 +716,7 @@
         <div class="section-inner quickstart">
           <div class="section-heading">
             <h2>Install it, check it, inspect it.</h2>
-            <p>The v0.1.28 CLI installs locally with no API key. Run doctor, generate a no-key project report, then launch an inspectable agent run with a Workspace Index.</p>
+            <p>The v0.1.29 CLI installs locally with no API key. Run doctor, generate a no-key project report, then launch an inspectable agent run with a Workspace Index.</p>
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
@@ -728,6 +728,7 @@ kaios doctor
 kaios analyze . --out artifacts/analysis.md --force
 kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 kaios ps &lt;run-id&gt;
+kaios trace &lt;run-id&gt;
 kaios export &lt;run-id&gt;
 
 # or:
@@ -738,6 +739,7 @@ kaios analyze . --out artifacts/analysis.md --force
 kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 kaios ps &lt;run-id&gt;
 kaios inspect &lt;run-id&gt;
+kaios trace &lt;run-id&gt;
 kaios report &lt;run-id&gt;</code></pre>
         </div>
       </section>

@@ -29,7 +29,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.28\n", out.toString())
+        assertEquals("kaios 0.1.29\n", out.toString())
     }
 
     @Test
@@ -78,6 +78,7 @@ class KaiosCliSmokeTest {
             "runs" to "Usage: kaios runs",
             "ps" to "Usage: kaios ps",
             "inspect" to "Usage: kaios inspect",
+            "trace" to "Usage: kaios trace",
             "report" to "Usage: kaios report",
             "export" to "Usage: kaios export",
             "doctor" to "Usage: kaios doctor",
@@ -111,6 +112,7 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("kaios run --index . --out artifacts/project.md --force \"summarize this project\""))
         assertTrue(text.contains("No API key is required by default"))
         assertTrue(text.contains("kaios ps <run-id>"))
+        assertTrue(text.contains("kaios trace <run-id>"))
         assertTrue(text.contains("kaios help"))
         assertTrue(!text.contains("run_id:"))
     }
@@ -352,6 +354,36 @@ class KaiosCliSmokeTest {
         assertTrue(inspectText.contains("events:"))
         assertTrue(inspectText.contains("SPAWNED"))
         assertTrue(inspectText.contains("SUCCEEDED"))
+
+        val traceOut = ByteArrayOutputStream()
+        val traceCode = cli.run(
+            arrayOf("trace", runId),
+            PrintStream(traceOut),
+            PrintStream(ByteArrayOutputStream()),
+        )
+        val traceText = traceOut.toString()
+
+        assertEquals(0, traceCode)
+        assertTrue(traceText.contains("KAI PROCESS TRACE"))
+        assertTrue(traceText.contains("schema: kaios.process-trace/v1"))
+        assertTrue(traceText.contains("<input> -> planner(pid=1) -> executor(pid=2) -> validator(pid=3)"))
+        assertTrue(traceText.contains("event_counts:"))
+        assertTrue(traceText.contains("TOOL_CALLED"))
+        assertTrue(traceText.contains("timeline:"))
+
+        val traceJsonOut = ByteArrayOutputStream()
+        val traceJsonCode = cli.run(
+            arrayOf("trace", runId, "--json"),
+            PrintStream(traceJsonOut),
+            PrintStream(ByteArrayOutputStream()),
+        )
+        val traceJson = Json.parseToJsonElement(traceJsonOut.toString()).jsonObject
+
+        assertEquals(0, traceJsonCode)
+        assertEquals("kaios.process-trace/v1", traceJson.getValue("schema").jsonPrimitive.content)
+        assertEquals(3, traceJson.getValue("metrics").jsonObject.getValue("processCount").jsonPrimitive.int)
+        assertEquals(3, traceJson.getValue("path").jsonArray.size)
+        assertEquals(3, traceJson.getValue("processes").jsonArray.size)
 
         val runsOut = ByteArrayOutputStream()
         val runsCode = cli.run(

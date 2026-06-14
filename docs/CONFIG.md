@@ -234,11 +234,13 @@ Configured workflows use the same process observability as the built-in workflow
 ```bash
 kaios ps <run-id>
 kaios inspect <run-id>
+kaios trace <run-id>
+kaios trace <run-id> --json
 kaios report <run-id>
 kaios export <run-id>
 ```
 
-Snapshots are still written under `.kaios/runs/`, so custom workflows can be inspected later without re-running the task.
+Snapshots are still written under `.kaios/runs/`, so custom workflows can be inspected later without re-running the task. `kaios trace` renders the saved run as `kaios.process-trace/v1`, a stable text/JSON view for CI checks, visualizers, replay tooling, and audit trails.
 
 ## Artifacts
 

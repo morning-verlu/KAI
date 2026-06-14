@@ -10,7 +10,7 @@ kaios --version
 
 Running `kaios` with no arguments prints the quick start and exits successfully, so it is safe to use as a first smoke test.
 Mistyped commands show a suggestion when there is a clear match, such as `kaios analyse` pointing to `kaios analyze`.
-If a run id is missing, `kaios ps`, `kaios inspect`, `kaios report`, and `kaios export` point back to `kaios runs` and saved run ids.
+If a run id is missing, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios report`, and `kaios export` point back to `kaios runs` and saved run ids.
 If `kaios.json` is missing, `kaios config show` and `kaios config validate` point back to `kaios init` and `kaios config templates`.
 
 Every core command also supports local help with examples and notes:
@@ -56,11 +56,11 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.28.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.28/kaios-0.1.28.zip
-unzip kaios-0.1.28.zip
-./kaios-0.1.28/bin/kaios doctor
-./kaios-0.1.28/bin/kaios analyze . --out artifacts/analysis.md --force
-./kaios-0.1.28/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
+curl -L -o kaios-0.1.29.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.29/kaios-0.1.29.zip
+unzip kaios-0.1.29.zip
+./kaios-0.1.29/bin/kaios doctor
+./kaios-0.1.29/bin/kaios analyze . --out artifacts/analysis.md --force
+./kaios-0.1.29/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 ```
 
 ## Build From Source
@@ -82,4 +82,6 @@ kaios init --template research
 kaios config show
 kaios ps <run-id>
 kaios inspect <run-id>
+kaios trace <run-id>
+kaios trace <run-id> --json
 ```

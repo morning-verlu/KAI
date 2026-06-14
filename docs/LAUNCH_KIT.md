@@ -25,7 +25,8 @@ It runs planner -> executor -> validator as inspectable agent processes with PID
 
 No API key needed for the first demo.
 
-It can also generate a static Agent Process Manager report for screenshots.
+It can also emit a KAI Process Trace (`kaios.process-trace/v1`) for CI, replay, audit, and future UI surfaces.
+It can generate a static Agent Process Manager report for screenshots.
 The README now includes a terminal process-table preview for quick sharing.
 There is a short CLI demo GIF for run -> ps -> inspect.
 New users can run `kaios doctor` before the first workflow.
@@ -61,6 +62,7 @@ The v0.1 release is a runnable Kotlin/JVM seed:
 - SQLite memory adapter
 - JSON run snapshots
 - CLI process table
+- KAI Process Trace schema
 - static Agent Process Manager report
 - Markdown run artifacts for shareable handoff
 - no-key Markdown and JSON workspace analysis reports
@@ -78,12 +80,13 @@ kaios doctor
 kaios analyze . --out artifacts/analysis.md --force
 kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 kaios ps <run-id>
+kaios trace <run-id>
 kaios export <run-id>
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.28/kaios-0.1.28.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.29/kaios-0.1.29.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 ```
 
@@ -101,7 +104,7 @@ The core metaphor:
 - Tool = Syscall
 - Memory = Process state
 
-The current v0.1 demo runs a planner -> executor -> validator workflow and lets you inspect each agent process with PID, token usage, context size, syscall count, duration, lifecycle events, optional Workspace Index source maps, project context sources, and retry attempts. You can generate no-key Markdown or JSON project reports with `kaios analyze`, preview project shape with `kaios index`, preview context with `kaios context`, exclude local noise with `.kaiosignore`, opt into real HTTP syscalls with `KAIOS_HTTP_ALLOWLIST`, and let real providers request tools through `KAIOS_SYSCALL` directives.
+The current v0.1 demo runs a planner -> executor -> validator workflow and lets you inspect each agent process with PID, token usage, context size, syscall count, duration, lifecycle events, optional Workspace Index source maps, project context sources, retry attempts, and a reusable `kaios.process-trace/v1` trace. You can generate no-key Markdown or JSON project reports with `kaios analyze`, preview project shape with `kaios index`, preview context with `kaios context`, exclude local noise with `.kaiosignore`, opt into real HTTP syscalls with `KAIOS_HTTP_ALLOWLIST`, and let real providers request tools through `KAIOS_SYSCALL` directives.
 
 It uses a deterministic mock model provider, so no API key is needed.
 
@@ -120,7 +123,7 @@ Agent = Process
 Workflow = Scheduler
 Tool = Syscall
 
-The first version is intentionally small but runnable: a default planner -> executor -> validator workflow, process metrics, lifecycle events, observable retries, permissioned tools, no-key Markdown and JSON workspace analysis reports, Workspace Index source maps, previewable bounded project context, allowlisted HTTP, and JSON run snapshots.
+The first version is intentionally small but runnable: a default planner -> executor -> validator workflow, process metrics, lifecycle events, KAI Process Trace JSON, observable retries, permissioned tools, no-key Markdown and JSON workspace analysis reports, Workspace Index source maps, previewable bounded project context, allowlisted HTTP, and JSON run snapshots.
 
 I would love feedback on the Kotlin API/DSL and runtime model.
 
@@ -140,6 +143,7 @@ kaios analyze . --out artifacts/analysis.md --force
 kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 kaios ps <run-id>
 kaios inspect <run-id>
+kaios trace <run-id>
 kaios report <run-id>
 ```
 
@@ -153,17 +157,18 @@ kaios analyze . --out artifacts/analysis.md --force
 kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 kaios ps <run-id>
 kaios inspect <run-id>
+kaios trace <run-id>
 kaios report <run-id>
 ```
 
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.1.28.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.28/kaios-0.1.28.zip
-unzip kaios-0.1.28.zip
-./kaios-0.1.28/bin/kaios doctor
-./kaios-0.1.28/bin/kaios analyze . --out artifacts/analysis.md --force
-./kaios-0.1.28/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
+curl -L -o kaios-0.1.29.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.29/kaios-0.1.29.zip
+unzip kaios-0.1.29.zip
+./kaios-0.1.29/bin/kaios doctor
+./kaios-0.1.29/bin/kaios analyze . --out artifacts/analysis.md --force
+./kaios-0.1.29/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 ```
 
 Build from source:
@@ -177,6 +182,7 @@ build/install/kaios-cli/bin/kaios analyze . --out artifacts/analysis.md --force
 build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifacts/project.md --force "summarize this project"
 build/install/kaios-cli/bin/kaios ps <run-id>
 build/install/kaios-cli/bin/kaios inspect <run-id>
+build/install/kaios-cli/bin/kaios trace <run-id>
 build/install/kaios-cli/bin/kaios report <run-id>
 ```
 

@@ -19,17 +19,22 @@ import ai.kaios.builtInToolRegistry
 import ai.kaios.workflow
 import ai.kaios.Workflow
 import ai.kaios.WorkflowScheduler
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.io.PrintStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Duration
+import java.time.Instant
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.28"
+private const val KAIOS_VERSION = "0.1.29"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
@@ -41,6 +46,7 @@ private val TOP_LEVEL_COMMANDS = listOf(
     "runs",
     "ps",
     "inspect",
+    "trace",
     "report",
     "export",
     "doctor",
@@ -57,6 +63,11 @@ private val TOP_LEVEL_COMMAND_ALIASES = mapOf(
 )
 
 private val CONFIG_COMMANDS = listOf("templates", "validate", "show")
+
+private val TRACE_JSON = Json {
+    prettyPrint = true
+    encodeDefaults = true
+}
 
 fun main(args: Array<String>) {
     val exitCode = KaiosCli().run(args, System.out, System.err)
@@ -90,6 +101,7 @@ class KaiosCli(
             "runs" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("runs")) else listRuns(out)
             "ps" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("ps")) else printProcessTable(commandArgs, out, err)
             "inspect" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("inspect")) else inspectRun(commandArgs, out, err)
+            "trace" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("trace")) else traceRun(commandArgs, out, err)
             "report" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("report")) else generateReport(commandArgs, out, err)
             "export" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("export")) else exportRun(commandArgs, out, err)
             "doctor" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("doctor")) else doctor(out)
@@ -258,7 +270,7 @@ class KaiosCli(
                 notes = listOf(
                     "No API key is required by default; the mock provider is deterministic.",
                     "Use -- before a task that starts with '-'.",
-                    "After a run, use 'kaios ps <run-id>' and 'kaios inspect <run-id>'.",
+                    "After a run, use 'kaios ps <run-id>', 'kaios inspect <run-id>', and 'kaios trace <run-id>'.",
                 ),
             )
             "context" -> CommandHelp(
@@ -319,7 +331,7 @@ class KaiosCli(
                 usage = "kaios runs",
                 summary = "List saved run snapshots from .kaios/runs/.",
                 examples = listOf("kaios runs"),
-                notes = listOf("Use a listed run id with ps, inspect, report, or export."),
+                notes = listOf("Use a listed run id with ps, inspect, trace, report, or export."),
             )
             "ps" -> CommandHelp(
                 usage = "kaios ps <run-id>",
@@ -331,6 +343,15 @@ class KaiosCli(
                 usage = "kaios inspect <run-id>",
                 summary = "Print final output and lifecycle events for a saved run.",
                 examples = listOf("kaios inspect run-97381ae9"),
+            )
+            "trace" -> CommandHelp(
+                usage = "kaios trace <run-id> [--format text|json]",
+                summary = "Print a KAI Process Trace with process metrics, execution path, event counts, and timeline.",
+                examples = listOf(
+                    "kaios trace run-97381ae9",
+                    "kaios trace run-97381ae9 --json",
+                ),
+                notes = listOf("Trace JSON uses schema kaios.process-trace/v1 for CI, UI, replay, and audit tooling."),
             )
             "report" -> CommandHelp(
                 usage = "kaios report <run-id>",
@@ -428,6 +449,7 @@ class KaiosCli(
         out.println("next:")
         out.println("  kaios ps ${result.runId.value}")
         out.println("  kaios inspect ${result.runId.value}")
+        out.println("  kaios trace ${result.runId.value}")
         out.println("  kaios report ${result.runId.value}")
         out.println("  kaios export ${result.runId.value}")
         return if (result.success) 0 else 2
@@ -910,6 +932,130 @@ class KaiosCli(
         return 0
     }
 
+    private fun traceRun(args: List<String>, out: PrintStream, err: PrintStream): Int {
+        val command = runCatching { parseTraceCommand(args) }.getOrElse { error ->
+            return printCommandUsageError(err, "trace", error.message)
+        }
+
+        val snapshot = runCatching { snapshotStore.load(command.runId) }.getOrElse {
+            return printSnapshotLoadError(err, it)
+        }
+
+        val trace = buildProcessTrace(snapshot)
+        when (command.format) {
+            TraceFormat.Text -> out.println(renderProcessTrace(trace))
+            TraceFormat.Json -> out.println(TRACE_JSON.encodeToString(trace))
+        }
+        return 0
+    }
+
+    private fun buildProcessTrace(snapshot: StoredRunSnapshot): ProcessTrace {
+        val processes = snapshot.processes.sortedBy { it.pid }
+        val events = snapshot.events
+        val eventInstants = events.mapNotNull { event ->
+            runCatching { Instant.parse(event.timestamp) }.getOrNull()
+        }
+        val firstEventAt = eventInstants.minOrNull()
+        val lastEventAt = eventInstants.maxOrNull()
+        val wallDurationMillis = if (firstEventAt != null && lastEventAt != null) {
+            Duration.between(firstEventAt, lastEventAt).toMillis().coerceAtLeast(0)
+        } else {
+            processes.sumOf { it.durationMillis }
+        }
+
+        return ProcessTrace(
+            schema = "kaios.process-trace/v1",
+            runId = snapshot.runId,
+            workflowName = snapshot.workflowName,
+            task = snapshot.task,
+            success = snapshot.success,
+            metrics = ProcessTraceMetrics(
+                processCount = processes.size,
+                tokenTotal = processes.sumOf { it.tokens },
+                inputTokens = processes.sumOf { it.inputTokens },
+                outputTokens = processes.sumOf { it.outputTokens },
+                contextBytes = processes.sumOf { it.contextSize },
+                syscallCount = processes.sumOf { it.syscallCount },
+                processDurationMillis = processes.sumOf { it.durationMillis },
+                wallDurationMillis = wallDurationMillis,
+                eventCount = events.size,
+            ),
+            path = processes.map { process -> "${process.agent}(pid=${process.pid})" },
+            processes = processes.map { process ->
+                ProcessTraceProcess(
+                    pid = process.pid,
+                    agent = process.agent,
+                    state = process.state,
+                    tokens = process.tokens,
+                    inputTokens = process.inputTokens,
+                    outputTokens = process.outputTokens,
+                    contextBytes = process.contextSize,
+                    syscallCount = process.syscallCount,
+                    durationMillis = process.durationMillis,
+                    failure = process.failure,
+                )
+            },
+            eventCounts = events
+                .groupingBy { event -> event.type }
+                .eachCount()
+                .toSortedMap(),
+            events = events.map { event ->
+                ProcessTraceEvent(
+                    timestamp = event.timestamp,
+                    pid = event.pid,
+                    agent = event.agent,
+                    type = event.type,
+                    message = event.message,
+                )
+            },
+        )
+    }
+
+    private fun renderProcessTrace(trace: ProcessTrace): String = buildString {
+        appendLine("KAI PROCESS TRACE")
+        appendLine("schema: ${trace.schema}")
+        appendLine("run: ${trace.runId}")
+        appendLine("workflow: ${trace.workflowName}")
+        appendLine("success: ${trace.success}")
+        appendLine("task: ${singleLine(trace.task)}")
+        appendLine()
+        appendLine("metrics:")
+        appendLine("  processes: ${trace.metrics.processCount}")
+        appendLine("  tokens: ${trace.metrics.tokenTotal} (input=${trace.metrics.inputTokens}, output=${trace.metrics.outputTokens})")
+        appendLine("  context: ${trace.metrics.contextBytes}b")
+        appendLine("  syscalls: ${trace.metrics.syscallCount}")
+        appendLine("  process_duration: ${trace.metrics.processDurationMillis}ms")
+        appendLine("  wall_duration: ${trace.metrics.wallDurationMillis}ms")
+        appendLine("  events: ${trace.metrics.eventCount}")
+        appendLine()
+        appendLine("path:")
+        if (trace.path.isEmpty()) {
+            appendLine("  <none>")
+        } else {
+            appendLine("  <input> -> ${trace.path.joinToString(" -> ")}")
+        }
+        appendLine()
+        appendLine("processes:")
+        appendLine(formatTraceProcessHeader())
+        trace.processes.forEach { process -> appendLine(formatTraceProcess(process)) }
+        appendLine()
+        appendLine("event_counts:")
+        if (trace.eventCounts.isEmpty()) {
+            appendLine("  -")
+        } else {
+            trace.eventCounts.forEach { (type, count) -> appendLine("  $type: $count") }
+        }
+        appendLine()
+        appendLine("timeline:")
+        if (trace.events.isEmpty()) {
+            appendLine("  -")
+        } else {
+            trace.events.forEach { event ->
+                appendLine("  ${event.timestamp} pid=${event.pid} agent=${event.agent} ${event.type} ${event.message}")
+            }
+        }
+    }.trimEnd()
+
     private fun printUsage(out: PrintStream) {
         out.println(
             """
@@ -940,6 +1086,7 @@ class KaiosCli(
                 kaios runs
                 kaios ps <run-id>
                 kaios inspect <run-id>
+                kaios trace <run-id> [--format text|json]
                 kaios report <run-id>
                 kaios export <run-id> [--out artifact.md]
                 kaios doctor
@@ -987,6 +1134,51 @@ class KaiosCli(
         "MEMORY" -> 4
         "SYSCALLS" -> 5
         else -> 6
+    }
+
+    private fun formatTraceProcessHeader(): String =
+        listOf("PID", "AGENT", "STATE", "TOKENS", "IN", "OUT", "MEMORY", "SYSCALLS", "DURATION").joinToString("  ") {
+            it.padEnd(traceColumnWidth(it))
+        }
+
+    private fun formatTraceProcess(process: ProcessTraceProcess): String =
+        listOf(
+            process.pid.toString(),
+            process.agent,
+            process.state,
+            process.tokens.toString(),
+            process.inputTokens.toString(),
+            process.outputTokens.toString(),
+            "${process.contextBytes}b",
+            process.syscallCount.toString(),
+            "${process.durationMillis}ms",
+        ).mapIndexed { index, value -> value.padEnd(traceColumnWidth(index)) }
+            .joinToString("  ")
+
+    private fun traceColumnWidth(header: String): Int = traceColumnWidth(
+        when (header) {
+            "PID" -> 0
+            "AGENT" -> 1
+            "STATE" -> 2
+            "TOKENS" -> 3
+            "IN" -> 4
+            "OUT" -> 5
+            "MEMORY" -> 6
+            "SYSCALLS" -> 7
+            else -> 8
+        },
+    )
+
+    private fun traceColumnWidth(index: Int): Int = when (index) {
+        0 -> 6
+        1 -> 12
+        2 -> 10
+        3 -> 8
+        4 -> 6
+        5 -> 6
+        6 -> 8
+        7 -> 8
+        else -> 10
     }
 
     private fun columnWidth(index: Int): Int = when (index) {
@@ -1439,6 +1631,48 @@ class KaiosCli(
         return ExportCommand(runId, outputPath ?: defaultArtifactPath(runId), force)
     }
 
+    private fun parseTraceCommand(args: List<String>): TraceCommand {
+        var runId: RunId? = null
+        var format = TraceFormat.Text
+        var index = 0
+
+        while (index < args.size) {
+            val arg = args[index]
+            when {
+                arg == "--json" -> {
+                    format = TraceFormat.Json
+                    index += 1
+                }
+                arg == "--format" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--format requires text or json.")
+                    format = parseTraceFormat(value)
+                    index += 2
+                }
+                arg.startsWith("--format=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--format requires text or json." }
+                    format = parseTraceFormat(value)
+                    index += 1
+                }
+                arg.startsWith("-") -> error("Unknown trace option '$arg'.")
+                runId == null -> {
+                    runId = RunId(arg)
+                    index += 1
+                }
+                else -> error("Unexpected trace argument '$arg'.")
+            }
+        }
+
+        return TraceCommand(runId ?: error("Run id is required."), format)
+    }
+
+    private fun parseTraceFormat(value: String): TraceFormat =
+        when (value.lowercase().trim()) {
+            "text", "plain" -> TraceFormat.Text
+            "json" -> TraceFormat.Json
+            else -> error("Unknown trace format '$value'. Use text or json.")
+        }
+
     private fun printTemplates(out: PrintStream) {
         out.println("TEMPLATES")
         projectConfigTemplates.forEach { template ->
@@ -1475,6 +1709,66 @@ private data class ExportCommand(
     val runId: RunId,
     val outputPath: Path,
     val force: Boolean,
+)
+
+private data class TraceCommand(
+    val runId: RunId,
+    val format: TraceFormat,
+)
+
+private enum class TraceFormat {
+    Text,
+    Json,
+}
+
+@Serializable
+private data class ProcessTrace(
+    val schema: String,
+    val runId: String,
+    val workflowName: String,
+    val task: String,
+    val success: Boolean,
+    val metrics: ProcessTraceMetrics,
+    val path: List<String>,
+    val processes: List<ProcessTraceProcess>,
+    val eventCounts: Map<String, Int>,
+    val events: List<ProcessTraceEvent>,
+)
+
+@Serializable
+private data class ProcessTraceMetrics(
+    val processCount: Int,
+    val tokenTotal: Int,
+    val inputTokens: Int,
+    val outputTokens: Int,
+    val contextBytes: Int,
+    val syscallCount: Int,
+    val processDurationMillis: Long,
+    val wallDurationMillis: Long,
+    val eventCount: Int,
+)
+
+@Serializable
+private data class ProcessTraceProcess(
+    val pid: Long,
+    val agent: String,
+    val state: String,
+    val tokens: Int,
+    val inputTokens: Int,
+    val outputTokens: Int,
+    val contextBytes: Int,
+    val syscallCount: Int,
+    val durationMillis: Long,
+    val failure: String? = null,
+)
+
+@Serializable
+private data class ProcessTraceEvent(
+    val timestamp: String,
+    val pid: Long,
+    val agent: String,
+    val type: String,
+    val message: String,
 )
 
 private data class AnalyzeCommand(

@@ -33,6 +33,7 @@ Most agent frameworks model AI work as chains, prompts, or chat sessions. KAI OS
 - Keep real network access behind explicit allowlist policy.
 - Schedule multi-agent workflows as DAGs.
 - Persist run snapshots for inspection and debugging.
+- Emit KAI Process Trace JSON for CI, UI, replay, and audit tooling.
 
 Kotlin gives this model a strong foundation: JVM ecosystem reach, type safety, coroutines-ready concurrency, DSL ergonomics, and a path toward Kotlin Multiplatform.
 
@@ -127,6 +128,24 @@ Inspect lifecycle events:
 kaios inspect run-97381ae9
 ```
 
+Print the KAI Process Trace:
+
+```bash
+kaios trace run-97381ae9
+kaios trace run-97381ae9 --json
+```
+
+```text
+KAI PROCESS TRACE
+schema: kaios.process-trace/v1
+run: run-97381ae9
+workflow: default
+success: true
+
+path:
+  <input> -> planner(pid=1) -> executor(pid=2) -> validator(pid=3)
+```
+
 Generate a standalone Agent Process Manager report:
 
 ```bash
@@ -176,7 +195,7 @@ Modules:
 - `tool-runtime`: built-in syscall tools including allowlisted HTTP and scoped files.
 - `memory-engine`: in-memory session memory and JSON run snapshots.
 - `model-providers`: OpenAI-compatible and Ollama model provider implementations.
-- `kaios-cli`: `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
+- `kaios-cli`: `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
 
 Read the deeper design notes in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -270,6 +289,7 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - Session memory and JSON snapshots under `.kaios/runs/`.
 - SQLite memory adapter for persisted agent process memory.
 - CLI process table and run inspector.
+- KAI Process Trace schema with text and JSON output through `kaios trace`.
 - Markdown run artifacts with `kaios run --out` and `kaios export`.
 - `kaios doctor` environment diagnostics for Java, provider, memory, snapshots, and writable runtime directories.
 - Static Agent Process Manager HTML reports under `.kaios/reports/`.
