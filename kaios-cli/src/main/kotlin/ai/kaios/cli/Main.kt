@@ -35,7 +35,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.67"
+private const val KAIOS_VERSION = "0.1.68"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val RUN_CAPSULE_SCHEMA = "kaios.run-capsule/v1"
 private const val RUN_REPLAY_SCHEMA = "kaios.run-replay/v1"
@@ -3238,14 +3238,26 @@ class KaiosCli(
                       echo "${'$'}HOME/.kaios/bin" >> "${'$'}GITHUB_PATH"
 
                   - name: Verify KAI OS project
-                    run: kaios verify --config $config --evidence --force
+                    run: |
+                      set -euo pipefail
+                      mkdir -p artifacts
+                      kaios verify --config $config --evidence --json --force | tee artifacts/kaios-verify.json
 
-                  - name: Upload KAI evidence
+                  - name: Collect KAI OS support report
+                    if: failure()
+                    run: |
+                      mkdir -p artifacts
+                      kaios bug-report --config $config --json --out artifacts/kaios-bug-report.json --force
+
+                  - name: Upload KAI OS artifacts
                     if: always()
                     uses: actions/upload-artifact@v4
                     with:
-                      name: kaios-evidence
-                      path: artifacts/kaios-run.capsule.json
+                      name: kaios-agent-gate
+                      path: |
+                        artifacts/kaios-verify.json
+                        artifacts/kaios-run.capsule.json
+                        artifacts/kaios-bug-report.json
                       if-no-files-found: ignore
         """.trimIndent() + "\n"
     }

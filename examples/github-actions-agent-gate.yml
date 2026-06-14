@@ -13,7 +13,7 @@ jobs:
     name: Verify agent workflow
     runs-on: ubuntu-latest
     env:
-      KAIOS_VERSION: "0.1.67"
+      KAIOS_VERSION: "0.1.68"
       KAIOS_MODEL_PROVIDER: mock
     steps:
       - name: Checkout
@@ -40,7 +40,7 @@ jobs:
         if: failure()
         run: |
           mkdir -p artifacts
-          kaios bug-report --json --out artifacts/kaios-bug-report.json --force
+          kaios bug-report --config kaios.json --json --out artifacts/kaios-bug-report.json --force
 
       - name: Upload KAI OS artifacts
         if: always()

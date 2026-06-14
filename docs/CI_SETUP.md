@@ -14,15 +14,16 @@ kaios setup --ci
 git add kaios.json .github/workflows/kaios.yml
 ```
 
-The generated `.github/workflows/kaios.yml` is intentionally no-key by default. It pins the current KAI OS CLI version, sets `KAIOS_MODEL_PROVIDER=mock`, runs the verify evidence gate, and uploads the resulting capsule artifact:
+The generated `.github/workflows/kaios.yml` is intentionally no-key by default. It pins the current KAI OS CLI version, sets `KAIOS_MODEL_PROVIDER=mock`, runs the verify evidence gate as JSON, and uploads a small audit bundle:
 
 ```bash
-kaios verify --config kaios.json --evidence --force
+mkdir -p artifacts
+kaios verify --config kaios.json --evidence --json --force | tee artifacts/kaios-verify.json
 ```
 
-This gives teams a stable gate for environment readiness, editable workflow validation, deterministic runtime execution, process trace contract checks, and portable evidence. The same command runs locally before pushing.
+The uploaded `kaios-agent-gate` artifact includes `kaios-verify.json`, `kaios-run.capsule.json`, and, when the gate fails, `kaios-bug-report.json`. This gives teams a stable gate for environment readiness, editable workflow validation, deterministic runtime execution, process trace contract checks, portable evidence, and support handoff. The same command runs locally before pushing.
 
-For a copyable production-style workflow that also saves `kaios.verify/v1` JSON and collects `kaios.bug-report/v1` on failure, see [../examples/github-actions-agent-gate.yml](../examples/github-actions-agent-gate.yml).
+For a copyable workflow file matching the generated gate, see [../examples/github-actions-agent-gate.yml](../examples/github-actions-agent-gate.yml).
 
 If the repository keeps a known-good baseline capsule, add a regression diff gate:
 

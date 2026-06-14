@@ -140,7 +140,7 @@ kaios verify --evidence --force
 kaios run --out artifacts/runtime.md "map the JVM agent runtime"
 ```
 
-`kaios setup --ci` also writes `.github/workflows/kaios.yml`, a no-key Agent Gate that installs KAI OS, runs `kaios verify --config kaios.json --evidence --force`, and uploads the capsule artifact.
+`kaios setup --ci` also writes `.github/workflows/kaios.yml`, a no-key Agent Gate that installs KAI OS, runs `kaios verify --config kaios.json --evidence --json --force`, saves the verify JSON plus capsule artifact, and collects a JSON bug report when the gate fails.
 
 Or install with the hosted script:
 
@@ -354,7 +354,7 @@ For one-command project setup, see [docs/SETUP.md](docs/SETUP.md).
 
 For the no-key readiness gate, see [docs/VERIFY.md](docs/VERIFY.md).
 
-For copyable project examples, including a production-style GitHub Actions Agent Gate, see [examples/README.md](examples/README.md).
+For copyable project examples, including the default GitHub Actions Agent Gate, see [examples/README.md](examples/README.md).
 
 For persisted memory, see [docs/MEMORY.md](docs/MEMORY.md).
 
@@ -377,10 +377,10 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - Permissioned tools: `echo`, `clock`, `mock-http`, allowlisted `http`, scoped `file`.
 - Project workflow templates, retry policy, config validation, config graph display, and auto-detected `kaios.json` runs.
 - `kaios setup` bootstraps a validated project workflow and can add the CI Agent Gate in one command.
-- Production-style GitHub Actions Agent Gate example with verify JSON, evidence capsule, and failure-time bug report.
+- Default GitHub Actions Agent Gate with verify JSON, evidence capsule, and failure-time bug report.
 - `kaios verify` emits `kaios.verify/v1`, runs the no-key readiness gate, can write `kaios.evidence/v1`, and saves a normal run snapshot for inspection.
 - `kaios config validate --json` emits `kaios.config-validation/v1` with `next` commands and structured `nextActions` for CI and release gates.
-- `kaios init --ci` writes a GitHub Actions Agent Gate that uses the same local `kaios verify --config kaios.json --evidence --force` contract.
+- `kaios init --ci` writes a GitHub Actions Agent Gate that uses the same local `kaios verify --config kaios.json --evidence --force` contract and stores machine-readable artifacts for automation.
 - Deterministic workspace analysis with `kaios analyze` for no-key Markdown and JSON project reports.
 - Workspace Index with `kaios index` and `kaios run --index <path>` for language stats, notable files, and project source maps.
 - Project-aware runs with `kaios context`, `.kaiosignore`, and bounded `kaios run --context <file-or-dir>` ingestion.

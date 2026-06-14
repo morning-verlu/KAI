@@ -13,7 +13,8 @@ This command:
 - validates the workflow with `kaios.config-validation/v1`.
 - runs readiness checks and warns about optional real-provider or persisted-memory env problems.
 - writes `.github/workflows/kaios.yml` when `--ci` is passed and the project config is valid.
-- points the generated Agent Gate at `kaios verify --config kaios.json --evidence --force`.
+- points the generated Agent Gate at `kaios verify --config kaios.json --evidence --json --force`.
+- uploads verify JSON, a portable capsule, and a failure-time bug report as `kaios-agent-gate`.
 - prints the next useful commands.
 
 ## Common Paths
@@ -31,7 +32,7 @@ kaios setup --ci
 git add kaios.json .github/workflows/kaios.yml
 ```
 
-For a production-style GitHub Actions example that also stores JSON verification output and a failure-time support report, see [../examples/github-actions-agent-gate.yml](../examples/github-actions-agent-gate.yml).
+For a copyable GitHub Actions Agent Gate matching the generated workflow, see [../examples/github-actions-agent-gate.yml](../examples/github-actions-agent-gate.yml).
 
 Use a different template:
 
