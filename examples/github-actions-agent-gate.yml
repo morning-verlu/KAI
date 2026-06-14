@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   kaios:
-    name: Verify agent workflow
+    name: Validate agent workflow
     runs-on: ubuntu-latest
     env:
       KAIOS_VERSION: "0.1.68"
@@ -34,13 +34,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          kaios verify --config kaios.json --evidence --json --force | tee artifacts/kaios-verify.json
+          kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json
 
       - name: Collect KAI OS support report
         if: failure()
         run: |
           mkdir -p artifacts
-          kaios bug-report --config kaios.json --json --out artifacts/kaios-bug-report.json --force
+          kaios bug-report --config 'kaios.json' --json --out artifacts/kaios-bug-report.json --force
 
       - name: Upload KAI OS artifacts
         if: always()

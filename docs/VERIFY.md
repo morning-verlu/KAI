@@ -74,10 +74,11 @@ The same `--config` path is honored by `doctor` and `bug-report`, so support dia
 
 ## CI
 
-`kaios setup --ci` writes `.github/workflows/kaios.yml` with the same gate and uploads the generated evidence capsule:
+`kaios setup --ci` writes `.github/workflows/kaios.yml` with the same no-key gate and uploads a small audit bundle:
 
 ```bash
-kaios verify --config kaios.json --evidence --force
+mkdir -p artifacts
+kaios verify --config kaios.json --evidence --json --force | tee artifacts/kaios-verify.json
 ```
 
-That makes failures reproducible locally before pushing.
+The uploaded `kaios-agent-gate` artifact includes the verify JSON, the generated evidence capsule, and a failure-time JSON bug report. That makes failures reproducible locally before pushing and gives maintainers one artifact to attach when asking for support.

@@ -23,7 +23,7 @@ kaios verify --config kaios.json --evidence --json --force | tee artifacts/kaios
 
 The uploaded `kaios-agent-gate` artifact includes `kaios-verify.json`, `kaios-run.capsule.json`, and, when the gate fails, `kaios-bug-report.json`. This gives teams a stable gate for environment readiness, editable workflow validation, deterministic runtime execution, process trace contract checks, portable evidence, and support handoff. The same command runs locally before pushing.
 
-For a copyable workflow file matching the generated gate, see [../examples/github-actions-agent-gate.yml](../examples/github-actions-agent-gate.yml).
+For a copyable workflow file matching the generated gate, see [../examples/github-actions-agent-gate.yml](../examples/github-actions-agent-gate.yml). The CLI smoke tests compare that file with the generated default workflow so documentation drift is caught during development.
 
 If the repository keeps a known-good baseline capsule, add a regression diff gate:
 

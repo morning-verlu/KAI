@@ -1837,6 +1837,20 @@ class KaiosCliSmokeTest {
     }
 
     @Test
+    fun `generated agent gate matches shipped GitHub Actions example`() {
+        val workspace = Files.createTempDirectory("kaios-cli-agent-gate-example")
+        val cli = cliFor(workspace)
+        val out = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("setup", "--ci"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
+        val workflowText = Files.readString(workspace.resolve(".github").resolve("workflows").resolve("kaios.yml"))
+        val exampleText = Files.readString(repoFile("examples/github-actions-agent-gate.yml"))
+
+        assertEquals(0, code)
+        assertEquals(exampleText, workflowText)
+    }
+
+    @Test
     fun `verify fails clearly before setup when config is missing`() {
         val workspace = Files.createTempDirectory("kaios-cli-verify-missing")
         val cli = cliFor(workspace)
@@ -3205,6 +3219,14 @@ private fun cliFor(workspace: Path): KaiosCli {
         snapshotRoot = runs,
         workingDir = workspace,
     )
+}
+
+private fun repoFile(relativePath: String): Path {
+    val direct = Paths.get(relativePath)
+    if (Files.exists(direct)) return direct
+    val fromCliModule = Paths.get("..").resolve(relativePath).normalize()
+    if (Files.exists(fromCliModule)) return fromCliModule
+    error("Could not locate '$relativePath' from ${Paths.get("").toAbsolutePath()}.")
 }
 
 private fun assertNextAction(json: JsonObject, id: String, command: String) {
