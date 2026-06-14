@@ -31,7 +31,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.33\n", out.toString())
+        assertEquals("kaios 0.1.34\n", out.toString())
     }
 
     @Test
@@ -459,6 +459,12 @@ class KaiosCliSmokeTest {
 
         assertEquals(0, runCode)
         assertTrue(runText.contains("validate:"))
+        assertTrue(runText.contains("next:"))
+        assertTrue(runText.contains("kaios ps latest"))
+        assertTrue(runText.contains("kaios inspect latest"))
+        assertTrue(runText.contains("kaios trace latest"))
+        assertTrue(runText.contains("kaios report latest"))
+        assertTrue(runText.contains("kaios export latest"))
         assertTrue(runId != null)
 
         val psOut = ByteArrayOutputStream()

@@ -10,7 +10,7 @@
   <circle cx="86" cy="29" r="8" fill="#28C840"/>
   <text x="560" y="35" text-anchor="middle" fill="#AAB7C4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="16">kaios process manager</text>
 
-  <text x="44" y="106" fill="#9BE7C3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">$ build/install/kaios-cli/bin/kaios ps run-97381ae9</text>
+  <text x="44" y="106" fill="#9BE7C3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20">$ build/install/kaios-cli/bin/kaios ps latest</text>
   <text x="44" y="158" fill="#F1F5F9" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22" font-weight="700">RUN run-97381ae9</text>
   <text x="275" y="158" fill="#AAB7C4" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">workflow=default</text>
   <text x="520" y="158" fill="#9BE7C3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="22">success=true</text>

@@ -34,7 +34,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.33"
+private const val KAIOS_VERSION = "0.1.34"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
@@ -539,11 +539,11 @@ class KaiosCli(
         out.println(result.finalOutput)
         out.println()
         out.println("next:")
-        out.println("  kaios ps ${result.runId.value}")
-        out.println("  kaios inspect ${result.runId.value}")
-        out.println("  kaios trace ${result.runId.value}")
-        out.println("  kaios report ${result.runId.value}")
-        out.println("  kaios export ${result.runId.value}")
+        out.println("  kaios ps latest")
+        out.println("  kaios inspect latest")
+        out.println("  kaios trace latest")
+        out.println("  kaios report latest")
+        out.println("  kaios export latest")
         return if (result.success) 0 else 2
     }
 
