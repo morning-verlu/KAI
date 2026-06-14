@@ -56,13 +56,12 @@ JSON output uses schema `kaios.setup/v1`.
 Run the readiness gate:
 
 ```bash
-kaios verify
+kaios verify --evidence --force
 kaios ps latest
 kaios trace latest --check
-kaios verify --evidence --force
 ```
 
-`kaios verify` checks the local runtime, validates the project workflow, runs a deterministic mock smoke workflow, validates the process trace contract, and saves a normal run snapshot. `kaios verify --evidence --force` confirms the same smoke run can become a portable audit package, replay offline, and later compare against a baseline with `--baseline ... --check`. Use `--evidence-out artifacts/run.capsule.json` when you need a custom capsule path.
+`kaios verify --evidence --force` checks the local runtime, validates the project workflow, runs a deterministic mock smoke workflow, validates the process trace contract, saves a normal run snapshot, and confirms the same smoke run can become a portable audit package. Use `--evidence-out artifacts/run.capsule.json` when you need a custom capsule path, or add `--baseline ... --check` when CI should compare against a known-good capsule.
 
 Create a project artifact when the gate is ready:
 

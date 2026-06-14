@@ -5,7 +5,7 @@ KAI OS can run the built-in `planner -> executor -> validator` workflow, or load
 ```bash
 kaios config templates
 kaios setup --ci
-kaios verify
+kaios verify --evidence --force
 kaios config validate
 kaios config show
 kaios run "map the JVM agent runtime"

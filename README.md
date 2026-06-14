@@ -51,11 +51,11 @@ brew install kaios
 
 kaios demo
 kaios setup --ci
-kaios verify
+kaios verify --evidence --force
 ```
 
 `kaios setup --ci` creates a validated `kaios.json` and a no-key GitHub Actions Agent Gate without overwriting existing files.
-`kaios verify` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, and leaves a normal run snapshot for `ps`, `inspect`, `trace`, `capsule`, and `evidence`. Add `--evidence --force` when CI should retain the portable proof package from the same command.
+`kaios verify --evidence --force` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, leaves a normal run snapshot for `ps`, `inspect`, and `trace`, and writes a portable proof package at `artifacts/kaios-run.capsule.json`.
 
 When the gate is ready, create a project artifact:
 
@@ -133,7 +133,7 @@ Create a local workflow config when you want your own agent process graph:
 kaios setup --ci
 kaios config show
 kaios config validate --json
-kaios verify
+kaios verify --evidence --force
 kaios run --out artifacts/runtime.md "map the JVM agent runtime"
 ```
 
@@ -146,7 +146,7 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
 kaios demo
 kaios setup --ci
-kaios verify
+kaios verify --evidence --force
 ```
 
 Or build from source:

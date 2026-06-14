@@ -35,7 +35,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.57"
+private const val KAIOS_VERSION = "0.1.58"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val RUN_CAPSULE_SCHEMA = "kaios.run-capsule/v1"
 private const val RUN_REPLAY_SCHEMA = "kaios.run-replay/v1"
@@ -1344,7 +1344,7 @@ class KaiosCli(
     private fun printNoRunSnapshotsHint(out: PrintStream) {
         out.println("Run 'kaios demo' to create a no-key sample run.")
         out.println("Run 'kaios setup --ci' to create a project workflow.")
-        out.println("Run 'kaios verify' to create an inspectable project run.")
+        out.println("Run 'kaios verify --evidence --force' to create an inspectable project run and evidence capsule.")
     }
 
     private fun resolveRunId(value: String, knownSnapshots: List<StoredRunSnapshot>? = null): RunId {
@@ -2747,7 +2747,7 @@ class KaiosCli(
             Quick start (3 steps):
               kaios demo
               kaios setup --ci
-              kaios verify
+              kaios verify --evidence --force
 
             Command groups:
               Setup:

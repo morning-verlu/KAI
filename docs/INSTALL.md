@@ -10,7 +10,7 @@ kaios --version
 
 Running `kaios` with no arguments prints the quick start and exits successfully, so it is safe to use as a first smoke test.
 Mistyped commands show a suggestion when there is a clear match, such as `kaios analyse` pointing to `kaios analyze`.
-If a run id is missing, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios report`, and `kaios export` point back to `kaios runs`; when no snapshots exist yet, the CLI points back to `kaios demo`, `kaios setup --ci`, and `kaios verify`.
+If a run id is missing, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios report`, and `kaios export` point back to `kaios runs`; when no snapshots exist yet, the CLI points back to `kaios demo`, `kaios setup --ci`, and `kaios verify --evidence --force`.
 If `kaios.json` is missing, `kaios config show` and `kaios config validate` point back to `kaios init` and `kaios config templates`.
 
 Every core command also supports local help with examples and notes:
@@ -62,11 +62,11 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.57.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.57/kaios-0.1.57.zip
-unzip kaios-0.1.57.zip
-./kaios-0.1.57/bin/kaios demo
-./kaios-0.1.57/bin/kaios setup --ci
-./kaios-0.1.57/bin/kaios verify --evidence --force
+curl -L -o kaios-0.1.58.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.58/kaios-0.1.58.zip
+unzip kaios-0.1.58.zip
+./kaios-0.1.58/bin/kaios demo
+./kaios-0.1.58/bin/kaios setup --ci
+./kaios-0.1.58/bin/kaios verify --evidence --force
 ```
 
 ## Build From Source
