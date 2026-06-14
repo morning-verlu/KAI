@@ -63,6 +63,8 @@ run_step "kaios setup --ci" "$KAIOS_BIN" setup --ci > setup.out
 assert_contains setup.out "schema: kaios.setup/v1"
 assert_contains setup.out "validation: valid"
 assert_contains setup.out "ci: created"
+assert_contains setup.out "ci_artifact: kaios-agent-gate"
+assert_contains setup.out "ci_artifact_paths: artifacts/kaios-verify.json, artifacts/kaios-run.capsule.json, artifacts/kaios-bug-report.json"
 assert_file kaios.json
 assert_file .github/workflows/kaios.yml
 assert_contains .github/workflows/kaios.yml "kaios verify --config 'kaios.json' --evidence --json --force | tee artifacts/kaios-verify.json"

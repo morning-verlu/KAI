@@ -13,7 +13,7 @@ jobs:
     name: Validate agent workflow
     runs-on: ubuntu-latest
     env:
-      KAIOS_VERSION: "0.1.68"
+      KAIOS_VERSION: "0.1.69"
       KAIOS_MODEL_PROVIDER: mock
     steps:
       - name: Checkout

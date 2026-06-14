@@ -15,6 +15,7 @@ This command:
 - writes `.github/workflows/kaios.yml` when `--ci` is passed and the project config is valid.
 - points the generated Agent Gate at `kaios verify --config kaios.json --evidence --json --force`.
 - uploads verify JSON, a portable capsule, and a failure-time bug report as `kaios-agent-gate`.
+- prints `ci_artifact` and `ci_artifact_paths` so automation and maintainers know which GitHub Actions artifact to open.
 - prints the next useful commands.
 
 ## Common Paths

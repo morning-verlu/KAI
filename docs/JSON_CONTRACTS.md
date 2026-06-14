@@ -103,6 +103,21 @@ The `command` value in every `nextActions` item is also present in `next`.
 
 ## Recommended Gates
 
+### Bootstrap Gate
+
+Use `kaios.setup/v1` when automation needs to know what setup wrote:
+
+```bash
+kaios setup --ci --json
+```
+
+Read:
+
+- `config.path` and `config.action` for the project workflow file.
+- `ci.path` and `ci.action` for the generated GitHub Actions Agent Gate.
+- `ciArtifact.name` and `ciArtifact.paths` for the uploaded `kaios-agent-gate` bundle when CI is enabled.
+- `validation.valid == true` before committing the generated workflow.
+
 ### Readiness Gate
 
 Use `kaios.verify/v1` when CI needs one answer:

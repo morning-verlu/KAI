@@ -63,7 +63,7 @@ kaios setup --ci
 kaios verify --evidence --force
 ```
 
-`kaios setup --ci` creates a validated `kaios.json` and a no-key GitHub Actions Agent Gate without overwriting existing files.
+`kaios setup --ci` creates a validated `kaios.json` and a no-key GitHub Actions Agent Gate without overwriting existing files. The setup output names the uploaded `kaios-agent-gate` artifact and its evidence files so CI failures are easy to inspect.
 `kaios verify --evidence --force` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, leaves a normal run snapshot for `ps`, `inspect`, and `trace`, and writes a portable proof package at `artifacts/kaios-run.capsule.json`.
 
 When the gate is ready, create a project artifact:

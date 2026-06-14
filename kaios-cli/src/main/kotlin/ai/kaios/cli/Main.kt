@@ -35,7 +35,8 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.68"
+private const val KAIOS_VERSION = "0.1.69"
+private const val CI_AGENT_GATE_ARTIFACT_NAME = "kaios-agent-gate"
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
 private const val RUN_CAPSULE_SCHEMA = "kaios.run-capsule/v1"
 private const val RUN_REPLAY_SCHEMA = "kaios.run-replay/v1"
@@ -85,6 +86,11 @@ private val TOP_LEVEL_COMMAND_ALIASES = mapOf(
 )
 
 private val CONFIG_COMMANDS = listOf("templates", "validate", "show")
+private val CI_AGENT_GATE_ARTIFACT_PATHS = listOf(
+    "artifacts/kaios-verify.json",
+    "artifacts/kaios-run.capsule.json",
+    "artifacts/kaios-bug-report.json",
+)
 
 private val TRACE_JSON = Json {
     prettyPrint = true
@@ -895,6 +901,7 @@ class KaiosCli(
             requestedTemplate = command.templateId,
             config = configFile,
             ci = ciFile,
+            ciArtifact = ciFile.path?.let { ciArtifactReport() },
             doctor = doctor,
             validation = validation,
             next = next,
@@ -934,6 +941,12 @@ class KaiosCli(
         }
         return SetupFileReport(path = path.toString(), action = action.id)
     }
+
+    private fun ciArtifactReport(): SetupCiArtifact =
+        SetupCiArtifact(
+            name = CI_AGENT_GATE_ARTIFACT_NAME,
+            paths = CI_AGENT_GATE_ARTIFACT_PATHS,
+        )
 
     private fun setupNextCommands(
         validation: ConfigValidationReport,
@@ -1021,6 +1034,10 @@ class KaiosCli(
         out.println("workflow: ${report.validation.workflowName ?: "-"}")
         out.println("agents: ${report.validation.agentCount}")
         out.println("ci: ${report.ci.action}${report.ci.path?.let { " ($it)" }.orEmpty()}")
+        report.ciArtifact?.let { artifact ->
+            out.println("ci_artifact: ${artifact.name}")
+            out.println("ci_artifact_paths: ${artifact.paths.joinToString(", ")}")
+        }
         val warnings = doctorWarnings(report.doctor)
         if (warnings.isNotEmpty()) {
             out.println()
@@ -1261,7 +1278,12 @@ class KaiosCli(
         }
 
         out.println("created: $path")
-        ciPath?.let { out.println("created_ci: $it") }
+        ciPath?.let {
+            out.println("created_ci: $it")
+            val artifact = ciArtifactReport()
+            out.println("ci_artifact: ${artifact.name}")
+            out.println("ci_artifact_paths: ${artifact.paths.joinToString(", ")}")
+        }
         out.println("template: ${command.templateId}")
         out.println()
         out.println("next:")
@@ -3204,7 +3226,8 @@ class KaiosCli(
 
     private fun projectCiWorkflowText(configPath: Path): String {
         val config = shellQuote(ciDisplayPath(configPath))
-        return """
+        val artifactPaths = CI_AGENT_GATE_ARTIFACT_PATHS.joinToString("\n") { "            $it" }
+        val workflow = """
             name: KAI OS Agent Gate
 
             on:
@@ -3253,13 +3276,12 @@ class KaiosCli(
                     if: always()
                     uses: actions/upload-artifact@v4
                     with:
-                      name: kaios-agent-gate
+                      name: $CI_AGENT_GATE_ARTIFACT_NAME
                       path: |
-                        artifacts/kaios-verify.json
-                        artifacts/kaios-run.capsule.json
-                        artifacts/kaios-bug-report.json
+                        __CI_AGENT_GATE_ARTIFACT_PATHS__
                       if-no-files-found: ignore
-        """.trimIndent() + "\n"
+        """.trimIndent()
+        return workflow.replace("            __CI_AGENT_GATE_ARTIFACT_PATHS__", artifactPaths) + "\n"
     }
 
     private fun parseRunCommand(args: List<String>): RunCommand {
@@ -4404,6 +4426,7 @@ private data class SetupReport(
     val requestedTemplate: String,
     val config: SetupFileReport,
     val ci: SetupFileReport,
+    val ciArtifact: SetupCiArtifact?,
     val doctor: DoctorReport,
     val validation: ConfigValidationReport,
     val next: List<String>,
@@ -4414,6 +4437,12 @@ private data class SetupReport(
 private data class SetupFileReport(
     val path: String?,
     val action: String,
+)
+
+@Serializable
+private data class SetupCiArtifact(
+    val name: String,
+    val paths: List<String>,
 )
 
 private data class VerifyCommand(
