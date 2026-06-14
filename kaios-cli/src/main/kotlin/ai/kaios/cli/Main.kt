@@ -29,7 +29,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.25"
+private const val KAIOS_VERSION = "0.1.26"
 
 private val TOP_LEVEL_COMMANDS = listOf(
     "init",
@@ -131,22 +131,37 @@ class KaiosCli(
     }
 
     private fun printNamedCommandHelp(args: List<String>, out: PrintStream, err: PrintStream): Int {
-        if (args.size != 1) {
+        val helpKey = helpCommandKey(args)
+        if (helpKey == null) {
             err.println("Usage: kaios help <command>")
+            err.println("Examples:")
+            err.println("  kaios help run")
+            err.println("  kaios help config show")
             err.println("Run 'kaios help' for available commands.")
             return 1
         }
 
-        val help = commandHelpOrNull(args.first())
+        val help = commandHelpOrNull(helpKey)
         if (help == null) {
-            err.println("Unknown command '${args.first()}'.")
-            printSuggestion(err, args.first(), TOP_LEVEL_COMMANDS, TOP_LEVEL_COMMAND_ALIASES, "kaios help")
+            err.println("Unknown command '${args.joinToString(" ")}'.")
+            if (args.size == 2 && args.first() == "config") {
+                printSuggestion(err, args.last(), CONFIG_COMMANDS, emptyMap(), "kaios help config")
+            } else {
+                printSuggestion(err, args.last(), TOP_LEVEL_COMMANDS, TOP_LEVEL_COMMAND_ALIASES, "kaios help")
+            }
             err.println("Run 'kaios help' for available commands.")
             err.println("Usage: kaios help <command>")
             return 1
         }
         return printCommandHelp(out, help)
     }
+
+    private fun helpCommandKey(args: List<String>): String? =
+        when {
+            args.size == 1 -> args.first()
+            args.size == 2 && args.first() == "config" -> "config ${args[1]}"
+            else -> null
+        }
 
     private fun printCommandUsageError(err: PrintStream, command: String, message: String? = null): Int =
         printUsageError(err, commandUsage(command), command, message)
@@ -273,6 +288,30 @@ class KaiosCli(
                 examples = listOf(
                     "kaios config templates",
                     "kaios config validate",
+                    "kaios config show --config kaios.json",
+                ),
+            )
+            "config templates" -> CommandHelp(
+                usage = "kaios config templates",
+                summary = "List built-in workflow templates that can be written with kaios init.",
+                examples = listOf(
+                    "kaios config templates",
+                    "kaios init --template research",
+                ),
+            )
+            "config validate" -> CommandHelp(
+                usage = "kaios config validate [--config kaios.json]",
+                summary = "Validate a kaios.json workflow without starting agents.",
+                examples = listOf(
+                    "kaios config validate",
+                    "kaios config validate --config kaios.json",
+                ),
+            )
+            "config show" -> CommandHelp(
+                usage = "kaios config show [--config kaios.json]",
+                summary = "Print the workflow agents, tools, dependencies, fallback routes, and graph.",
+                examples = listOf(
+                    "kaios config show",
                     "kaios config show --config kaios.json",
                 ),
             )
@@ -500,11 +539,22 @@ class KaiosCli(
 
         return when (subcommand) {
             "templates" -> {
+                val rest = args.drop(1)
+                if (isHelp(rest)) return printCommandHelp(out, commandHelp("config templates"))
+                if (rest.isNotEmpty()) {
+                    return printUsageError(err, commandUsage("config templates"), "config templates", "Unknown config templates option '${rest.first()}'.")
+                }
                 printTemplates(out)
                 0
             }
-            "validate" -> validateConfig(args.drop(1), out, err)
-            "show" -> showConfig(args.drop(1), out, err)
+            "validate" -> {
+                val rest = args.drop(1)
+                if (isHelp(rest)) printCommandHelp(out, commandHelp("config validate")) else validateConfig(rest, out, err)
+            }
+            "show" -> {
+                val rest = args.drop(1)
+                if (isHelp(rest)) printCommandHelp(out, commandHelp("config show")) else showConfig(rest, out, err)
+            }
             else -> {
                 err.println("Unknown config command '$subcommand'.")
                 printSuggestion(err, subcommand, CONFIG_COMMANDS, emptyMap(), "kaios config")
@@ -515,7 +565,7 @@ class KaiosCli(
 
     private fun validateConfig(args: List<String>, out: PrintStream, err: PrintStream): Int {
         val path = runCatching { parseConfigPath(args) }.getOrElse { error ->
-            return printUsageError(err, "kaios config validate [--config kaios.json]", "config", error.message)
+            return printUsageError(err, commandUsage("config validate"), "config validate", error.message)
         }
 
         return runCatching { loadProjectWorkflow(path, SessionMemoryStore(), toolRegistry()) }
@@ -536,7 +586,7 @@ class KaiosCli(
 
     private fun showConfig(args: List<String>, out: PrintStream, err: PrintStream): Int {
         val path = runCatching { parseConfigPath(args) }.getOrElse { error ->
-            return printUsageError(err, "kaios config show [--config kaios.json]", "config", error.message)
+            return printUsageError(err, commandUsage("config show"), "config show", error.message)
         }
 
         val workflow = runCatching { loadProjectWorkflow(path, SessionMemoryStore(), toolRegistry()) }.getOrElse { error ->

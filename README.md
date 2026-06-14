@@ -58,6 +58,7 @@ kaios
 kaios help run
 kaios help analyze
 kaios help config
+kaios help config show
 ```
 
 If you mistype a command, KAI OS suggests the closest safe next command instead of guessing and running it.

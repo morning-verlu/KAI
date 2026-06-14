@@ -29,7 +29,7 @@ class KaiosCliSmokeTest {
         val code = cli.run(arrayOf("--version"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
 
         assertEquals(0, code)
-        assertEquals("kaios 0.1.25\n", out.toString())
+        assertEquals("kaios 0.1.26\n", out.toString())
     }
 
     @Test
@@ -830,6 +830,60 @@ class KaiosCliSmokeTest {
         assertTrue(templatesText.contains("research"))
         assertTrue(templatesText.contains("code-review"))
         assertTrue(templatesText.contains("release"))
+    }
+
+    @Test
+    fun `config subcommands support direct and named help`() {
+        val workspace = Files.createTempDirectory("kaios-cli-config-help")
+        val cli = cliFor(workspace)
+        val cases = listOf(
+            arrayOf("config", "templates", "--help") to "Usage: kaios config templates",
+            arrayOf("config", "validate", "--help") to "Usage: kaios config validate",
+            arrayOf("config", "show", "--help") to "Usage: kaios config show",
+            arrayOf("help", "config", "show") to "Usage: kaios config show",
+            arrayOf("help", "config", "templates") to "Usage: kaios config templates",
+        )
+
+        cases.forEach { (args, usage) ->
+            val out = ByteArrayOutputStream()
+            val code = cli.run(args, PrintStream(out), PrintStream(ByteArrayOutputStream()))
+            val text = out.toString()
+
+            assertEquals(0, code)
+            assertTrue(text.contains(usage), args.joinToString(" "))
+            assertTrue(text.contains("Examples:"), args.joinToString(" "))
+            assertTrue(!text.contains("Unknown"), args.joinToString(" "))
+        }
+    }
+
+    @Test
+    fun `help command suggests close config subcommand names`() {
+        val workspace = Files.createTempDirectory("kaios-cli-config-help-suggest")
+        val cli = cliFor(workspace)
+        val err = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("help", "config", "shwo"), PrintStream(ByteArrayOutputStream()), PrintStream(err))
+        val text = err.toString()
+
+        assertEquals(1, code)
+        assertTrue(text.contains("Unknown command 'config shwo'"))
+        assertTrue(text.contains("Did you mean 'kaios help config show'?"))
+        assertTrue(text.contains("Usage: kaios help <command>"))
+    }
+
+    @Test
+    fun `config templates rejects unknown arguments with help pointer`() {
+        val workspace = Files.createTempDirectory("kaios-cli-config-templates-unknown")
+        val cli = cliFor(workspace)
+        val err = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("config", "templates", "--bad"), PrintStream(ByteArrayOutputStream()), PrintStream(err))
+        val text = err.toString()
+
+        assertEquals(1, code)
+        assertTrue(text.contains("Unknown config templates option '--bad'"))
+        assertTrue(text.contains("Usage: kaios config templates"))
+        assertTrue(text.contains("Run 'kaios help config templates' for examples."))
     }
 
     @Test
