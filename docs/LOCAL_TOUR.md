@@ -27,11 +27,19 @@ capsule: /tmp/kaios-tour.xxxxxx/run.capsule.json
 analysis: /tmp/kaios-tour.xxxxxx/analysis.json
 ```
 
+It also isolates KAI OS runtime state by default:
+
+```text
+runtime_state: /tmp/kaios-tour.xxxxxx/runtime/runs
+```
+
 Run the same tour against another local project:
 
 ```bash
 KAIOS_TOUR_WORKDIR=/path/to/project ./scripts/local-tour.sh "summarize this project"
 ```
+
+If the target project has no README, the tour omits `--context` and still runs with Workspace Index only.
 
 Use a specific installed CLI:
 
@@ -45,4 +53,6 @@ Keep the output in a predictable directory:
 KAIOS_TOUR_DIR=/tmp/kaios-tour ./scripts/local-tour.sh
 ```
 
-The target workspace will still receive the normal `.kaios/runs/` snapshot directory because KAI OS persists inspectable run state there. The tour keeps shareable artifacts, traces, and capsules outside the repository unless you choose a directory inside it.
+The target workspace is left alone by default: run snapshots, reports, generated runtime artifacts, and generated capsules are redirected into the tour directory through `KAIOS_RUNS_DIR`, `KAIOS_REPORTS_DIR`, `KAIOS_ARTIFACTS_DIR`, and `KAIOS_CAPSULES_DIR`. The tour will not create `.kaios/` inside the target project unless you override those environment variables yourself.
+
+If you explicitly set those environment variables yourself, the tour respects them.
