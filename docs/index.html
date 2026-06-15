@@ -541,7 +541,7 @@
           <a href="#model">Model</a>
           <a href="#processes">Processes</a>
           <a href="#quickstart">Quick start</a>
-          <a class="nav-cta" href="https://github.com/morning-verlu/KAI">Star on GitHub</a>
+          <a class="nav-cta" href="https://github.com/morning-verlu/KAI">Explore KAI OS</a>
         </div>
       </nav>
     </header>
@@ -551,11 +551,11 @@
         <div class="hero-inner">
           <h1>KAI OS</h1>
           <p class="hero-copy">
-            AI Agent Operating System in Kotlin. Run no-key Agent Gates, inspect agents like processes, and keep tools behind syscall boundaries.
+            AI Agent Operating System in Kotlin. Run multi-agent workflows as observable processes with lifecycle, scheduling, memory, permissions, and syscall-bounded tools.
           </p>
           <div class="actions">
-            <a class="button primary" href="https://github.com/morning-verlu/KAI">Star on GitHub</a>
-            <a class="button secondary" href="#quickstart">Run quickstart</a>
+            <a class="button primary" href="https://github.com/morning-verlu/KAI">Explore KAI OS</a>
+            <a class="button secondary" href="#processes">See agent processes</a>
           </div>
           <div class="metaphor" aria-label="KAI OS core metaphor">
             <div>
@@ -715,8 +715,8 @@
       <section id="quickstart">
         <div class="section-inner quickstart">
           <div class="section-heading">
-            <h2>Install it, check it, inspect it.</h2>
-            <p>The v0.1.84 CLI installs locally with no API key. One command runs the demo, bootstraps a validated workflow, verifies the runtime gate, and creates portable evidence for audit or future Agent Desktop imports.</p>
+            <h2>Run agents as processes in 60 seconds.</h2>
+            <p>KAI OS starts locally with no API key. Quickstart creates a real agent run, project workflow, process trace, and portable evidence; then ps and inspect expose the runtime state.</p>
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
@@ -724,14 +724,22 @@
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/blob/main/examples/README.md">Examples</a>
             </div>
           </div>
-          <pre class="command"><code>brew tap morning-verlu/tap
+          <pre class="command"><code># Install the kaios CLI (Homebrew is one option)
+brew tap morning-verlu/tap
 brew install kaios
-kaios next
-kaios quickstart --dry-run
+
+# Run KAI OS
 kaios quickstart
 kaios ps
+kaios inspect
 kaios trace --check
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+
+# Ask KAI OS for the next workspace-aware command
+kaios next
+
+# Preview onboarding writes:
+kaios quickstart --dry-run
 
 # local-only first run:
 kaios quickstart --no-ci

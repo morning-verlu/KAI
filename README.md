@@ -7,9 +7,11 @@
 
 Website: [morning-verlu.github.io/KAI](https://morning-verlu.github.io/KAI/)
 
-KAI OS is a Kotlin runtime for orchestrating AI agents like operating-system processes.
+KAI OS is a Kotlin runtime that turns multi-agent work into observable, controllable processes.
 
-It is not a chatbot framework, not a LangChain clone, and not just a CLI. The goal is a developer-native runtime where agents have lifecycle, memory, permissions, metrics, and syscall-style tool boundaries.
+Agents get lifecycle, memory, permissions, metrics, and syscall-style tool boundaries. Workflows run as DAGs, and every run can be inspected, replayed, compared, and packaged as portable evidence.
+
+It is not a chatbot framework, not a LangChain clone, and not just a CLI. The CLI is the first interface to the KAI OS runtime.
 
 ![KAI OS CLI demo](docs/assets/kaios-demo.gif)
 
@@ -50,21 +52,43 @@ Most agent frameworks model AI work as chains, prompts, or chat sessions. KAI OS
 
 Kotlin gives this model a strong foundation: JVM ecosystem reach, type safety, coroutines-ready concurrency, DSL ergonomics, and a path toward Kotlin Multiplatform.
 
-## Quick Start
+## Run KAI OS In 60 Seconds
 
-Install, then run the full no-key onboarding gate:
+Once the `kaios` CLI is installed, this is the product path:
+
+```bash
+kaios quickstart
+kaios ps
+kaios inspect
+kaios trace --check
+```
+
+`kaios quickstart` runs the deterministic demo, creates a validated `kaios.json`, writes a no-key GitHub Actions Agent Gate, verifies the workflow, writes a portable evidence capsule, and prints the next command to inspect the agent processes. It is safe to rerun: existing config and CI files are kept unless you pass `--force`.
+`kaios ps`, `kaios inspect`, and `kaios trace --check` expose the process model: PID, state, tokens, context, syscalls, duration, output, lifecycle events, and trace validity.
+
+Need KAI OS to choose the next command from the current workspace?
+
+```bash
+kaios next
+```
+
+`kaios next` is the read-only compass: it inspects doctor diagnostics, project config, latest run evidence, and trace validity, then prints the single best next command.
+
+Homebrew is one installation option:
 
 ```bash
 brew tap morning-verlu/tap
 brew install kaios
-
-kaios next
-kaios quickstart --dry-run
-kaios quickstart
 ```
 
-`kaios next` is the read-only compass: it inspects doctor diagnostics, project config, latest run evidence, and trace validity, then prints the single best next command for the current workspace.
-`kaios quickstart` runs the deterministic demo, creates a validated `kaios.json`, writes a no-key GitHub Actions Agent Gate, verifies the workflow, writes a portable evidence capsule, and prints the next command to inspect the agent processes. It is safe to rerun: existing config and CI files are kept unless you pass `--force`.
+See [Install KAI OS](docs/INSTALL.md) for the hosted installer, release ZIP, and source build. Installation is only the delivery step; the runtime and process model above are the product.
+
+Preview the onboarding write plan when needed:
+
+```bash
+kaios quickstart --dry-run
+```
+
 Use `kaios quickstart --dry-run` first when you want to preview generated files and commands without writing anything.
 Use `kaios quickstart --no-ci` when you want the same local onboarding path without writing `.github/workflows/kaios.yml`.
 When you do keep the generated workflow, pushing it to GitHub may require an account token or session with workflow permission.
