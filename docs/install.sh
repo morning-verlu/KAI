@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-VERSION="${KAIOS_VERSION:-0.3.0}"
+VERSION="${KAIOS_VERSION:-0.3.1}"
 REPO="morning-verlu/KAI"
 BASE_URL="https://github.com/${REPO}/releases/download/v${VERSION}"
 ARCHIVE="kaios-${VERSION}.zip"
@@ -100,6 +100,7 @@ echo
 if command -v kaios >/dev/null 2>&1; then
   PROJECT_RUN="$(project_run_command kaios)"
   echo "Try:"
+  echo "  kaios tour"
   echo "  kaios quickstart"
   echo "  kaios review"
   echo "  kaios evidence --summary"
@@ -113,6 +114,7 @@ else
   echo "  export PATH=\"${BIN_DIR}:\$PATH\""
   echo
   echo "Try now:"
+  echo "  ${BIN_DIR}/kaios tour"
   echo "  ${BIN_DIR}/kaios quickstart"
   echo "  ${BIN_DIR}/kaios review"
   echo "  ${BIN_DIR}/kaios evidence --summary"

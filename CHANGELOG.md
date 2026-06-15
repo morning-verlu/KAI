@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.1 - First-Run Tour
+
+KAI OS v0.3.1 adds a built-in `kaios tour` command so new users can experience the Evidence OS loop without preparing their own dirty Git repository first.
+
+Highlights:
+
+- Added `kaios tour`, a no-key walkthrough that creates a disposable Git workspace, runs quickstart, makes a small code change, runs review, prints process/evidence pointers, and keeps the generated artifacts for inspection.
+- Added `kaios.tour/v1` JSON output for docs, launch posts, and smoke checks.
+- Added `kaios try` as a friendly alias for the tour.
+- Updated help, installer recommendations, README, install docs, launch site, and launch kit to make the tour the lowest-friction first command.
+
+Verification:
+
+```bash
+./gradlew :kaios-cli:test --no-daemon
+```
+
 ## 0.3.0 - Evidence Core
 
 KAI OS v0.3 turns the runtime evidence path into the product center: agent work is now easier to recover, schedule, audit, package, and gate in CI without an API key.

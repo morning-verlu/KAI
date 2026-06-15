@@ -37,7 +37,7 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.3.0"
+private const val KAIOS_VERSION = "0.3.1"
 private const val CI_AGENT_GATE_ARTIFACT_NAME = "kaios-agent-gate"
 private const val CI_WORKFLOW_PUSH_NOTE = "Pushing .github/workflows/kaios.yml may require GitHub workflow permission/scope."
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
@@ -55,10 +55,12 @@ private const val BUG_REPORT_SCHEMA = "kaios.bug-report/v1"
 private const val SETUP_SCHEMA = "kaios.setup/v1"
 private const val VERIFY_SCHEMA = "kaios.verify/v1"
 private const val QUICKSTART_SCHEMA = "kaios.quickstart/v1"
+private const val TOUR_SCHEMA = "kaios.tour/v1"
 private const val EVIDENCE_DIFF_CHANGE_LIMIT = 5
 private const val CHANGED_CONTEXT_FILE_LIMIT = 8
 
 private val TOP_LEVEL_COMMANDS = listOf(
+    "tour",
     "quickstart",
     "next",
     "setup",
@@ -89,6 +91,7 @@ private val TOP_LEVEL_COMMANDS = listOf(
 )
 
 private val TOP_LEVEL_COMMAND_ALIASES = mapOf(
+    "try" to "tour",
     "start" to "quickstart",
     "onboard" to "quickstart",
     "analyse" to "analyze",
@@ -145,6 +148,7 @@ class KaiosCli(
         val command = resolveTopLevelCommand(inputCommand)
         val commandArgs = args.drop(1)
         return when (command) {
+            "tour" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("tour")) else runTour(commandArgs, out, err)
             "quickstart" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("quickstart")) else runQuickstart(commandArgs, out, err)
             "next" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("next")) else printWorkspaceNext(commandArgs, out, err)
             "setup" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("setup")) else setupProject(commandArgs, out, err)
@@ -239,6 +243,7 @@ class KaiosCli(
             command == "fix failed checks above" -> "fix-failed-checks"
             command.startsWith("fix ") -> "repair-config"
             command.startsWith("git add ") -> "stage-generated-files"
+            command.startsWith("kaios tour") -> "run-tour"
             command.startsWith("kaios quickstart") -> "quickstart"
             command.startsWith("kaios doctor") && command.contains(" --fix") -> "repair-project"
             command.startsWith("kaios setup ") && command.contains(" --force") -> "regenerate-config"
@@ -274,6 +279,7 @@ class KaiosCli(
             "repair-config" -> "Repair the workflow config or regenerate it safely."
             "repair-project" -> "Preview or apply the safest local repair for failed diagnostics."
             "stage-generated-files" -> "Stage generated config and CI gate files for review."
+            "run-tour" -> "Run the full Evidence OS demo in a temporary Git workspace."
             "quickstart" -> "Run the no-key onboarding gate and create inspectable evidence."
             "setup-project" -> "Create a validated local workflow and optional CI gate."
             "regenerate-config" -> "Regenerate the invalid workflow config and optional CI gate."
@@ -413,6 +419,20 @@ class KaiosCli(
 
     private fun commandHelpOrNull(command: String): CommandHelp? =
         when (command) {
+            "tour" -> CommandHelp(
+                usage = "kaios tour [--dir path] [--json|--format json]",
+                summary = "Run the complete Evidence OS tour in a disposable local Git workspace.",
+                examples = listOf(
+                    "kaios tour",
+                    "kaios tour --json",
+                    "kaios tour --dir /tmp/kaios-tour",
+                ),
+                notes = listOf(
+                    "The tour uses the deterministic mock provider; no API key or network access is required.",
+                    "It creates a tiny Git repo, runs quickstart, creates a code change, runs review, prints process/evidence pointers, and keeps the tour directory for inspection.",
+                    "JSON output uses schema $TOUR_SCHEMA for docs, launch posts, and smoke checks.",
+                ),
+            )
             "quickstart" -> CommandHelp(
                 usage = "kaios quickstart [--dry-run] [--no-ci|--local] [--force] [--json|--format json]",
                 summary = "Run the no-key onboarding path: demo, setup, optional CI gate, verify evidence, and next moves.",
@@ -796,6 +816,205 @@ class KaiosCli(
             )
             else -> null
         }
+
+    private fun runTour(args: List<String>, out: PrintStream, err: PrintStream): Int {
+        val command = runCatching { parseTourCommand(args) }.getOrElse { error ->
+            return printCommandUsageError(err, "tour", error.message)
+        }
+
+        val report = runCatching { buildTourReport(command) }.getOrElse { error ->
+            err.println(error.message ?: "kaios tour failed.")
+            return 2
+        }
+
+        when (command.format) {
+            TourFormat.Text -> renderTourText(report, out)
+            TourFormat.Json -> out.println(TRACE_JSON.encodeToString(report))
+        }
+
+        return if (report.status == "ready") 0 else 2
+    }
+
+    private fun buildTourReport(command: TourCommand): TourReport {
+        val tourRoot = (command.directory ?: Files.createTempDirectory("kaios-tour-"))
+            .toAbsolutePath()
+            .normalize()
+        val workspace = tourRoot.resolve("workspace").normalize()
+        require(!workspace.exists() || Files.list(workspace).use { paths -> paths.findAny().isEmpty }) {
+            "Tour workspace '$workspace' already exists and is not empty."
+        }
+
+        Files.createDirectories(workspace.resolve("src"))
+        Files.writeString(
+            workspace.resolve("README.md"),
+            """
+            # KAI OS Tour Project
+
+            A tiny Kotlin workspace used by `kaios tour` to demonstrate local-first agent evidence.
+            """.trimIndent() + "\n",
+        )
+        Files.writeString(
+            workspace.resolve("src").resolve("App.kt"),
+            """
+            fun main() {
+                println("KAI OS tour")
+            }
+            """.trimIndent() + "\n",
+        )
+        Files.writeString(
+            workspace.resolve(".gitignore"),
+            """
+            .kaios/
+            artifacts/
+            build/
+            """.trimIndent() + "\n",
+        )
+        Files.writeString(
+            workspace.resolve(".kaiosignore"),
+            """
+            .env
+            *.pem
+            secrets/
+            """.trimIndent() + "\n",
+        )
+
+        runGit(workspace, "init", "--quiet")
+        runGit(workspace, "config", "user.email", "kaios-tour@example.com")
+        runGit(workspace, "config", "user.name", "KAIOS Tour")
+        runGit(workspace, "add", "-A")
+        runGit(workspace, "commit", "--quiet", "-m", "tour seed")
+
+        val tourCli = cliForWorkspace(workspace)
+        val commands = mutableListOf<TourStep>()
+
+        val quickstart = runNestedCli(tourCli, arrayOf("quickstart", "--no-ci", "--json"))
+        commands += TourStep("quickstart", "kaios quickstart --no-ci --json", quickstart.exitCode)
+        require(quickstart.exitCode == 0) { "Tour quickstart failed:\n${quickstart.stderr.ifBlank { quickstart.stdout }}" }
+
+        runGit(workspace, "add", "-A")
+        if (gitOutput(workspace, "status", "--porcelain").isNotBlank()) {
+            runGit(workspace, "commit", "--quiet", "-m", "kaios quickstart")
+        }
+
+        Files.writeString(
+            workspace.resolve("src").resolve("App.kt"),
+            """
+            fun main() {
+                println("KAI OS tour")
+            }
+
+            fun evidenceCoreSignal(): String = "process trace + capsule + replay"
+            """.trimIndent() + "\n",
+        )
+
+        val review = runNestedCli(tourCli, arrayOf("review", "--json"))
+        commands += TourStep("review", "kaios review --json", review.exitCode)
+        require(review.exitCode == 0) { "Tour review failed:\n${review.stderr.ifBlank { review.stdout }}" }
+        val runId = Regex("\"runId\"\\s*:\\s*\"([^\"]+)\"")
+            .find(review.stdout)
+            ?.groupValues
+            ?.get(1)
+            ?: error("Tour review did not return a runId.")
+
+        val ps = runNestedCli(tourCli, arrayOf("ps", runId, "--json"))
+        commands += TourStep("ps", "kaios ps $runId --json", ps.exitCode)
+        require(ps.exitCode == 0) { "Tour process table failed:\n${ps.stderr.ifBlank { ps.stdout }}" }
+
+        val evidence = runNestedCli(tourCli, arrayOf("evidence", runId, "--summary"))
+        commands += TourStep("evidence", "kaios evidence $runId --summary", evidence.exitCode)
+        require(evidence.exitCode == 0) { "Tour evidence summary failed:\n${evidence.stderr.ifBlank { evidence.stdout }}" }
+
+        val recover = runNestedCli(tourCli, arrayOf("recover", runId, "--dry-run", "--json"))
+        commands += TourStep("recover", "kaios recover $runId --dry-run --json", recover.exitCode)
+        require(recover.exitCode == 0) { "Tour recovery report failed:\n${recover.stderr.ifBlank { recover.stdout }}" }
+
+        val next = listOf(
+            "cd ${displayPath(workspace)}",
+            "kaios ps $runId",
+            "kaios inspect $runId",
+            "kaios trace $runId --check",
+            "kaios replay --file artifacts/change-review.capsule.json",
+        )
+
+        return TourReport(
+            schema = TOUR_SCHEMA,
+            version = KAIOS_VERSION,
+            status = "ready",
+            tourDir = tourRoot.toString(),
+            workspace = workspace.toString(),
+            runId = runId,
+            changedFile = "src/App.kt",
+            artifact = workspace.resolve("artifacts").resolve("change-review.md").toString(),
+            trace = workspace.resolve("artifacts").resolve("change-review.trace.json").toString(),
+            capsule = workspace.resolve("artifacts").resolve("change-review.capsule.json").toString(),
+            commands = commands,
+            next = next,
+            nextActions = nextActions(next),
+        )
+    }
+
+    private fun renderTourText(report: TourReport, out: PrintStream) {
+        out.println("KAI OS tour")
+        out.println("schema: ${report.schema}")
+        out.println("status: ${report.status}")
+        out.println("workspace: ${report.workspace}")
+        out.println("run_id: ${report.runId}")
+        out.println("changed_file: ${report.changedFile}")
+        out.println()
+        out.println("steps:")
+        report.commands.forEach { step -> out.println("  ${step.name}: exit=${step.exitCode} command=\"${step.command}\"") }
+        out.println()
+        out.println("artifacts:")
+        out.println("  review: ${report.artifact}")
+        out.println("  trace: ${report.trace}")
+        out.println("  capsule: ${report.capsule}")
+        out.println()
+        out.println("next:")
+        report.next.forEach { command -> out.println("  $command") }
+    }
+
+    private fun cliForWorkspace(workspace: Path): KaiosCli {
+        val runs = workspace.resolve(".kaios").resolve("runs")
+        return KaiosCli(
+            snapshotStore = FileRunSnapshotStore(runs),
+            reportRoot = workspace.resolve(".kaios").resolve("reports"),
+            artifactRoot = workspace.resolve(".kaios").resolve("artifacts"),
+            capsuleRoot = workspace.resolve(".kaios").resolve("capsules"),
+            snapshotRoot = runs,
+            workingDir = workspace,
+            env = env,
+        )
+    }
+
+    private fun runNestedCli(cli: KaiosCli, args: Array<String>): NestedCliResult {
+        val out = java.io.ByteArrayOutputStream()
+        val err = java.io.ByteArrayOutputStream()
+        val exitCode = cli.run(args, PrintStream(out), PrintStream(err))
+        return NestedCliResult(
+            exitCode = exitCode,
+            stdout = out.toString(),
+            stderr = err.toString(),
+        )
+    }
+
+    private fun runGit(workspace: Path, vararg args: String) {
+        gitOutput(workspace, *args)
+    }
+
+    private fun gitOutput(workspace: Path, vararg args: String): String {
+        val process = runCatching {
+            ProcessBuilder(listOf("git", *args))
+                .directory(workspace.toFile())
+                .redirectErrorStream(true)
+                .start()
+        }.getOrElse {
+            error("kaios tour requires git to create a disposable review workspace.")
+        }
+        val output = process.inputStream.bufferedReader().readText()
+        val exit = process.waitFor()
+        require(exit == 0) { "git ${args.joinToString(" ")} failed in '$workspace':\n$output" }
+        return output
+    }
 
     private fun runQuickstart(args: List<String>, out: PrintStream, err: PrintStream): Int {
         val command = runCatching { parseQuickstartCommand(args) }.getOrElse { error ->
@@ -4380,6 +4599,7 @@ class KaiosCli(
               kaios next
 
             Quick start shortcuts:
+              kaios tour
               kaios quickstart --dry-run
               kaios quickstart
 
@@ -4390,6 +4610,7 @@ class KaiosCli(
 
             Command groups:
               Setup:
+                kaios tour [--dir path]
                 kaios next [--config kaios.json]
                 kaios quickstart [--dry-run]
                 kaios setup [--ci]
@@ -4431,6 +4652,7 @@ class KaiosCli(
                 kaios help <command>
 
               Common aliases:
+                kaios try              -> kaios tour
                 kaios start [--no-ci]  -> kaios quickstart
                 kaios status           -> kaios doctor
                 kaios ls               -> kaios runs
@@ -5141,6 +5363,55 @@ class KaiosCli(
             "text", "plain" -> ReviewFormat.Text
             "json" -> ReviewFormat.Json
             else -> error("Unknown review format '$value'. Use text or json.")
+        }
+
+    private fun parseTourCommand(args: List<String>): TourCommand {
+        var directory: Path? = null
+        var format = TourFormat.Text
+        var index = 0
+
+        while (index < args.size) {
+            val arg = args[index]
+            when {
+                arg == "--dir" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--dir requires a path.")
+                    directory = resolvePath(value)
+                    index += 2
+                }
+                arg.startsWith("--dir=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--dir requires a path." }
+                    directory = resolvePath(value)
+                    index += 1
+                }
+                arg == "--json" -> {
+                    format = TourFormat.Json
+                    index += 1
+                }
+                arg == "--format" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--format requires text or json.")
+                    format = parseTourFormat(value)
+                    index += 2
+                }
+                arg.startsWith("--format=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--format requires text or json." }
+                    format = parseTourFormat(value)
+                    index += 1
+                }
+                arg.startsWith("-") -> error("Unknown tour option '$arg'.")
+                else -> error("Unexpected tour argument '$arg'.")
+            }
+        }
+
+        return TourCommand(directory, format)
+    }
+
+    private fun parseTourFormat(value: String): TourFormat =
+        when (value.lowercase().trim()) {
+            "text", "plain" -> TourFormat.Text
+            "json" -> TourFormat.Json
+            else -> error("Unknown tour format '$value'. Use text or json.")
         }
 
     private fun parseProcessTableCommand(args: List<String>): ProcessTableCommand {
@@ -6430,6 +6701,46 @@ private data class ReviewCommand(
 private data class ProcessTableCommand(
     val runIdText: String,
     val format: ProcessTableFormat,
+)
+
+private data class TourCommand(
+    val directory: Path?,
+    val format: TourFormat,
+)
+
+private enum class TourFormat(val id: String) {
+    Text("text"),
+    Json("json"),
+}
+
+@Serializable
+private data class TourReport(
+    val schema: String,
+    val version: String,
+    val status: String,
+    val tourDir: String,
+    val workspace: String,
+    val runId: String,
+    val changedFile: String,
+    val artifact: String,
+    val trace: String,
+    val capsule: String,
+    val commands: List<TourStep>,
+    val next: List<String>,
+    val nextActions: List<NextAction>,
+)
+
+@Serializable
+private data class TourStep(
+    val name: String,
+    val command: String,
+    val exitCode: Int,
+)
+
+private data class NestedCliResult(
+    val exitCode: Int,
+    val stdout: String,
+    val stderr: String,
 )
 
 private data class QuickstartCommand(

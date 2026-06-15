@@ -62,7 +62,15 @@ Kotlin gives this model a strong foundation: JVM ecosystem reach, type safety, c
 
 ## Run KAI OS In 60 Seconds
 
-Once the `kaios` CLI is installed, this is the product path:
+Once the `kaios` CLI is installed, the lowest-friction tour is:
+
+```bash
+kaios tour
+```
+
+`kaios tour` creates a disposable Git workspace, runs the no-key onboarding path, makes a tiny code change, runs `kaios review`, and prints the review artifact, process trace, replayable capsule, process table, evidence summary, and recovery report pointers.
+
+For a real project, this is the product path:
 
 ```bash
 kaios quickstart
@@ -74,7 +82,7 @@ kaios evidence --baseline artifacts/baseline.capsule.json --check
 `kaios review` is the Evidence OS loop for a dirty Git workspace: it reads the current change set, attaches bounded changed-file context, honors `.kaiosignore`, runs the deterministic agent review, and writes `artifacts/change-review.md`, `artifacts/change-review.trace.json`, and `artifacts/change-review.capsule.json`.
 `kaios evidence --baseline ... --check` turns a run capsule into a CI-grade gate by validating the capsule, replaying it offline, and failing when stable runtime behavior differs from the baseline.
 
-Want a guided local tour that writes artifacts to `/tmp` and shows the full path from project analysis to replayable evidence?
+Want the source-tree version of the guided local tour?
 
 ```bash
 ./scripts/local-tour.sh
@@ -94,6 +102,7 @@ Choose the first command by risk level:
 
 | Need | Command |
 | --- | --- |
+| Experience the full Evidence OS loop in a disposable repo | `kaios tour` |
 | See the product model and local entrypoints | `kaios` |
 | Run the guided local tour from source | `./scripts/local-tour.sh` |
 | Get one read-only recommendation | `kaios next` |
@@ -240,13 +249,14 @@ Or install with the hosted script:
 ```bash
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
-kaios quickstart
+kaios tour
 ```
 
 Or build from source:
 
 ```bash
 ./gradlew test installDist
+build/install/kaios-cli/bin/kaios tour
 build/install/kaios-cli/bin/kaios quickstart
 build/install/kaios-cli/bin/kaios analyze . --out artifacts/analysis.md --force
 build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"

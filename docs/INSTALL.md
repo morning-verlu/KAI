@@ -19,6 +19,7 @@ If `kaios.json` is missing, `kaios config show`, `kaios config validate`, and `k
 
 | Need | Command |
 | --- | --- |
+| Experience the full Evidence OS loop in a disposable repo | `kaios tour` |
 | See the product model and local entrypoints | `kaios` |
 | Get one read-only recommendation | `kaios next` |
 | Preview onboarding writes | `kaios quickstart --dry-run` |
@@ -52,6 +53,7 @@ brew tap morning-verlu/tap
 brew install kaios
 
 kaios next
+kaios tour
 kaios quickstart --dry-run
 kaios quickstart
 ```
@@ -83,8 +85,8 @@ The installer downloads the release ZIP, verifies the published SHA256 checksum,
 ```bash
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
 kaios next
-kaios quickstart
 ```
 
 Set `KAIOS_INSTALL_DIR` to install somewhere else:
@@ -96,9 +98,10 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.3.0.zip https://github.com/morning-verlu/KAI/releases/download/v0.3.0/kaios-0.3.0.zip
-unzip kaios-0.3.0.zip
-./kaios-0.3.0/bin/kaios quickstart
+curl -L -o kaios-0.3.1.zip https://github.com/morning-verlu/KAI/releases/download/v0.3.1/kaios-0.3.1.zip
+unzip kaios-0.3.1.zip
+./kaios-0.3.1/bin/kaios tour
+./kaios-0.3.1/bin/kaios quickstart
 ```
 
 ## Build From Source
@@ -107,6 +110,7 @@ unzip kaios-0.3.0.zip
 git clone https://github.com/morning-verlu/KAI.git
 cd KAI
 ./gradlew test installDist
+build/install/kaios-cli/bin/kaios tour
 build/install/kaios-cli/bin/kaios next
 build/install/kaios-cli/bin/kaios quickstart
 ```
@@ -115,6 +119,7 @@ Useful next commands after the first artifact:
 
 ```bash
 kaios analyze . --format json --out artifacts/analysis.json --force
+kaios tour
 kaios next
 kaios quickstart
 kaios doctor --json

@@ -753,7 +753,7 @@
         <div class="section-inner quickstart">
           <div class="section-heading">
             <h2>Run the Evidence OS loop in 60 seconds.</h2>
-            <p>KAI OS starts locally with no API key. Quickstart creates the first run and gate, review packages the current code change, and evidence turns it into replayable proof.</p>
+            <p>KAI OS starts locally with no API key. Tour creates a disposable repo and runs the full Evidence OS loop; quickstart, review, and evidence are the real-project path.</p>
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
@@ -765,6 +765,9 @@
             </div>
           </div>
           <pre class="command"><code># Run KAI OS after installing the CLI
+kaios tour
+
+# Real project path
 kaios quickstart
 kaios review
 kaios evidence --summary
@@ -790,6 +793,7 @@ kaios export
 # or:
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
 kaios next
 kaios quickstart
 kaios review

@@ -96,6 +96,7 @@ The v0.3 Evidence Core release is a runnable Kotlin/JVM seed:
 
 Try KAI OS:
 
+kaios tour
 kaios next
 kaios quickstart --dry-run
 kaios quickstart
@@ -110,7 +111,7 @@ kaios export
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.3.0/kaios-0.3.0.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.3.1/kaios-0.3.1.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 Install options after the product demo: Homebrew, hosted installer, release ZIP, or source build
 ```
@@ -161,6 +162,7 @@ https://morning-verlu.github.io/KAI/
 KAI OS product flow. Lead with what KAI OS does; installation is a separate adoption step:
 
 ```bash
+kaios tour
 kaios next
 kaios quickstart --dry-run
 kaios quickstart
@@ -177,6 +179,7 @@ Hosted installer:
 ```bash
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
 kaios quickstart
 kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 kaios ps
@@ -189,11 +192,12 @@ kaios report
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.3.0.zip https://github.com/morning-verlu/KAI/releases/download/v0.3.0/kaios-0.3.0.zip
-unzip kaios-0.3.0.zip
-./kaios-0.3.0/bin/kaios quickstart
-./kaios-0.3.0/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-./kaios-0.3.0/bin/kaios gate --baseline artifacts/baseline.capsule.json --check
+curl -L -o kaios-0.3.1.zip https://github.com/morning-verlu/KAI/releases/download/v0.3.1/kaios-0.3.1.zip
+unzip kaios-0.3.1.zip
+./kaios-0.3.1/bin/kaios tour
+./kaios-0.3.1/bin/kaios quickstart
+./kaios-0.3.1/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+./kaios-0.3.1/bin/kaios gate --baseline artifacts/baseline.capsule.json --check
 ```
 
 Build from source:
@@ -202,6 +206,7 @@ Build from source:
 git clone https://github.com/morning-verlu/KAI.git
 cd KAI
 ./gradlew test installDist
+build/install/kaios-cli/bin/kaios tour
 build/install/kaios-cli/bin/kaios quickstart
 build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
 build/install/kaios-cli/bin/kaios ps

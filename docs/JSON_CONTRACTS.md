@@ -13,6 +13,7 @@ The rule of thumb is simple:
 
 | Command | Schema | Primary Use |
 | --- | --- | --- |
+| `kaios tour --json` | `kaios.tour/v1` | Disposable first-run Evidence OS tour with generated review, trace, capsule, and next actions. |
 | `kaios next --json` | `kaios.next/v1` | Read-only workspace compass with one prioritized command. |
 | `kaios quickstart --json` | `kaios.quickstart/v1` | One-command onboarding state across demo, setup, verify, and evidence. |
 | `kaios review --json` | `kaios.review/v1` | Current-change review artifact, process trace, capsule, replay proof, optional baseline diff, and next actions. |
@@ -55,6 +56,7 @@ These schemas include both `next` and `nextActions`:
 - `kaios.doctor-fix/v1`
 - `kaios.bug-report/v1`
 - `kaios.evidence/v1`
+- `kaios.tour/v1`
 
 `next` is a list of shell commands for people and existing scripts:
 

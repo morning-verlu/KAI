@@ -4,6 +4,16 @@ Use the local tour when you want to feel what KAI OS does before reading the ful
 
 The tour runs entirely on your machine with the deterministic provider. It does not need an API key.
 
+If you installed the CLI, start with the built-in disposable tour:
+
+```bash
+kaios tour
+```
+
+`kaios tour` creates a tiny temporary Git project, runs quickstart, makes a code change, runs review, writes a process trace and capsule, and prints next commands for inspection.
+
+Use the source-tree script when developing KAI OS itself or when you want to run the tour against an existing local project:
+
 ```bash
 ./scripts/local-tour.sh
 ```
