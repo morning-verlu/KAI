@@ -311,4 +311,4 @@ Use `kaios.next/v1` when the support surface only needs the first command instea
 - `signals`
 - `nextActions`
 
-`schemaVersion: 1` workspace analysis is intentionally separate from the `kaios.*` runtime schemas. Use it for dashboards and onboarding reports, not runtime correctness gates.
+`schemaVersion: 1` workspace analysis is intentionally separate from the `kaios.*` runtime schemas. Use it for dashboards and onboarding reports, not runtime correctness gates. Its `actionPlan` array contains prioritized actions with stable `id`, `priority`, `action`, `command`, and `reason` fields so tools can surface a useful next move without parsing Markdown tables.

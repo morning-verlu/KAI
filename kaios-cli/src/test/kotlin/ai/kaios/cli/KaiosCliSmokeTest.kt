@@ -2015,6 +2015,9 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("Kotlin is present"))
         assertTrue(text.contains("GitHub Actions workflow files are present"))
         assertTrue(text.contains("1 test file(s) found"))
+        assertTrue(text.contains("## Recommended Action Plan"))
+        assertTrue(text.contains("kaios quickstart --dry-run"))
+        assertTrue(text.contains("./gradlew test"))
         assertTrue(text.contains("kaios run --index . --context README.md"))
         assertTrue(!text.contains("Useful public overview."))
     }
@@ -2033,12 +2036,21 @@ class KaiosCliSmokeTest {
         val root = Json.parseToJsonElement(text).jsonObject
         val summary = root.getValue("summary").jsonObject
         val languages = root.getValue("languages").jsonArray
+        val actionPlan = root.getValue("actionPlan").jsonArray
 
         assertEquals(0, code)
         assertEquals(1, root.getValue("schemaVersion").jsonPrimitive.int)
         assertEquals(2, summary.getValue("files").jsonPrimitive.int)
         assertTrue(languages.any { language ->
             language.jsonObject.getValue("language").jsonPrimitive.content == "Kotlin"
+        })
+        assertTrue(actionPlan.any { action ->
+            val item = action.jsonObject
+            item.getValue("id").jsonPrimitive.content == "preview-onboarding" &&
+                item.getValue("command").jsonPrimitive.content == "kaios quickstart --dry-run"
+        })
+        assertTrue(actionPlan.any { action ->
+            action.jsonObject.getValue("id").jsonPrimitive.content == "create-project-artifact"
         })
         assertTrue(root.getValue("suggestedCommands").jsonArray.isNotEmpty())
         assertTrue(!text.contains("Useful public overview."))

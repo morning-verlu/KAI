@@ -36,6 +36,7 @@ internal class WorkspaceAnalyzer {
                 WorkspaceAnalysisFile(file.path, file.language, file.lines, file.bytes)
             },
             qualitySignals = qualitySignals(index),
+            actionPlan = actionPlan(index),
             suggestedCommands = suggestedCommands(index),
         )
 
@@ -99,6 +100,15 @@ internal class WorkspaceAnalyzer {
         appendLine("## Test And Quality Signals")
         appendLine()
         analysis.qualitySignals.forEach { appendLine("- $it") }
+        appendLine()
+
+        appendLine("## Recommended Action Plan")
+        appendLine()
+        appendLine("| Priority | Action | Command | Why |")
+        appendLine("| --- | --- | --- | --- |")
+        analysis.actionPlan.forEach { action ->
+            appendLine("| ${action.priority} | ${escapeCell(action.action)} | `${escapeCell(action.command)}` | ${escapeCell(action.reason)} |")
+        }
         appendLine()
 
         appendLine("## Suggested KAI OS Commands")
@@ -174,6 +184,83 @@ internal class WorkspaceAnalyzer {
         return signals
     }
 
+    private fun actionPlan(index: WorkspaceIndex): List<WorkspaceAnalysisAction> {
+        val files = index.files.map { it.path }
+        val hasKaiosConfig = files.any { it == "kaios.json" }
+        val hasGradle = files.any { it == "settings.gradle.kts" || it == "build.gradle.kts" || it == "settings.gradle" || it == "build.gradle" }
+        val hasTests = files.any { "/src/test/" in it || it.startsWith("test/") || it.contains("/test/") }
+        val readme = index.files.firstOrNull { it.path.equals("README.md", ignoreCase = true) || it.path == "README" }
+        val largest = index.largestFiles.firstOrNull()
+
+        val actions = mutableListOf<WorkspaceAnalysisAction>()
+
+        if (hasKaiosConfig) {
+            actions += WorkspaceAnalysisAction(
+                id = "verify-agent-runtime",
+                priority = "P0",
+                action = "Verify the agent runtime contract",
+                command = "kaios gate --config kaios.json",
+                reason = "A KAI OS workflow config exists, so the highest-value check is the deterministic readiness gate plus evidence capsule.",
+            )
+        } else {
+            actions += WorkspaceAnalysisAction(
+                id = "preview-onboarding",
+                priority = "P0",
+                action = "Preview KAI OS onboarding writes",
+                command = "kaios quickstart --dry-run",
+                reason = "No kaios.json was found; preview the generated workflow and evidence path before writing files.",
+            )
+        }
+
+        actions += WorkspaceAnalysisAction(
+            id = "create-project-artifact",
+            priority = "P1",
+            action = "Create a reviewable project artifact",
+            command = if (readme == null) {
+                "kaios run --index . --out artifacts/project.md --force \"summarize this project\""
+            } else {
+                "kaios run --index . --context ${shellArg(readme.path)} --out artifacts/project.md --force \"summarize this project\""
+            },
+            reason = "Turn the static workspace map into a saved run, process table, trace, and Markdown handoff artifact.",
+        )
+
+        if (hasGradle) {
+            actions += WorkspaceAnalysisAction(
+                id = "run-tests",
+                priority = if (hasTests) "P1" else "P2",
+                action = "Run the project test gate",
+                command = "./gradlew test",
+                reason = if (hasTests) {
+                    "Gradle and test files were detected; run the native test gate before trusting agent output."
+                } else {
+                    "Gradle was detected; even without indexed tests, the native test task is the fastest health check."
+                },
+            )
+        }
+
+        if (largest != null && largest.lines > 600) {
+            actions += WorkspaceAnalysisAction(
+                id = "inspect-largest-hotspot",
+                priority = "P2",
+                action = "Inspect the largest hotspot",
+                command = "kaios context ${shellArg(largest.path)}",
+                reason = "`${largest.path}` has ${largest.lines} lines; preview bounded context before asking an agent to reason about it.",
+            )
+        }
+
+        if (index.truncated) {
+            actions += WorkspaceAnalysisAction(
+                id = "expand-workspace-map",
+                priority = "P2",
+                action = "Expand the workspace map",
+                command = "KAIOS_INDEX_MAX_FILES=${index.maxFiles * 2} kaios analyze . --out artifacts/analysis.md --force",
+                reason = "The index hit its file limit, so the current report may miss important files.",
+            )
+        }
+
+        return actions.distinctBy { it.id }
+    }
+
     private fun suggestedCommands(index: WorkspaceIndex): List<String> {
         val commands = mutableListOf(
             "kaios index .",
@@ -200,6 +287,13 @@ internal class WorkspaceAnalyzer {
 
     private fun escapeCell(value: String): String =
         value.replace("|", "\\|")
+
+    private fun shellArg(value: String): String =
+        if (value.all { it.isLetterOrDigit() || it in setOf('/', '.', '_', '-') }) {
+            value
+        } else {
+            "'${value.replace("'", "'\"'\"'")}'"
+        }
 }
 
 @Serializable
@@ -212,6 +306,7 @@ internal data class WorkspaceAnalysis(
     val notableFiles: List<WorkspaceAnalysisFile>,
     val hotspots: List<WorkspaceAnalysisFile>,
     val qualitySignals: List<String>,
+    val actionPlan: List<WorkspaceAnalysisAction>,
     val suggestedCommands: List<String>,
 )
 
@@ -247,4 +342,13 @@ internal data class WorkspaceAnalysisFile(
     val language: String,
     val lines: Int,
     val bytes: Long,
+)
+
+@Serializable
+internal data class WorkspaceAnalysisAction(
+    val id: String,
+    val priority: String,
+    val action: String,
+    val command: String,
+    val reason: String,
 )
