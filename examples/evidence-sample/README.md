@@ -43,3 +43,5 @@ kaios quickstart
 kaios review
 kaios evidence --summary
 ```
+
+Feedback is useful even if you only inspected these files. Open an [Evidence feedback issue](https://github.com/morning-verlu/KAI/issues/new?template=evidence_feedback.yml) and tell us whether the trace, capsule, or process table would help in a real review or CI workflow.

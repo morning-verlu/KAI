@@ -1,0 +1,66 @@
+name: Evidence feedback
+description: Share feedback after trying kaios tour, kaios review, or the Evidence Sample.
+title: "[Evidence]: "
+labels: ["feedback", "evidence"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for looking at KAI OS.
+
+        This template is for lightweight feedback on the Evidence OS path:
+
+        ```bash
+        kaios tour
+        kaios review
+        kaios evidence --summary
+        ```
+
+        You can also use it after reading the checked-in Evidence Sample without installing the CLI.
+  - type: dropdown
+    id: path
+    attributes:
+      label: What did you inspect?
+      options:
+        - Evidence Sample only
+        - kaios tour
+        - kaios review
+        - kaios evidence / replay / capsule
+        - README / launch site only
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: useful
+    attributes:
+      label: What felt useful?
+      description: Which artifact, command, or runtime concept made sense?
+      placeholder: "The process table / trace / capsule / syscall ledger helped because..."
+    validations:
+      required: true
+  - type: textarea
+    id: unclear
+    attributes:
+      label: What was unclear or unconvincing?
+      description: Where did the Evidence OS story lose you?
+      placeholder: "I could not tell why..."
+    validations:
+      required: true
+  - type: textarea
+    id: real_project
+    attributes:
+      label: What would make this worth trying on a real repo?
+      description: Name the smallest improvement that would move KAI OS from interesting to useful.
+  - type: dropdown
+    id: audience
+    attributes:
+      label: Your perspective
+      options:
+        - Kotlin/JVM backend developer
+        - Open source maintainer
+        - Agent / LLM infrastructure builder
+        - CI / platform engineer
+        - Curious observer
+        - Other
+    validations:
+      required: true
