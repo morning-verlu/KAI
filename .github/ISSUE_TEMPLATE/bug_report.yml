@@ -3,6 +3,19 @@ description: Report a reproducible problem in KAI OS.
 title: "[Bug]: "
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a KAI OS issue.
+
+        If the CLI can still run, start with:
+
+        ```bash
+        kaios next
+        kaios bug-report --out artifacts/kaios-bug-report.md --force
+        ```
+
+        The report is designed to be safe to paste, but please review artifacts before sharing and do not add secrets manually.
   - type: textarea
     id: summary
     attributes:
@@ -11,10 +24,26 @@ body:
     validations:
       required: true
   - type: textarea
+    id: diagnostics
+    attributes:
+      label: KAI OS diagnostics
+      description: Paste `kaios bug-report`, `kaios next`, or explain why the command could not run.
+      placeholder: |
+        kaios next output:
+        ...
+
+        kaios bug-report output or artifact:
+        ...
+    validations:
+      required: true
+  - type: textarea
     id: reproduce
     attributes:
       label: Reproduction
-      description: Include commands, output, and relevant snapshot details.
+      description: Include the exact commands, config path, and smallest input that reproduces the issue.
+      placeholder: |
+        1. kaios ...
+        2. ...
     validations:
       required: true
   - type: textarea
@@ -28,3 +57,20 @@ body:
     attributes:
       label: Java version
       placeholder: "java -version"
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Onboarding / first run
+        - Runtime / process lifecycle
+        - Workflow scheduler
+        - Tools / syscalls
+        - Memory / snapshots
+        - Providers
+        - CLI / help output
+        - Evidence / trace / capsule
+        - Documentation
+        - Unknown
+    validations:
+      required: true

@@ -1,13 +1,22 @@
 name: Feature request
-description: Suggest a runtime, scheduler, tool, memory, provider, or UI feature.
-title: "[Feature]: "
+description: Suggest a product improvement or runtime use case for KAI OS.
+title: "[Use case]: "
 labels: ["enhancement"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        KAI OS prioritizes clarity, usefulness, and stability over feature count.
+
+        Before proposing a new surface area, please describe the developer workflow it improves and the smallest change that would make that workflow easier.
   - type: dropdown
     id: area
     attributes:
       label: Area
       options:
+        - Onboarding / first run
+        - Product clarity
+        - Runtime trust / evidence
         - Runtime
         - Scheduler
         - Tools
@@ -22,14 +31,32 @@ body:
   - type: textarea
     id: problem
     attributes:
-      label: Problem
-      description: What should KAI OS make easier?
+      label: Use case or problem
+      description: What developer workflow should KAI OS make easier, safer, or more predictable?
+      placeholder: "When I..., KAI OS should help me..."
     validations:
       required: true
   - type: textarea
+    id: current
+    attributes:
+      label: Current workaround
+      description: What do you do today with KAI OS or another tool?
+  - type: textarea
     id: proposal
     attributes:
-      label: Proposal
-      description: What would the feature look like?
+      label: Smallest useful improvement
+      description: What is the smallest change that would solve the workflow without adding unnecessary complexity?
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Product impact
+      options:
+        - Improves onboarding or first successful run
+        - Improves stability or predictability
+        - Improves trust, evidence, or debugging
+        - Improves docs or examples
+        - Adds a new capability
     validations:
       required: true
