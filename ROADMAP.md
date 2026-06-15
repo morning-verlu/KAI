@@ -1,63 +1,51 @@
 # Roadmap
 
-KAI OS is starting with a small, inspectable runtime. The goal is to grow into a Kotlin-native operating layer for AI agents.
+KAI OS is currently v0.3.1: a local-first Evidence OS for AI agents in Kotlin. The product wedge is not "more agents"; it is turning agent work into process traces, replayable capsules, syscall ledgers, and CI-grade proof.
 
-## v0.1 - Runtime Seed
+## Shipped
 
-- Kotlin/JVM multi-module project
-- deterministic mock model provider
-- process lifecycle and metrics
-- coroutine DAG workflow scheduler
-- permissioned syscall tools
-- session memory
-- SQLite memory adapter
-- JSON run snapshots
-- CLI run, process table, and inspector
-- static Agent Process Manager report
+### Runtime Seed
 
-## v0.2 - Real Providers and Safer Tools
+- Kotlin/JVM multi-module runtime with deterministic `MockModelProvider`.
+- Agent process lifecycle: spawn, start, suspend, resume, cancel, succeed, fail.
+- Process metrics: PID, state, tokens, context size, syscalls, duration, timestamps.
+- DAG workflow scheduler, session memory, SQLite memory adapter, and JSON run snapshots.
+- Permissioned built-in syscalls: `echo`, `clock`, `mock-http`, allowlisted `http`, scoped `file`.
+- CLI inspection path: `run`, `ps`, `inspect`, `trace`, `capsule`, `replay`, `diff`, `evidence`.
 
-- OpenAI-compatible provider foundations, shipped in v0.1.1
-- Ollama provider foundations, shipped in v0.1.1
-- scoped file syscall, shipped in v0.1.3
-- SQLite memory adapter, shipped in v0.1.4
-- coroutine scheduler foundations, shipped in v0.1.5
-- structured tool argument schemas
-- HTTP tool with allowlist policy, shipped in v0.1.12
-- observable scheduler retry policy, shipped in v0.1.13
-- Workspace Index for project source maps, shipped in v0.1.14
-- no-key workspace analysis reports, shipped in v0.1.15
-- structured JSON workspace analysis, shipped in v0.1.16
-- better error surfaces
+### Evidence OS Path
 
-## v0.3 - Scheduler Kernel
+- `kaios quickstart` for no-key onboarding, project config, verify, evidence, and next actions.
+- `kaios review` for dirty Git workspaces: Markdown review artifact, process trace, replayable capsule, and `kaios.review/v1` JSON.
+- `kaios evidence --summary` for PR-friendly proof and `--baseline --check` for behavioral gates.
+- Workspace Index, bounded context loading, `.kaiosignore`, project analysis, and safe bug reports.
+- Hosted installer and first-run `kaios tour` that runs the Evidence OS loop in a disposable repo.
 
-- scheduler budget policies
-- richer fallback routing
-- workflow result graph
-- persistent run store
+### Evidence Core
 
-## v0.4 - Memory Engine
+- Process recovery evidence: crash events, failure kinds, memory isolation, recovery lineage, and `kaios recover --dry-run`.
+- Priority scheduler evidence: deterministic priority ordering, event-triggered nodes, retry, recovery, fallback, timeout, sibling cancellation, and local worker backend records.
+- Syscall ledger: capability grants, allowed/denied audit records, redacted arguments, tool duration, estimated cost fields, and denied syscall counters.
+- Backward-compatible JSON contract fields in traces, capsules, review JSON, and evidence output.
 
-- SQLite memory adapter
-- conversation/session indexing
-- summarization hooks
-- optional vector memory interface
-- memory import/export
+## Next: v0.4 Evidence CI
 
-## v0.5 - Plugin Runtime
+- GitHub Actions examples that publish `kaios evidence --summary` as PR-visible Markdown.
+- Stable baseline workflow: create, update, compare, and explain baseline capsules.
+- Sample capsules and traces that new users can inspect without running a project first.
+- Release-quality docs for `kaios review`, `kaios evidence`, `kaios recover`, and JSON contracts.
+- More contract tests around dirty workspaces, ignored files, binary files, and baseline drift.
 
-- JVM plugin loading
-- tool plugin API
-- agent plugin API
-- memory plugin API
-- plugin manifest validation
+## v0.5 Runtime Extensions
 
-## v1.0 - Agent OS Developer Experience
+- Provider function-calling polish for OpenAI-compatible and Ollama execution.
+- Narrow plugin API for tools and memory adapters, only where it strengthens evidence.
+- Richer memory scopes and import/export flows.
+- More runnable JVM/Kotlin project examples for maintainers and backend teams.
 
-- stable runtime API
-- stable DSL
-- CLI debugger
-- process manager UI
-- workflow graph visualizer
-- production examples
+## v1.0 Agent OS Developer Experience
+
+- Stable runtime API and stable CLI JSON contracts.
+- Agent process manager UI for traces, capsules, syscalls, recovery, and cost.
+- Workflow graph visualizer for scheduler evidence.
+- Production examples that show KAI OS as the evidence layer beside real providers.

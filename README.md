@@ -1,9 +1,11 @@
 # KAI OS
 
-> AI Agent Operating System in Kotlin.
+> Local-first Evidence OS for AI agents in Kotlin.
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF.svg)](https://kotlinlang.org/)
+[![Release](https://img.shields.io/github/v/release/morning-verlu/KAI?label=release)](https://github.com/morning-verlu/KAI/releases)
+[![Discussions](https://img.shields.io/badge/discussions-open-8A63D2.svg)](https://github.com/morning-verlu/KAI/discussions)
 
 Website: [morning-verlu.github.io/KAI](https://morning-verlu.github.io/KAI/)
 
@@ -12,6 +14,14 @@ KAI OS is a Kotlin runtime that turns multi-agent work into observable, controll
 Agents get lifecycle, memory, permissions, metrics, and syscall-style tool boundaries. Workflows run as DAGs, and every run can be inspected, replayed, compared, and packaged as portable evidence.
 
 It is not a chatbot framework, not a LangChain clone, and not just a CLI. The CLI is the first interface to the KAI OS runtime.
+
+Try the full Evidence OS loop in a disposable local repo:
+
+```bash
+curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
+```
 
 ![KAI OS CLI demo](docs/assets/kaios-demo.gif)
 
@@ -482,7 +492,7 @@ For all install options, see [docs/INSTALL.md](docs/INSTALL.md).
 
 ## Current Status
 
-KAI OS is early v0.3 infrastructure. Today it includes:
+KAI OS v0.3.1 is runnable Evidence OS infrastructure. Today it includes:
 
 - Deterministic project-aware `MockModelProvider`, no API key needed.
 - OpenAI-compatible and Ollama providers for real model execution.

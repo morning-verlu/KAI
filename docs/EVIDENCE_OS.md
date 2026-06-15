@@ -1,6 +1,6 @@
 # Evidence OS For Agents
 
-KAI OS chooses one main moat for the next milestone: local-first evidence for agent work.
+KAI OS chooses one main moat: local-first evidence for agent work.
 
 The product claim is:
 
@@ -30,7 +30,7 @@ KAI OS treats those answers as first-class runtime output, not as an observabili
 
 ## v0.3 Evidence Core
 
-The next moat is three runtime primitives that show up directly in trace, capsule, review, and evidence output:
+The shipped v0.3 moat is three runtime primitives that show up directly in trace, capsule, review, and evidence output:
 
 - Process Recovery: runtime crashes are recorded as `FAILED + RUNTIME_CRASH`, recovery starts a new PID, and `kaios recover --dry-run` reports which processes are recoverable.
 - Priority Scheduler: ready DAG nodes run by priority, event-triggered nodes wait for matching runtime events, and the local worker backend records `workerId` without requiring a real cluster.
@@ -97,7 +97,7 @@ private/
 
 ## What KAI OS Does Not Prioritize Yet
 
-The next moat is not a chat UI, visual workflow builder, plugin marketplace, or more model providers.
+The moat is not a chat UI, visual workflow builder, plugin marketplace, or more model providers.
 
 Those can matter later, but they do not prove the core product. The core product is that a developer can run one local command and get evidence that is inspectable, portable, replayable, and gateable.
 
@@ -123,9 +123,9 @@ KAI OS should not compete by claiming "more agents" or "more integrations" first
 
 This is the wedge: KAI OS can be small and still valuable if it owns the evidence layer well.
 
-## Success Criteria For v0.2
+## Current Success Criteria
 
-KAI OS v0.2 should be judged by the review evidence loop, not by feature count:
+KAI OS v0.3.1 should be judged by the review evidence loop, not by feature count:
 
 - A dirty Git repo can run `kaios review` and get artifact, trace, capsule, replay result, and stable JSON.
 - A clean Git repo fails clearly and recommends executable next commands.
