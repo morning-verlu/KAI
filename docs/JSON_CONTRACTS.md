@@ -18,6 +18,7 @@ The rule of thumb is simple:
 | `kaios verify --json` | `kaios.verify/v1` | One-command local and CI readiness gate. |
 | `kaios config validate --json` | `kaios.config-validation/v1` | Workflow config validation without starting agents. |
 | `kaios doctor --json` | `kaios.doctor/v1` | Machine-readable environment diagnostics. |
+| `kaios doctor --fix --json` | `kaios.doctor-fix/v1` | Preview or apply the local repair path for project workflow files. |
 | `kaios bug-report --json` | `kaios.bug-report/v1` | Safe support bundle for issues and handoff. |
 | `kaios runs --json` | `kaios.runs/v1` | Saved run registry for local tooling and UI lists. |
 | `kaios trace <run> --json` | `kaios.process-trace/v1` | Process metrics, path, and lifecycle timeline. |
@@ -45,6 +46,7 @@ These schemas include both `next` and `nextActions`:
 - `kaios.quickstart/v1`
 - `kaios.config-validation/v1`
 - `kaios.doctor/v1`
+- `kaios.doctor-fix/v1`
 - `kaios.bug-report/v1`
 - `kaios.evidence/v1`
 
@@ -82,6 +84,7 @@ The `command` value in every `nextActions` item is also present in `next`.
 | --- | --- |
 | `fix-failed-checks` | Resolve failed diagnostics before retrying. |
 | `repair-config` | Repair or regenerate a workflow config. |
+| `repair-project` | Preview or apply the safest local repair for failed diagnostics. |
 | `stage-generated-files` | Stage generated config and CI files. |
 | `quickstart` | Run the no-key onboarding gate and create inspectable evidence. |
 | `setup-project` | Create a validated workflow and optional CI gate. |
@@ -144,6 +147,27 @@ Read:
 - `ciArtifact.name` and `ciArtifact.paths` for the uploaded `kaios-agent-gate` bundle when CI is enabled.
 - `ciArtifact.pushPermissionNote` before asking users to push generated GitHub Actions workflows.
 - `validation.valid == true` before committing the generated workflow.
+
+### Doctor Repair Gate
+
+Use `kaios.doctor-fix/v1` when automation needs to preview or apply the repair path suggested by diagnostics:
+
+```bash
+kaios doctor --fix --dry-run --json
+kaios doctor --fix --json
+```
+
+Gate on:
+
+- `status == "planned"` for dry-run previews.
+- `status == "fixed"` for applied repairs.
+- `plan.writes` matches the config and optional CI files your automation is allowed to create or keep.
+- `setup.validation.valid == true` after an applied repair.
+- `after.summary.status == "ready"` after an applied repair.
+- `errors` is empty after an applied repair.
+
+Use `--ci` when the repair should also write `.github/workflows/kaios.yml`.
+Use `--force` only after surfacing the dry-run plan to a person, because existing config and CI files are kept by default.
 
 ### Readiness Gate
 

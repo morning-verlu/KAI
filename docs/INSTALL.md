@@ -12,7 +12,7 @@ Running `kaios` with no arguments prints the quick start and exits successfully,
 Common aliases execute directly: `kaios start --no-ci`, `kaios status`, `kaios ls`, `kaios proc`, and `kaios audit`.
 Mistyped commands still show a suggestion when there is a clear match.
 After a saved run exists, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios evidence`, `kaios report`, and `kaios export` default to the newest run. When no snapshots exist yet, the CLI points back to `kaios quickstart`, `kaios demo`, `kaios setup --ci`, and `kaios gate`.
-If `kaios.json` is missing, `kaios config show` and `kaios config validate` point back to `kaios setup --ci`; use `kaios config templates` when you want to choose a different workflow template before setup.
+If `kaios.json` is missing, `kaios config show`, `kaios config validate`, and `kaios doctor` point back to `kaios doctor --fix --dry-run`, `kaios doctor --fix`, or `kaios setup --ci`; use `kaios config templates` when you want to choose a different workflow template before setup.
 
 Every core command also supports local help with examples and notes:
 
@@ -78,9 +78,9 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$
 ## Download ZIP
 
 ```bash
-curl -L -o kaios-0.1.80.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.80/kaios-0.1.80.zip
-unzip kaios-0.1.80.zip
-./kaios-0.1.80/bin/kaios quickstart
+curl -L -o kaios-0.1.81.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.81/kaios-0.1.81.zip
+unzip kaios-0.1.81.zip
+./kaios-0.1.81/bin/kaios quickstart
 ```
 
 ## Build From Source
@@ -98,6 +98,8 @@ Useful next commands after the first artifact:
 kaios analyze . --format json --out artifacts/analysis.json --force
 kaios quickstart
 kaios doctor --json
+kaios doctor --fix --dry-run
+kaios doctor --fix
 kaios doctor --config workflows/research.json --json
 kaios setup --ci
 kaios gate

@@ -105,7 +105,7 @@ kaios export
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.80/kaios-0.1.80.zip
+Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.1.81/kaios-0.1.81.zip
 Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 ```
 
@@ -184,11 +184,11 @@ kaios report
 Download ZIP:
 
 ```bash
-curl -L -o kaios-0.1.80.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.80/kaios-0.1.80.zip
-unzip kaios-0.1.80.zip
-./kaios-0.1.80/bin/kaios quickstart
-./kaios-0.1.80/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-./kaios-0.1.80/bin/kaios gate --baseline artifacts/baseline.capsule.json --check
+curl -L -o kaios-0.1.81.zip https://github.com/morning-verlu/KAI/releases/download/v0.1.81/kaios-0.1.81.zip
+unzip kaios-0.1.81.zip
+./kaios-0.1.81/bin/kaios quickstart
+./kaios-0.1.81/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
+./kaios-0.1.81/bin/kaios gate --baseline artifacts/baseline.capsule.json --check
 ```
 
 Build from source:

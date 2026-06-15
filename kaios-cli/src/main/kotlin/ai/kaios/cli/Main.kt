@@ -36,7 +36,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 
-private const val KAIOS_VERSION = "0.1.80"
+private const val KAIOS_VERSION = "0.1.81"
 private const val CI_AGENT_GATE_ARTIFACT_NAME = "kaios-agent-gate"
 private const val CI_WORKFLOW_PUSH_NOTE = "Pushing .github/workflows/kaios.yml may require GitHub workflow permission/scope."
 private const val PROCESS_TRACE_SCHEMA = "kaios.process-trace/v1"
@@ -45,6 +45,7 @@ private const val RUN_REPLAY_SCHEMA = "kaios.run-replay/v1"
 private const val RUN_DIFF_SCHEMA = "kaios.run-diff/v1"
 private const val RUN_EVIDENCE_SCHEMA = "kaios.evidence/v1"
 private const val DOCTOR_SCHEMA = "kaios.doctor/v1"
+private const val DOCTOR_FIX_SCHEMA = "kaios.doctor-fix/v1"
 private const val RUNS_SCHEMA = "kaios.runs/v1"
 private const val CONFIG_VALIDATION_SCHEMA = "kaios.config-validation/v1"
 private const val BUG_REPORT_SCHEMA = "kaios.bug-report/v1"
@@ -227,6 +228,7 @@ class KaiosCli(
             command.startsWith("fix ") -> "repair-config"
             command.startsWith("git add ") -> "stage-generated-files"
             command.startsWith("kaios quickstart") -> "quickstart"
+            command.startsWith("kaios doctor") && command.contains(" --fix") -> "repair-project"
             command.startsWith("kaios setup ") && command.contains(" --force") -> "regenerate-config"
             command.startsWith("kaios setup ") || command == "kaios setup" -> "setup-project"
             command.startsWith("kaios config validate ") -> "validate-config"
@@ -256,6 +258,7 @@ class KaiosCli(
         when (id) {
             "fix-failed-checks" -> "Resolve failed diagnostics before retrying the workflow."
             "repair-config" -> "Repair the workflow config or regenerate it safely."
+            "repair-project" -> "Preview or apply the safest local repair for failed diagnostics."
             "stage-generated-files" -> "Stage generated config and CI gate files for review."
             "quickstart" -> "Run the no-key onboarding gate and create inspectable evidence."
             "setup-project" -> "Create a validated local workflow and optional CI gate."
@@ -689,16 +692,23 @@ class KaiosCli(
                 ),
             )
             "doctor" -> CommandHelp(
-                usage = "kaios doctor [--config kaios.json] [--json|--format json]",
-                summary = "Check the local Java runtime, writable KAI OS directories, provider config, and project config.",
+                usage = "kaios doctor [--config kaios.json] [--fix] [--dry-run] [--ci] [--force] [--json|--format json]",
+                summary = "Check the local runtime and optionally repair missing or invalid project workflow files.",
                 examples = listOf(
                     "kaios doctor",
+                    "kaios doctor --fix --dry-run",
+                    "kaios doctor --fix",
+                    "kaios doctor --fix --ci",
                     "kaios doctor --config workflows/research.json",
                     "kaios doctor --json",
                 ),
                 notes = listOf(
                     "Run this first when a command behaves differently across machines.",
+                    "Use --fix to create or repair the configured kaios.json using the research template.",
+                    "Use --dry-run with --fix to preview workflow and CI writes before touching project files.",
+                    "Existing config and CI files are kept unless --force is passed.",
                     "JSON output uses schema $DOCTOR_SCHEMA for CI and issue diagnostics.",
+                    "Fix JSON output uses schema $DOCTOR_FIX_SCHEMA for repair automation.",
                 ),
             )
             "bug-report" -> CommandHelp(
@@ -2022,6 +2032,18 @@ class KaiosCli(
         val command = runCatching { parseDoctorCommand(args) }.getOrElse { error ->
             return printCommandUsageError(err, "doctor", error.message)
         }
+        if (command.fix) {
+            val report = runCatching { buildDoctorFixReport(command) }.getOrElse { error ->
+                err.println(error.message)
+                return 1
+            }
+            when (command.format) {
+                DoctorFormat.Text -> renderDoctorFixText(report, out)
+                DoctorFormat.Json -> out.println(TRACE_JSON.encodeToString(report))
+            }
+            return if (report.status == "fixed" || report.status == "planned") 0 else 2
+        }
+
         val report = buildDoctorReport(command.configPath)
 
         when (command.format) {
@@ -2275,10 +2297,184 @@ class KaiosCli(
             add("kaios demo")
             when {
                 configPath.exists() && projectConfigStatus == DoctorStatus.OK -> add(verifyEvidenceCommand(configPath))
-                else -> addAll(configRecoveryCommands(configPath))
+                else -> {
+                    val needsForce = configPath.exists()
+                    add(doctorFixCommand(configPath, writeCi = true, force = needsForce, dryRun = true))
+                    add(doctorFixCommand(configPath, writeCi = true, force = needsForce))
+                    addAll(configRecoveryCommands(configPath))
+                }
             }
             add("kaios analyze . --out artifacts/analysis.md --force")
         }.distinct()
+
+    private fun buildDoctorFixReport(command: DoctorCommand): DoctorFixReport {
+        requireProjectTemplate(command.templateId)
+        val before = buildDoctorReport(command.configPath)
+        val plan = doctorFixPlan(command)
+
+        if (command.dryRun) {
+            val next = doctorFixNextCommands(command, status = "planned")
+            return DoctorFixReport(
+                schema = DOCTOR_FIX_SCHEMA,
+                version = KAIOS_VERSION,
+                cwd = workingDir.toString(),
+                status = "planned",
+                dryRun = true,
+                requestedTemplate = command.templateId,
+                config = command.configPath.toString(),
+                before = before,
+                plan = plan,
+                setup = null,
+                after = null,
+                errors = emptyList(),
+                next = next,
+                nextActions = nextActions(next),
+            )
+        }
+
+        val setupCommand = SetupCommand(
+            configPath = command.configPath,
+            force = command.force,
+            templateId = command.templateId,
+            writeCi = command.writeCi,
+            format = SetupFormat.Json,
+        )
+        val setup = buildSetupReport(setupCommand)
+        val after = buildDoctorReport(command.configPath)
+        val errors = buildList {
+            if (!setup.validation.valid) addAll(setup.validation.errors.ifEmpty { listOf("project config is still invalid.") })
+            if (after.summary.failed > 0) add("doctor still reports ${after.summary.failed} failed check(s).")
+        }
+        val status = if (errors.isEmpty()) "fixed" else "failed"
+        val next = doctorFixNextCommands(command, status)
+
+        return DoctorFixReport(
+            schema = DOCTOR_FIX_SCHEMA,
+            version = KAIOS_VERSION,
+            cwd = workingDir.toString(),
+            status = status,
+            dryRun = false,
+            requestedTemplate = command.templateId,
+            config = command.configPath.toString(),
+            before = before,
+            plan = plan,
+            setup = setup,
+            after = after,
+            errors = errors,
+            next = next,
+            nextActions = nextActions(next),
+        )
+    }
+
+    private fun doctorFixPlan(command: DoctorCommand): DoctorFixPlan {
+        val configAction = plannedSetupFileAction(command.configPath, command.force)
+        val ciPath = defaultCiWorkflowPath()
+        val writes = buildList {
+            add(
+                DoctorFixPlannedWrite(
+                    id = "config",
+                    path = displayPath(command.configPath),
+                    action = configAction,
+                    reason = "Project workflow used by run, gate, config validation, and support diagnostics.",
+                ),
+            )
+            add(
+                if (command.writeCi) {
+                    DoctorFixPlannedWrite(
+                        id = "ci",
+                        path = displayPath(ciPath),
+                        action = plannedSetupFileAction(ciPath, command.force),
+                        reason = "Optional no-key GitHub Actions Agent Gate.",
+                    )
+                } else {
+                    DoctorFixPlannedWrite(
+                        id = "ci",
+                        path = null,
+                        action = SetupFileAction.Skipped.id,
+                        reason = "Pass --ci when you want doctor --fix to write the GitHub Actions Agent Gate.",
+                    )
+                },
+            )
+        }
+        val commands = buildList {
+            add(doctorFixCommand(command.configPath, command.templateId, command.writeCi, command.force))
+            add(setupCommandFor(command.configPath, command.templateId, command.writeCi, command.force))
+            add("kaios config validate --config ${displayPath(command.configPath)} --json")
+            if (command.writeCi) add(verifyEvidenceCommand(command.configPath))
+        }.distinct()
+        val notes = buildList {
+            add("doctor --fix reuses the same project setup contract as kaios setup.")
+            add("Existing config and CI files are kept unless --force is passed.")
+            if (command.dryRun) {
+                add("Dry run previews project workflow and CI writes without generating those files.")
+            }
+        }
+        return DoctorFixPlan(
+            dryRun = command.dryRun,
+            writeCi = command.writeCi,
+            force = command.force,
+            writes = writes,
+            commands = commands,
+            notes = notes,
+        )
+    }
+
+    private fun plannedSetupFileAction(path: Path, force: Boolean): String =
+        when {
+            path.exists() && force -> SetupFileAction.Overwritten.id
+            path.exists() -> SetupFileAction.Existing.id
+            else -> SetupFileAction.Created.id
+        }
+
+    private fun doctorFixNextCommands(command: DoctorCommand, status: String): List<String> =
+        buildList {
+            when (status) {
+                "planned" -> add(doctorFixCommand(command.configPath, command.templateId, command.writeCi, command.force))
+                "fixed" -> {
+                    add("kaios config validate --config ${displayPath(command.configPath)} --json")
+                    add(verifyEvidenceCommand(command.configPath))
+                    if (command.writeCi) {
+                        add("git add ${displayPath(command.configPath)} ${displayPath(defaultCiWorkflowPath())}")
+                    }
+                    add(doctorJsonCommand(command.configPath))
+                }
+                else -> {
+                    add(doctorFixCommand(command.configPath, command.templateId, command.writeCi, force = true, dryRun = true))
+                    add(doctorFixCommand(command.configPath, command.templateId, command.writeCi, force = true))
+                    addAll(configRecoveryCommands(command.configPath))
+                    add(bugReportCommand(command.configPath))
+                }
+            }
+        }.distinct()
+
+    private fun doctorFixCommand(
+        configPath: Path,
+        templateId: String = "research",
+        writeCi: Boolean = false,
+        force: Boolean = false,
+        dryRun: Boolean = false,
+    ): String =
+        buildString {
+            append("kaios doctor --fix")
+            if (dryRun) append(" --dry-run")
+            if (templateId != "research") append(" --template $templateId")
+            if (configPath.toAbsolutePath().normalize() != defaultConfigPath().toAbsolutePath().normalize()) {
+                append(" --config ${displayPath(configPath)}")
+            }
+            if (writeCi) append(" --ci")
+            if (force) append(" --force")
+        }
+
+    private fun setupCommandFor(configPath: Path, templateId: String, writeCi: Boolean, force: Boolean): String =
+        buildString {
+            append("kaios setup")
+            if (templateId != "research") append(" --template $templateId")
+            if (configPath.toAbsolutePath().normalize() != defaultConfigPath().toAbsolutePath().normalize()) {
+                append(" --config ${displayPath(configPath)}")
+            }
+            if (writeCi) append(" --ci")
+            if (force) append(" --force")
+        }
 
     private fun doctorSummaryText(summary: DoctorSummary): String =
         when {
@@ -2307,6 +2503,47 @@ class KaiosCli(
             report.summary.failed > 0 -> out.println("summary: ${report.summary.failed} failed, ${report.summary.warnings} warning(s)")
             report.summary.warnings > 0 -> out.println("summary: ready with ${report.summary.warnings} warning(s)")
             else -> out.println("summary: ready")
+        }
+        out.println()
+        out.println("next:")
+        report.next.forEach { next -> out.println("  $next") }
+    }
+
+    private fun renderDoctorFixText(report: DoctorFixReport, out: PrintStream) {
+        out.println("KAI OS doctor fix")
+        out.println("schema: ${report.schema}")
+        out.println("version: ${report.version}")
+        out.println("cwd: ${report.cwd}")
+        out.println("status: ${report.status}")
+        out.println("dry_run: ${report.dryRun}")
+        out.println("config: ${report.config}")
+        out.println("requested_template: ${report.requestedTemplate}")
+        out.println("before: ${doctorSummaryText(report.before.summary)}")
+        out.println()
+        out.println("plan:")
+        out.println("  write_ci: ${report.plan.writeCi}")
+        out.println("  force: ${report.plan.force}")
+        report.plan.writes.forEach { write ->
+            out.println("  ${write.id}: ${write.action}${write.path?.let { " ($it)" }.orEmpty()}")
+        }
+        out.println("  commands:")
+        report.plan.commands.forEach { command -> out.println("    $command") }
+        if (report.setup != null) {
+            out.println()
+            out.println("setup: ${if (report.setup.validation.valid) "ready" else "failed"} config=${report.setup.config.action} ci=${report.setup.ci.action}")
+        }
+        if (report.after != null) {
+            out.println("after: ${doctorSummaryText(report.after.summary)}")
+        }
+        if (report.errors.isNotEmpty()) {
+            out.println()
+            out.println("errors:")
+            report.errors.forEach { error -> out.println("  - ${singleLine(error)}") }
+        }
+        if (report.plan.notes.isNotEmpty()) {
+            out.println()
+            out.println("notes:")
+            report.plan.notes.forEach { note -> out.println("  - $note") }
         }
         out.println()
         out.println("next:")
@@ -3386,7 +3623,7 @@ class KaiosCli(
                 kaios evidence [latest] [--out capsule.json] [--baseline baseline.capsule.json] [--check]
                 kaios report [latest]
                 kaios export [latest] [--out artifact.md]
-                kaios doctor [--config kaios.json]
+                kaios doctor [--config kaios.json] [--fix] [--dry-run]
                 kaios bug-report [--config kaios.json] [--out report.md]
                 kaios --version
                 kaios help <command>
@@ -4905,11 +5142,32 @@ class KaiosCli(
     private fun parseDoctorCommand(args: List<String>): DoctorCommand {
         var configPath = defaultConfigPath()
         var format = DoctorFormat.Text
+        var fix = false
+        var dryRun = false
+        var force = false
+        var writeCi = false
+        var templateId = "research"
         var index = 0
 
         while (index < args.size) {
             val arg = args[index]
             when {
+                arg == "--fix" -> {
+                    fix = true
+                    index += 1
+                }
+                arg == "--dry-run" || arg == "--plan" -> {
+                    dryRun = true
+                    index += 1
+                }
+                arg == "--force" || arg == "-f" -> {
+                    force = true
+                    index += 1
+                }
+                arg == "--ci" -> {
+                    writeCi = true
+                    index += 1
+                }
                 arg == "--config" || arg == "-c" -> {
                     val value = args.getOrNull(index + 1) ?: error("--config requires a path.")
                     configPath = resolvePath(value)
@@ -4919,6 +5177,19 @@ class KaiosCli(
                     val value = arg.substringAfter("=")
                     require(value.isNotBlank()) { "--config requires a path." }
                     configPath = resolvePath(value)
+                    index += 1
+                }
+                arg == "--template" || arg == "-t" -> {
+                    val value = args.getOrNull(index + 1) ?: error("$arg requires a template id.")
+                    requireProjectTemplate(value)
+                    templateId = value.lowercase().trim()
+                    index += 2
+                }
+                arg.startsWith("--template=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--template requires a template id." }
+                    requireProjectTemplate(value)
+                    templateId = value.lowercase().trim()
                     index += 1
                 }
                 arg == "--json" -> {
@@ -4941,7 +5212,19 @@ class KaiosCli(
             }
         }
 
-        return DoctorCommand(configPath, format)
+        if (!fix && (dryRun || force || writeCi || templateId != "research")) {
+            error("--dry-run, --ci, --force, and --template require --fix.")
+        }
+
+        return DoctorCommand(
+            configPath = configPath,
+            format = format,
+            fix = fix,
+            dryRun = dryRun,
+            writeCi = writeCi,
+            force = force,
+            templateId = templateId,
+        )
     }
 
     private fun parseDoctorFormat(value: String): DoctorFormat =
@@ -5644,6 +5927,11 @@ private data class ConfigValidationReport(
 private data class DoctorCommand(
     val configPath: Path,
     val format: DoctorFormat,
+    val fix: Boolean,
+    val dryRun: Boolean,
+    val writeCi: Boolean,
+    val force: Boolean,
+    val templateId: String,
 )
 
 private enum class DoctorFormat(val id: String) {
@@ -5687,6 +5975,42 @@ private data class DoctorReportCheck(
     val name: String,
     val status: String,
     val detail: String,
+)
+
+@Serializable
+private data class DoctorFixReport(
+    val schema: String,
+    val version: String,
+    val cwd: String,
+    val status: String,
+    val dryRun: Boolean,
+    val requestedTemplate: String,
+    val config: String,
+    val before: DoctorReport,
+    val plan: DoctorFixPlan,
+    val setup: SetupReport?,
+    val after: DoctorReport?,
+    val errors: List<String>,
+    val next: List<String>,
+    val nextActions: List<NextAction>,
+)
+
+@Serializable
+private data class DoctorFixPlan(
+    val dryRun: Boolean,
+    val writeCi: Boolean,
+    val force: Boolean,
+    val writes: List<DoctorFixPlannedWrite>,
+    val commands: List<String>,
+    val notes: List<String>,
+)
+
+@Serializable
+private data class DoctorFixPlannedWrite(
+    val id: String,
+    val path: String?,
+    val action: String,
+    val reason: String,
 )
 
 @Serializable

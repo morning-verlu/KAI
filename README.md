@@ -107,6 +107,8 @@ Need a support-friendly environment check?
 
 ```bash
 kaios doctor
+kaios doctor --fix --dry-run
+kaios doctor --fix
 kaios doctor --json
 kaios bug-report
 kaios doctor --config workflows/research.json --json
@@ -114,7 +116,8 @@ kaios bug-report --config workflows/research.json --out artifacts/kaios-bug-repo
 ```
 
 `kaios bug-report` creates a safe-to-paste Markdown report with doctor checks, config validation, latest run metrics, and trace contract status.
-`kaios doctor`, `kaios gate`, `kaios verify`, and `kaios bug-report` print the same recovery path: `kaios quickstart` for the full no-key onboarding gate, `kaios setup --ci` when no project workflow exists, `kaios gate --config kaios.json` when one is valid, or `kaios config validate --config kaios.json --json` plus `kaios setup --ci --force` when an existing config is invalid.
+`kaios doctor --fix --dry-run` previews the local repair plan; `kaios doctor --fix` creates the missing project workflow without writing CI unless you add `--ci`. Existing files are kept unless you pass `--force`.
+`kaios doctor`, `kaios gate`, `kaios verify`, and `kaios bug-report` print the same recovery path: `kaios quickstart` for the full no-key onboarding gate, `kaios doctor --fix --ci` or `kaios setup --ci` when no project workflow exists, `kaios gate --config kaios.json` when one is valid, or `kaios config validate --config kaios.json --json` plus `kaios doctor --fix --ci --force` when an existing config is invalid.
 Use `--config` with `doctor` and `bug-report` when your project workflow lives outside the default `kaios.json`; diagnostics and next commands will follow that exact file instead of falling back to the default.
 
 Need a machine-readable workspace report for CI or dashboards?
