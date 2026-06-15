@@ -129,6 +129,7 @@ kaios help config
 kaios help config show
 ```
 
+The bare `kaios` command leads with the product model, concrete use cases, and the three-step path from onboarding to process inspection.
 Common aliases also work directly: `kaios start --no-ci` for local quickstart, `kaios status` for doctor, `kaios ls` for saved runs, `kaios proc` for the process table, and `kaios audit` for evidence packaging. If you truly mistype a command, KAI OS suggests the closest safe next command instead of guessing.
 After a saved run exists, inspection commands default to the newest run: `kaios ps`, `kaios inspect`, `kaios trace --check`, `kaios evidence --out artifacts/run.capsule.json --force`, `kaios report`, and `kaios export` all work without typing `latest`.
 

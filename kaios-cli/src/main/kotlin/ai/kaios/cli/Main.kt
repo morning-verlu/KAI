@@ -3778,10 +3778,26 @@ class KaiosCli(
             """
             KAI OS - AI Agent Operating System in Kotlin
 
-            Need the next move?
+            Product model:
+              Agent    = Process
+              Workflow = Scheduler
+              Tool     = Syscall
+              Memory   = Process state
+
+            Use KAI OS when:
+              - CI needs a no-key Agent Gate before real model credentials.
+              - A multi-agent run needs PID/state/token/context/syscall observability.
+              - A run needs portable evidence for review, replay, support, or baseline drift.
+
+            Three-step product path:
+              1. kaios quickstart --dry-run
+              2. kaios quickstart
+              3. kaios ps && kaios inspect
+
+            Need the next workspace-aware move?
               kaios next
 
-            Quick start (one command):
+            Quick start shortcuts:
               kaios quickstart --dry-run
               kaios quickstart
 
