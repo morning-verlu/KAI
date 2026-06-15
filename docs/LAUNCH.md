@@ -1,73 +1,84 @@
 # Launch Plan
 
-The project goal is to make KAI OS legible as a new infrastructure category: an AI Agent Operating System in Kotlin.
+The launch goal is to make KAI OS legible as a new infrastructure category: a local-first Evidence OS for AI agents in Kotlin.
 
 ## Positioning
 
 Lead with:
 
 ```text
-AI Agent Operating System in Kotlin
+Local-first Evidence OS for AI agents in Kotlin
 Agent = Process, Workflow = Scheduler, Tool = Syscall
 ```
 
 Avoid positioning it as:
 
 - a chatbot framework
-- a LangChain Kotlin clone
+- a Kotlin LangChain clone
 - a thin SDK wrapper
+- a Homebrew package
+
+Homebrew, hosted installer, release ZIP, and source builds are adoption paths. The product is KAI OS.
+
+## Primary Demo Hook
+
+Use the first-run tour:
+
+```bash
+curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
+```
+
+The tour is the clearest proof because it shows the full Evidence OS loop without requiring an API key or a real project:
+
+- disposable Git workspace
+- current-change review
+- process table
+- process trace
+- replayable capsule
+- evidence summary
+- recovery dry-run report
 
 ## Launch Channels
 
-- GitHub Pages launch site: https://morning-verlu.github.io/KAI/
-- GitHub README and topics
+- GitHub Discussion announcement
+- GitHub README and launch site
 - Hacker News "Show HN"
-- Reddit: r/Kotlin, r/MachineLearning, r/LocalLLaMA, r/programming
+- Reddit: r/Kotlin first, then broader programming/LLM communities if feedback is healthy
 - Kotlin Slack
-- LinkedIn/Twitter/X demo thread
-- DEV.to or Medium technical post
+- LinkedIn/X thread with the demo GIF
+- DEV.to or Medium technical post after the first discussion feedback
 
-## Demo Hook
+## First 100-Star Checklist
 
-Use the process table:
-
-```bash
-kaios run "analyze crypto market"
-kaios ps
-kaios trace
-kaios evidence --out artifacts/run.capsule.json --force
-kaios evidence --out artifacts/run.capsule.json --baseline artifacts/baseline.capsule.json --check --force
-```
-
-The process table is the visual proof of the idea. The trace is the durable proof: `kaios.process-trace/v1` turns one agent run into a reusable audit, CI, replay, and future UI asset. The capsule is the moat proof: `kaios.run-capsule/v1` packages the snapshot, trace, provenance hashes, and replay commands as a portable runtime artifact that can be validated from a shared JSON file. Replay is the protocol proof: `kaios.run-replay/v1` rebuilds the trace from the embedded snapshot without API keys or the original run directory. Diff is the regression proof: `kaios.run-diff/v1` compares stable agent behavior across two capsules. Evidence is the product proof: `kaios.evidence/v1` turns packaging, validation, replay, and optional baseline diff into one CI-ready command.
-
-## First-Star Checklist
-
-- CI green
-- install command works
-- README has a clear first screen
-- GitHub Pages has a direct launch landing page
-- social preview image works for shared links
-- demo GIF shows run, ps, and inspect
-- release ZIP/TAR assets are attached for download-first trial
-- install script supports one-command local setup
-- at least one low-friction install path works after the concept lands
-- `kaios doctor` helps new users diagnose local setup
-- architecture diagram is visible
-- example output is included
-- roadmap is public
-- issues are open for provider/tool/plugin requests
+- [x] CI/test command is green.
+- [x] Hosted install command works.
+- [x] `kaios tour` works without API keys.
+- [x] README has a clear first screen.
+- [x] GitHub Pages has a direct launch landing page.
+- [x] Social preview image works for shared links.
+- [x] Demo GIF shows the CLI flow.
+- [x] Release ZIP/TAR assets are attached.
+- [x] Roadmap reflects v0.3.1 Evidence OS, not stale milestones.
+- [x] Contributing guide points new contributors at tour/review/evidence.
+- [ ] Repository is pinned on the maintainer profile.
+- [ ] Short social post is published.
+- [ ] GitHub Discussion is updated with v0.3.1 tour CTA.
+- [ ] Kotlin community post is published.
+- [ ] Show HN post is published.
+- [ ] Early questions are answered within 24 hours.
 
 ## 1000-Star Reality
 
 Stars should come from real interest, not automation or artificial engagement. The controllable path is:
 
 - sharp concept
-- working demo
-- strong README
-- repeated launch posts
-- short video or GIF of process table
-- quick follow-up releases
-- visible issue responses
+- no-key working demo
+- strong README first screen
+- repeated but respectful launch posts
+- fast replies to real questions
+- quick follow-up releases from user feedback
+- visible issues for contributors
 
-See [LAUNCH_KIT.md](LAUNCH_KIT.md) for copy-paste launch posts and the first demo flow.
+See [LAUNCH_KIT.md](LAUNCH_KIT.md) for copy-paste launch posts, channel-specific drafts, reply guidance, and metrics to capture.

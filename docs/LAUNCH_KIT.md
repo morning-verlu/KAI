@@ -1,228 +1,259 @@
-# Launch Kit
+# Outbound Launch Kit
 
-Use this page when announcing KAI OS.
+Use this page when announcing KAI OS. The launch goal is real feedback and real stars from Kotlin/JVM developers, OSS maintainers, and agent infrastructure builders.
 
-## One-Line Pitch
+## Canonical Pitch
 
-KAI OS is an AI Agent Operating System in Kotlin: agents run like processes, workflows schedule them like a kernel, and tools are syscall boundaries.
-
-Launch site: https://morning-verlu.github.io/KAI/
-Social preview image: https://morning-verlu.github.io/KAI/assets/kaios-social-card.png
-Demo GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Trust contract: https://github.com/morning-verlu/KAI/blob/main/docs/TRUST.md
-Install page: https://github.com/morning-verlu/KAI/blob/main/docs/INSTALL.md
-
-## Short Post
+KAI OS is a local-first Evidence OS for AI agents in Kotlin. It turns agent runs into process traces, replayable capsules, syscall ledgers, and CI-grade proof.
 
 ```text
-I built KAI OS: an AI Agent Operating System in Kotlin.
-
 Agent = Process
 Workflow = Scheduler
 Tool = Syscall
-
-It runs planner -> executor -> validator as inspectable agent processes with PID, token usage, memory, syscalls, and lifecycle events.
-
-No API key needed for the first demo.
-
-It can also emit a KAI Process Trace (`kaios.process-trace/v1`) for CI, replay, audit, and future UI surfaces.
-It can package a KAI Run Capsule (`kaios.run-capsule/v1`) with snapshot, trace, provenance hashes, and replay commands.
-It can replay a shared capsule offline (`kaios.run-replay/v1`) by rebuilding the trace from the embedded snapshot.
-It can diff two shared capsules offline (`kaios.run-diff/v1`) for stable regression checks.
-It can generate a static Agent Process Manager report for screenshots.
-The README now includes a terminal process-table preview for quick sharing.
-There is a short CLI demo GIF for run -> ps -> inspect.
-New users can run `kaios next` for one read-only recommendation, then `kaios quickstart` to complete demo, setup, verify, and evidence in one no-key pass before choosing their own task. Use `kaios quickstart --no-ci` for local-only onboarding without writing a GitHub Actions workflow.
-
-Repo: https://github.com/morning-verlu/KAI
-Site: https://morning-verlu.github.io/KAI/
-GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
+Memory = Process state
 ```
 
-## Technical Post
+## Main CTA
 
-```text
-Most agent frameworks model AI work as prompts, chains, or chat sessions.
-
-KAI OS models AI work as runtime infrastructure:
-
-- Agent = Process
-- Workflow = Scheduler
-- Tool = Syscall
-- Memory = Process state
-
-The v0.3 Evidence Core release is a runnable Kotlin/JVM seed:
-
-- agent lifecycle
-- coroutine DAG workflow scheduler
-- observable scheduler retry policy
-- permissioned syscall tools
-- deterministic mock model provider
-- OpenAI-compatible and Ollama providers
-- scoped file syscall
-- allowlisted real HTTP syscall
-- real-provider `KAIOS_SYSCALL` directives
-- SQLite memory adapter
-- JSON run snapshots
-- CLI process table
-- KAI Process Trace schema
-- KAI Run Capsule schema
-- process recovery evidence with new PIDs
-- priority scheduler evidence
-- syscall audit ledger with denied calls, tool time, and estimated cost
-- static Agent Process Manager report
-- Markdown run artifacts for shareable handoff
-- no-key Markdown and JSON workspace analysis reports
-- Workspace Index with language stats, notable files, and source maps
-- project-aware runs with `kaios context`, `.kaiosignore`, and bounded `--context` files and directories
-- one-command KAI OS onboarding after installation
-- kaios demo for a no-key first run with process table and trace artifact
-- kaios next for one read-only workspace-aware recommendation
-- kaios quickstart for one-command no-key onboarding with setup, CI gate, verify, evidence, and next actions
-- kaios quickstart --no-ci for local-only onboarding when a project is not ready for CI files
-- kaios review for current-change review with Markdown artifact, process trace, replayable capsule, and optional baseline gate
-- kaios evidence --summary for PR-friendly Verdict, Changed Runtime Behavior, Fix First, and Process Table output
-- kaios setup for one-command project workflow bootstrap
-- kaios gate for one-command readiness, trace, evidence, replay, and optional baseline checks
-- kaios verify for lower-level CI-compatible readiness control
-- kaios capsule for portable run evidence packages
-- kaios doctor for local environment diagnostics
-- kaios init templates, config validation, and editable agent DAGs
-- kaios doctor --json for machine-readable environment diagnostics
-- kaios runs --json for a stable local run registry
-- kaios config validate --json for CI-safe workflow validation
-- kaios init --ci for a ready-to-commit GitHub Actions Agent Gate powered by `kaios verify --evidence`
-- kaios bug-report for safe GitHub issue diagnostics and support handoff
-
-Try KAI OS:
-
-kaios tour
-kaios next
-kaios quickstart --dry-run
-kaios quickstart
-kaios quickstart --no-ci
-kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-kaios runs --json
-kaios ps
-kaios trace --check
-kaios gate --baseline artifacts/baseline.capsule.json --check
-kaios export
-
-Repo: https://github.com/morning-verlu/KAI
-Site: https://morning-verlu.github.io/KAI/
-GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
-Release ZIP: https://github.com/morning-verlu/KAI/releases/download/v0.3.1/kaios-0.3.1.zip
-Installer: curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
-Install options after the product demo: Homebrew, hosted installer, release ZIP, or source build
-```
-
-## Show HN Draft
-
-```text
-Show HN: KAI OS – AI Agent Operating System in Kotlin
-
-I am building KAI OS, a Kotlin/JVM runtime that treats AI agents like operating-system processes.
-
-The core metaphor:
-
-- Agent = Process
-- Workflow = Scheduler
-- Tool = Syscall
-- Memory = Process state
-
-The current v0.3 demo runs a planner -> executor -> validator workflow and lets you inspect each agent process with PID, token usage, context size, syscall count, tool time, estimated cost, denied syscall count, duration, lifecycle events, optional Workspace Index source maps, project context sources, retry attempts, recovery lineage, scheduler evidence, a reusable `kaios.process-trace/v1` trace, and a portable `kaios.run-capsule/v1` evidence package that can be validated, replayed, or diffed from shared JSON files. The Evidence OS path is `kaios review`: it turns the current Git change set into a Markdown review artifact, process trace, replayable capsule, and optional baseline gate. You can generate no-key Markdown or JSON project reports with `kaios analyze`, preview project shape with `kaios index`, preview context with `kaios context`, exclude local noise with `.kaiosignore`, opt into real HTTP syscalls with `KAIOS_HTTP_ALLOWLIST`, and let real providers request tools through `KAIOS_SYSCALL` directives.
-
-It uses a deterministic mock model provider, so no API key is needed.
-
-I am interested in feedback from Kotlin/JVM developers, agent-framework builders, and people thinking about AI runtime infrastructure.
-
-Repo: https://github.com/morning-verlu/KAI
-Site: https://morning-verlu.github.io/KAI/
-```
-
-## Reddit / Kotlin Slack Draft
-
-```text
-I started KAI OS, a Kotlin/JVM agent runtime built around an OS metaphor:
-
-Agent = Process
-Workflow = Scheduler
-Tool = Syscall
-
-The first Evidence Core release is intentionally small but runnable: a default planner -> executor -> validator workflow, current-change review through `kaios review`, process metrics, lifecycle events, process recovery evidence, priority scheduler evidence, syscall audit ledger, KAI Process Trace JSON, KAI Run Capsule JSON, offline capsule replay/diff, observable retries, permissioned tools, no-key Markdown and JSON workspace analysis reports, Workspace Index source maps, previewable bounded project context, allowlisted HTTP, and JSON run snapshots.
-
-I would love feedback on the Kotlin API/DSL and runtime model.
-
-https://github.com/morning-verlu/KAI
-https://morning-verlu.github.io/KAI/
-```
-
-## First Demo Flow
-
-KAI OS product flow. Lead with what KAI OS does; installation is a separate adoption step:
-
-```bash
-kaios tour
-kaios next
-kaios quickstart --dry-run
-kaios quickstart
-kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-kaios ps
-kaios inspect
-kaios trace --check
-kaios gate --baseline artifacts/baseline.capsule.json --check
-kaios report
-```
-
-Hosted installer:
+Lead every post to the no-key tour:
 
 ```bash
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
 kaios tour
-kaios quickstart
-kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-kaios ps
-kaios inspect
-kaios trace --check
-kaios gate --baseline artifacts/baseline.capsule.json --check
-kaios report
 ```
 
-Download ZIP:
+The tour creates a disposable Git repo, runs the Evidence OS loop, generates a review artifact, writes a process trace, writes a replayable capsule, prints a process table, and shows recovery/evidence commands.
 
-```bash
-curl -L -o kaios-0.3.1.zip https://github.com/morning-verlu/KAI/releases/download/v0.3.1/kaios-0.3.1.zip
-unzip kaios-0.3.1.zip
-./kaios-0.3.1/bin/kaios tour
-./kaios-0.3.1/bin/kaios quickstart
-./kaios-0.3.1/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-./kaios-0.3.1/bin/kaios gate --baseline artifacts/baseline.capsule.json --check
+## Links
+
+- Repo: https://github.com/morning-verlu/KAI
+- Site: https://morning-verlu.github.io/KAI/
+- Release: https://github.com/morning-verlu/KAI/releases/tag/v0.3.1
+- Installer: https://morning-verlu.github.io/KAI/install.sh
+- Demo GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
+- Social card: https://morning-verlu.github.io/KAI/assets/kaios-social-card.png
+- Evidence OS: https://github.com/morning-verlu/KAI/blob/main/docs/EVIDENCE_OS.md
+- Trust contract: https://github.com/morning-verlu/KAI/blob/main/docs/TRUST.md
+
+## Do Not Lead With
+
+- Homebrew. It is an install option, not the product.
+- "Kotlin LangChain." KAI OS is lower-level runtime evidence infrastructure.
+- A full feature dump. Lead with the tour and the proof artifacts.
+- A claim that it is production complete. Be honest: v0.3.1 is small, runnable, and focused.
+
+## Day 0 Posting Order
+
+1. Update the GitHub launch issue with this outbound plan.
+2. Post the GitHub Discussion as the canonical project announcement.
+3. Post the X/LinkedIn short version with the demo GIF.
+4. Post the Kotlin/JVM community version.
+5. Post Show HN after the README and site are stable.
+6. Reply quickly to every real question for the first 24 hours.
+
+## Short Social Post
+
+```text
+I built KAI OS: a local-first Evidence OS for AI agents in Kotlin.
+
+It treats agent work like OS runtime evidence:
+
+Agent = Process
+Workflow = Scheduler
+Tool = Syscall
+Memory = Process state
+
+Run a no-key tour:
+
+curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
+
+The tour creates a disposable repo and outputs a process table, Markdown review, process trace, replayable capsule, and CI-style evidence summary.
+
+Repo: https://github.com/morning-verlu/KAI
+Site: https://morning-verlu.github.io/KAI/
 ```
 
-Build from source:
+## X / LinkedIn Thread
 
-```bash
-git clone https://github.com/morning-verlu/KAI.git
-cd KAI
-./gradlew test installDist
-build/install/kaios-cli/bin/kaios tour
-build/install/kaios-cli/bin/kaios quickstart
-build/install/kaios-cli/bin/kaios run --index . --context README.md --out artifacts/project.md --trace-out artifacts/trace.json --force "summarize this project"
-build/install/kaios-cli/bin/kaios ps
-build/install/kaios-cli/bin/kaios inspect
-build/install/kaios-cli/bin/kaios trace --check
-build/install/kaios-cli/bin/kaios gate --baseline artifacts/baseline.capsule.json --check
-build/install/kaios-cli/bin/kaios report
+```text
+1/ I built KAI OS: a local-first Evidence OS for AI agents in Kotlin.
+
+The idea: agent work should be inspectable like operating-system processes, not just text from a chatbot.
+
+2/ The runtime model:
+
+Agent = Process
+Workflow = Scheduler
+Tool = Syscall
+Memory = Process state
+
+3/ The first-run path needs no API key:
+
+curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
+
+4/ `kaios tour` creates a disposable Git repo, runs a current-change review, and writes:
+
+- Markdown review artifact
+- process trace
+- replayable capsule
+- process table
+- evidence summary
+- recovery dry-run report
+
+5/ The moat is evidence, not more agents:
+
+- process recovery evidence
+- priority scheduler evidence
+- syscall audit ledger
+- offline replay
+- baseline diff gates
+- PR-friendly evidence summaries
+
+6/ I would love feedback from Kotlin/JVM developers, OSS maintainers, and people building agent infrastructure.
+
+Repo: https://github.com/morning-verlu/KAI
+Site: https://morning-verlu.github.io/KAI/
 ```
 
-## Launch Checklist
+## Show HN Draft
 
-- Pin the repository on the GitHub profile.
-- Share the GitHub Pages launch site alongside the repository.
-- Add the repo link to social bios for launch week.
-- Post the short pitch first, then follow with the technical post.
-- Reply quickly to the first issues and comments.
-- Ship one follow-up commit within 24 hours of launch.
-- Create issues for model providers, safe tools, scheduler, memory, and UI.
-- Add a short demo GIF or terminal screenshot as soon as possible. (README terminal preview shipped.)
+```text
+Show HN: KAI OS - Local-first Evidence OS for AI agents in Kotlin
+
+I am building KAI OS, a Kotlin/JVM runtime that turns AI agent runs into process traces, replayable capsules, syscall ledgers, and CI-grade proof.
+
+The core model is:
+
+- Agent = Process
+- Workflow = Scheduler
+- Tool = Syscall
+- Memory = Process state
+
+The current v0.3.1 release is small but runnable. The easiest way to try it is the no-key tour:
+
+curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
+
+The tour creates a disposable Git repo, runs a deterministic current-change review, and writes a Markdown review artifact, process trace, replayable capsule, process table, evidence summary, and recovery dry-run report.
+
+The point is not to be another Kotlin LangChain clone. I am trying to build the local evidence layer around agent work: what ran, which tools were called, what failed, what recovered, what can be replayed offline, and what can be gated in CI.
+
+I would love feedback from Kotlin/JVM developers, OSS maintainers, and people thinking about agent runtime infrastructure.
+
+Repo: https://github.com/morning-verlu/KAI
+Site: https://morning-verlu.github.io/KAI/
+```
+
+## Kotlin / JVM Community Draft
+
+```text
+I am building KAI OS, a Kotlin/JVM runtime for AI agent evidence.
+
+It is not trying to be a Kotlin LangChain clone. The runtime model is closer to OS infrastructure:
+
+Agent = Process
+Workflow = Scheduler
+Tool = Syscall
+Memory = Process state
+
+The v0.3.1 release has a no-key first-run tour:
+
+curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
+
+It generates a process table, trace JSON, replayable capsule, current-change review artifact, and CI-style evidence summary from a disposable local repo.
+
+I would especially like feedback on the Kotlin API shape, the process/scheduler/tool model, and whether local evidence capsules are useful for JVM backend teams.
+
+https://github.com/morning-verlu/KAI
+https://morning-verlu.github.io/KAI/
+```
+
+## Reddit Draft
+
+```text
+Title: KAI OS - local-first Evidence OS for AI agents in Kotlin
+
+I am building KAI OS, a Kotlin/JVM runtime that treats AI agent runs like inspectable processes.
+
+The model:
+
+- Agent = Process
+- Workflow = Scheduler
+- Tool = Syscall
+- Memory = Process state
+
+The current release is intentionally small and local-first. It has a deterministic no-key tour:
+
+curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
+
+The tour creates a disposable Git repo and outputs a current-change review artifact, process table, trace JSON, replayable capsule, evidence summary, and recovery dry-run report.
+
+The main difference from agent frameworks is the focus on portable evidence: replay, baseline diffs, syscall audit records, process recovery evidence, and CI-grade summaries.
+
+I would love feedback, especially from Kotlin/JVM developers and maintainers who care about agent runs being auditable and reproducible.
+
+Repo: https://github.com/morning-verlu/KAI
+```
+
+## GitHub Discussion Update
+
+```text
+KAI OS v0.3.1 now has a first-run tour:
+
+curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
+
+The tour runs without an API key, creates a disposable Git repo, and produces the core Evidence OS artifacts: process table, Markdown review, trace JSON, replayable capsule, evidence summary, and recovery dry-run report.
+
+I am looking for feedback on three things:
+
+1. Does the Agent = Process / Workflow = Scheduler / Tool = Syscall model feel useful?
+2. Would replayable run capsules help in PR review, support, or CI?
+3. What would make `kaios review` valuable enough to run on a real Kotlin/JVM repo?
+```
+
+## Reply Playbook
+
+Use short, concrete replies.
+
+| Question | Reply direction |
+| --- | --- |
+| Is this another LangChain? | No. KAI OS focuses on local runtime evidence: process traces, capsules, syscall audit, replay, and CI gates. |
+| Does it need an API key? | The default tour/review/evidence path does not. Real providers are optional. |
+| Why Kotlin? | JVM teams need agent runtime infrastructure that fits their build, CI, and backend ecosystem. |
+| Is it production ready? | Not yet. v0.3.1 is a runnable evidence-core seed. The goal is feedback on the runtime model and proof artifacts. |
+| Why not build UI first? | The evidence contract comes first; UI can later read the same traces, capsules, syscalls, and recovery records. |
+
+## Metrics To Capture
+
+Capture before posting, then at 1 hour, 6 hours, 24 hours, and 7 days:
+
+- GitHub stars
+- forks
+- release downloads
+- site visits if available
+- discussion comments
+- issues opened
+- install failures
+- questions repeated by more than one person
+
+## Follow-Up Releases
+
+Plan one visible follow-up within 24-48 hours of the first external post. Good candidates:
+
+- improve one confusing first-run message.
+- add one example capsule to the repo.
+- add one Kotlin/JVM sample workflow.
+- convert one repeated question into docs.
+- ship one small `kaios review` improvement found by early users.
