@@ -712,6 +712,37 @@
         </div>
       </section>
 
+      <section class="band">
+        <div class="section-inner">
+          <div class="section-heading">
+            <h2>Use KAI OS when agent work needs runtime evidence.</h2>
+            <p>Start with concrete workflows: gate a repo, debug a run, package evidence, or give an agent bounded project context.</p>
+          </div>
+          <div class="features">
+            <article class="feature">
+              <h3>CI Agent Gate</h3>
+              <p>Add a no-key readiness gate that validates config, runs a deterministic workflow, writes JSON evidence, and explains failures from the PR page.</p>
+              <span class="tag">kaios gate</span>
+            </article>
+            <article class="feature">
+              <h3>Runtime Debugging</h3>
+              <p>Inspect a multi-agent run through process ids, lifecycle events, token usage, context size, syscall counts, and trace validity.</p>
+              <span class="tag">kaios ps</span>
+            </article>
+            <article class="feature">
+              <h3>Portable Evidence</h3>
+              <p>Package a run as a capsule, replay it offline, compare it against a baseline, and share a safe support report when something changes.</p>
+              <span class="tag">kaios evidence</span>
+            </article>
+            <article class="feature">
+              <h3>Project Context</h3>
+              <p>Analyze, index, and attach bounded repository context so an agent can reason over a project without copying the whole workspace.</p>
+              <span class="tag">kaios run --index</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section id="quickstart">
         <div class="section-inner quickstart">
           <div class="section-heading">
@@ -720,6 +751,7 @@
             <div class="link-grid">
               <a class="button primary" href="https://github.com/morning-verlu/KAI">Open repository</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/releases">View releases</a>
+              <a class="button secondary" href="https://github.com/morning-verlu/KAI/blob/main/docs/USE_CASES.md">Use cases</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/blob/main/docs/JSON_CONTRACTS.md">JSON contracts</a>
               <a class="button secondary" href="https://github.com/morning-verlu/KAI/blob/main/examples/README.md">Examples</a>
             </div>

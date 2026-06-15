@@ -33,6 +33,8 @@ Memory   = Process state
 
 KAI OS is intentionally small in v0.1. If you only need a chatbot UI or a thin prompt wrapper, this project is probably lower-level than you need.
 
+For concrete workflows, read [KAI OS Use Cases](docs/USE_CASES.md).
+
 ## Why This Exists
 
 Most agent frameworks model AI work as chains, prompts, or chat sessions. KAI OS models AI work as runtime infrastructure:
@@ -327,6 +329,7 @@ Modules:
 - `kaios-cli`: `kaios next`, `kaios quickstart`, `kaios gate`, `kaios demo`, `kaios init`, `kaios run`, `kaios runs`, `kaios ps`, `kaios inspect`, `kaios trace`, `kaios capsule`, `kaios replay`, `kaios diff`, `kaios report`, workspace analysis, Workspace Index, context-file loading, and `kaios doctor`.
 
 Read the deeper design notes in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Read concrete workflows in [docs/USE_CASES.md](docs/USE_CASES.md).
 Read the JSON automation contracts in [docs/JSON_CONTRACTS.md](docs/JSON_CONTRACTS.md).
 Read the trace schema contract in [docs/TRACE.md](docs/TRACE.md).
 Read the capsule schema contract in [docs/CAPSULE.md](docs/CAPSULE.md).
