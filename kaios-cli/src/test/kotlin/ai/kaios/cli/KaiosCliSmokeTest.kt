@@ -641,6 +641,36 @@ class KaiosCliSmokeTest {
     }
 
     @Test
+    fun `next recommends workspace analysis before gate when git working tree is dirty`() {
+        val workspace = Files.createTempDirectory("kaios-cli-next-dirty")
+        runGit(workspace, "init")
+        val cli = cliFor(workspace)
+
+        val setupCode = cli.run(arrayOf("setup", "--ci"), PrintStream(ByteArrayOutputStream()), PrintStream(ByteArrayOutputStream()))
+        assertEquals(0, setupCode)
+
+        val out = ByteArrayOutputStream()
+        val code = cli.run(arrayOf("next", "--json"), PrintStream(out), PrintStream(ByteArrayOutputStream()))
+        val json = Json.parseToJsonElement(out.toString()).jsonObject
+        val action = json.getValue("action").jsonObject
+        val fixFirst = json.getValue("fixFirst").jsonObject
+        val changeSignal = json.getValue("signals")
+            .jsonArray
+            .map { it.jsonObject }
+            .single { signal -> signal.getValue("name").jsonPrimitive.content == "changes" }
+
+        assertEquals(0, code)
+        assertEquals("review", json.getValue("status").jsonPrimitive.content)
+        assertEquals("review-current-change", action.getValue("id").jsonPrimitive.content)
+        assertEquals("kaios analyze .", action.getValue("command").jsonPrimitive.content)
+        assertEquals("review-current-change", fixFirst.getValue("id").jsonPrimitive.content)
+        assertEquals("dirty", changeSignal.getValue("status").jsonPrimitive.content)
+        assertTrue(changeSignal.getValue("detail").jsonPrimitive.content.contains("changed file(s)"))
+        assertNextAction(json, "review-current-change", "kaios analyze .")
+        assertNextAction(json, "verify-project", "kaios gate --config kaios.json")
+    }
+
+    @Test
     fun `help command help flag shows global help`() {
         val cli = cliFor(Files.createTempDirectory("kaios-cli-help-help"))
         val out = ByteArrayOutputStream()

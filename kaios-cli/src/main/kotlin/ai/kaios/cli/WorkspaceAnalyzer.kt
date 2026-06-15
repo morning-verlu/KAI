@@ -13,7 +13,7 @@ internal class WorkspaceAnalyzer {
     }
 
     fun analyze(index: WorkspaceIndex): WorkspaceAnalysis {
-        val changeSummary = detectGitChanges(index.root)
+        val changeSummary = detectWorkspaceGitChanges(index.root)
         return WorkspaceAnalysis(
             schemaVersion = 1,
             summary = WorkspaceAnalysisSummary(
@@ -302,43 +302,6 @@ internal class WorkspaceAnalyzer {
         return actions.distinctBy { it.id }
     }
 
-    private fun detectGitChanges(root: Path): WorkspaceChangeSummary {
-        val process = runCatching {
-            ProcessBuilder("git", "-C", root.toString(), "status", "--porcelain=v1", "--untracked-files=all")
-                .redirectErrorStream(true)
-                .start()
-        }.getOrNull() ?: return WorkspaceChangeSummary.Unavailable
-
-        val finished = process.waitFor(2, TimeUnit.SECONDS)
-        if (!finished) {
-            process.destroyForcibly()
-            return WorkspaceChangeSummary.Unavailable
-        }
-        if (process.exitValue() != 0) return WorkspaceChangeSummary.Unavailable
-
-        val files = process.inputStream
-            .bufferedReader()
-            .readLines()
-            .mapNotNull(::parseGitStatusLine)
-
-        return WorkspaceChangeSummary(
-            available = true,
-            dirty = files.isNotEmpty(),
-            changedFiles = files.size,
-            untrackedFiles = files.count { it.status == "??" },
-            files = files.take(20),
-        )
-    }
-
-    private fun parseGitStatusLine(line: String): WorkspaceChangedFile? {
-        if (line.length < 4) return null
-        val status = line.take(2).trim().ifBlank { line.take(2) }
-        val rawPath = line.drop(3)
-        val path = rawPath.substringAfter(" -> ", rawPath).trim().trim('"')
-        if (path.isBlank()) return null
-        return WorkspaceChangedFile(status = status, path = path)
-    }
-
     private fun suggestedCommands(index: WorkspaceIndex): List<String> {
         val commands = mutableListOf(
             "kaios index .",
@@ -372,6 +335,43 @@ internal class WorkspaceAnalyzer {
         } else {
             "'${value.replace("'", "'\"'\"'")}'"
         }
+}
+
+internal fun detectWorkspaceGitChanges(root: Path): WorkspaceChangeSummary {
+    val process = runCatching {
+        ProcessBuilder("git", "-C", root.toString(), "status", "--porcelain=v1", "--untracked-files=all")
+            .redirectErrorStream(true)
+            .start()
+    }.getOrNull() ?: return WorkspaceChangeSummary.Unavailable
+
+    val finished = process.waitFor(2, TimeUnit.SECONDS)
+    if (!finished) {
+        process.destroyForcibly()
+        return WorkspaceChangeSummary.Unavailable
+    }
+    if (process.exitValue() != 0) return WorkspaceChangeSummary.Unavailable
+
+    val files = process.inputStream
+        .bufferedReader()
+        .readLines()
+        .mapNotNull(::parseGitStatusLine)
+
+    return WorkspaceChangeSummary(
+        available = true,
+        dirty = files.isNotEmpty(),
+        changedFiles = files.size,
+        untrackedFiles = files.count { it.status == "??" },
+        files = files.take(20),
+    )
+}
+
+private fun parseGitStatusLine(line: String): WorkspaceChangedFile? {
+    if (line.length < 4) return null
+    val status = line.take(2).trim().ifBlank { line.take(2) }
+    val rawPath = line.drop(3)
+    val path = rawPath.substringAfter(" -> ", rawPath).trim().trim('"')
+    if (path.isBlank()) return null
+    return WorkspaceChangedFile(status = status, path = path)
 }
 
 @Serializable

@@ -107,9 +107,10 @@ When you are unsure where the workspace is, ask KAI OS:
 kaios next
 ```
 
-`kaios next` is read-only. It checks diagnostics, config validity, latest run evidence, and trace status, then prints one prioritized command:
+`kaios next` is read-only. It checks diagnostics, config validity, Git working tree changes, latest run evidence, and trace status, then prints one prioritized command:
 
 - repair first when config or diagnostics are broken.
+- analyze current changes before gates when the Git working tree is dirty.
 - run the Agent Gate when evidence is missing.
 - inspect processes when the workspace is healthy.
 

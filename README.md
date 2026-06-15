@@ -75,7 +75,7 @@ Need KAI OS to choose the next command from the current workspace?
 kaios next
 ```
 
-`kaios next` is the read-only compass: it inspects doctor diagnostics, project config, latest run evidence, and trace validity, then prints the single best next command.
+`kaios next` is the read-only compass: it inspects doctor diagnostics, project config, Git working tree changes, latest run evidence, and trace validity, then prints the single best next command.
 
 Choose the first command by risk level:
 
@@ -155,7 +155,7 @@ kaios bug-report --config workflows/research.json --out artifacts/kaios-bug-repo
 ```
 
 `kaios bug-report` creates a safe-to-paste Markdown report with a Fix First command, doctor checks, config validation, latest run metrics, and trace contract status.
-`kaios next` gives the same recovery path as one prioritized command: repair invalid configs first, run the Agent Gate when no evidence exists, then inspect process metrics once the workspace is healthy.
+`kaios next` gives the same recovery path as one prioritized command: repair invalid configs first, analyze current Git changes before gates when the working tree is dirty, run the Agent Gate when evidence is missing, then inspect process metrics once the workspace is healthy.
 `kaios doctor --fix --dry-run` previews the local repair plan; `kaios doctor --fix` creates the missing project workflow without writing CI unless you add `--ci`. Existing files are kept unless you pass `--force`.
 `kaios doctor`, `kaios gate`, `kaios verify`, and `kaios bug-report` print the same recovery path: `kaios quickstart` for the full no-key onboarding gate, `kaios doctor --fix --dry-run --ci` then `kaios doctor --fix --ci` when no project workflow exists, `kaios gate --config kaios.json` when one is valid, or `kaios config validate --config kaios.json --json` plus `kaios doctor --fix --dry-run --ci --force` before `kaios doctor --fix --ci --force` when an existing config is invalid.
 Use `--config` with `doctor` and `bug-report` when your project workflow lives outside the default `kaios.json`; diagnostics and next commands will follow that exact file instead of falling back to the default.

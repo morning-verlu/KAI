@@ -213,8 +213,10 @@ class KaiosCli(
         commands.forEach { command -> stream.println("  $command") }
     }
 
-    private fun nextActions(commands: List<String>): List<NextAction> =
-        commands.map(::nextAction)
+    private fun nextActions(commands: List<String>, vararg preferred: NextAction): List<NextAction> {
+        val preferredByCommand = preferred.associateBy { it.command }
+        return commands.map { command -> preferredByCommand[command] ?: nextAction(command) }
+    }
 
     private fun nextAction(command: String): NextAction {
         val id = nextActionId(command)
@@ -2103,8 +2105,9 @@ class KaiosCli(
         val latestSnapshot = snapshots.firstOrNull()
         val latestRun = latestSnapshot?.let(::bugReportRun)
         val trace = latestSnapshot?.let(::bugReportTrace)
+        val changes = detectWorkspaceGitChanges(workingDir)
         val reportNext = bugReportNextCommands(config, latestRun)
-        val fixFirst = nextFixFirst(configPath, doctor, config, latestRun, trace, reportNext)
+        val fixFirst = nextFixFirst(configPath, doctor, config, latestRun, trace, changes, reportNext)
         val action = fixFirst ?: nextHealthyAction(latestRun)
         val next = buildList {
             add(action.command)
@@ -2116,12 +2119,12 @@ class KaiosCli(
             schema = NEXT_SCHEMA,
             version = KAIOS_VERSION,
             cwd = workingDir.toString(),
-            status = nextStatus(doctor, config, latestRun, trace),
+            status = nextStatus(doctor, config, latestRun, trace, changes),
             action = action,
             fixFirst = fixFirst,
-            signals = nextSignals(doctor, config, latestRun, trace),
+            signals = nextSignals(doctor, config, latestRun, trace, changes),
             next = next,
-            nextActions = nextActions(next),
+            nextActions = nextActions(next, action),
         )
     }
 
@@ -2131,15 +2134,24 @@ class KaiosCli(
         config: ConfigValidationReport,
         latestRun: BugReportRun?,
         trace: BugReportTrace?,
+        changes: WorkspaceChangeSummary,
         next: List<String>,
     ): NextAction? =
         when {
             !config.valid -> bugReportFixFirst(config, latestRun, trace, next)
             doctor.summary.failed > 0 -> nextAction(doctorTextCommand(configPath))
+            changes.available && changes.dirty -> nextChangeAction(changes)
             latestRun == null -> bugReportFixFirst(config, latestRun, trace, next)
             trace?.valid == false -> bugReportFixFirst(config, latestRun, trace, next)
             else -> null
         }
+
+    private fun nextChangeAction(changes: WorkspaceChangeSummary): NextAction =
+        NextAction(
+            id = "review-current-change",
+            command = "kaios analyze .",
+            reason = "Git working tree has ${changes.changedFiles} changed file(s); analyze current changes before running gates or packaging evidence.",
+        )
 
     private fun nextHealthyAction(latestRun: BugReportRun?): NextAction =
         nextAction(if (latestRun?.success == false) "kaios inspect" else "kaios ps")
@@ -2149,9 +2161,11 @@ class KaiosCli(
         config: ConfigValidationReport,
         latestRun: BugReportRun?,
         trace: BugReportTrace?,
+        changes: WorkspaceChangeSummary,
     ): String =
         when {
             doctor.summary.failed > 0 || !config.valid -> "repair"
+            changes.available && changes.dirty -> "review"
             latestRun == null -> "verify"
             trace?.valid == false -> "repair"
             !latestRun.success -> "inspect"
@@ -2163,45 +2177,67 @@ class KaiosCli(
         config: ConfigValidationReport,
         latestRun: BugReportRun?,
         trace: BugReportTrace?,
+        changes: WorkspaceChangeSummary,
     ): List<NextSignal> =
-        listOf(
-            NextSignal(
-                name = "doctor",
-                status = doctor.summary.status,
-                detail = "${doctor.summary.failed} failed, ${doctor.summary.warnings} warning(s)",
-            ),
-            NextSignal(
-                name = "config",
-                status = if (config.valid) "valid" else "invalid",
-                detail = if (config.valid) {
-                    "${config.workflowName ?: "workflow"} (${config.agentCount} agent process node(s))"
-                } else {
-                    config.errors.firstOrNull()?.let(::singleLine) ?: "workflow config is invalid"
-                },
-            ),
-            NextSignal(
-                name = "latest_run",
-                status = when {
-                    latestRun == null -> "missing"
-                    latestRun.success -> "success"
-                    else -> "failed"
-                },
-                detail = latestRun?.let { "${it.runId} ${singleLine(it.task)}" } ?: "no saved run snapshot",
-            ),
-            NextSignal(
-                name = "trace",
-                status = when {
-                    trace == null -> "missing"
-                    trace.valid -> "valid"
-                    else -> "invalid"
-                },
-                detail = when {
-                    trace == null -> "no trace because no saved run snapshot exists"
-                    trace.valid -> "${trace.processCount} process(es), ${trace.eventCount} event(s)"
-                    else -> trace.issues.firstOrNull()?.let(::singleLine) ?: "process trace contract failed"
-                },
-            ),
-        )
+        buildList {
+            add(
+                NextSignal(
+                    name = "doctor",
+                    status = doctor.summary.status,
+                    detail = "${doctor.summary.failed} failed, ${doctor.summary.warnings} warning(s)",
+                ),
+            )
+            add(
+                NextSignal(
+                    name = "config",
+                    status = if (config.valid) "valid" else "invalid",
+                    detail = if (config.valid) {
+                        "${config.workflowName ?: "workflow"} (${config.agentCount} agent process node(s))"
+                    } else {
+                        config.errors.firstOrNull()?.let(::singleLine) ?: "workflow config is invalid"
+                    },
+                ),
+            )
+            if (changes.available) {
+                add(
+                    NextSignal(
+                        name = "changes",
+                        status = if (changes.dirty) "dirty" else "clean",
+                        detail = if (changes.dirty) {
+                            "${changes.changedFiles} changed file(s), ${changes.untrackedFiles} untracked"
+                        } else {
+                            "Git working tree is clean"
+                        },
+                    ),
+                )
+            }
+            add(
+                NextSignal(
+                    name = "latest_run",
+                    status = when {
+                        latestRun == null -> "missing"
+                        latestRun.success -> "success"
+                        else -> "failed"
+                    },
+                    detail = latestRun?.let { "${it.runId} ${singleLine(it.task)}" } ?: "no saved run snapshot",
+                ),
+            )
+            add(
+                NextSignal(
+                    name = "trace",
+                    status = when {
+                        trace == null -> "missing"
+                        trace.valid -> "valid"
+                        else -> "invalid"
+                    },
+                    detail = when {
+                        trace == null -> "no trace because no saved run snapshot exists"
+                        trace.valid -> "${trace.processCount} process(es), ${trace.eventCount} event(s)"
+                        else -> trace.issues.firstOrNull()?.let(::singleLine) ?: "process trace contract failed"
+                    },
+                ),
+            )
+        }
 
     private fun renderNextText(report: NextReport, out: PrintStream) {
         out.println("KAI OS next")
