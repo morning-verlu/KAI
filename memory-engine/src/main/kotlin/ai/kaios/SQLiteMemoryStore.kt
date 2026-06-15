@@ -25,8 +25,8 @@ class SQLiteMemoryStore(
             connection().use { connection ->
                 connection.prepareStatement(
                     """
-                    INSERT INTO memory_entries(run_id, agent_id, role, content, timestamp)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO memory_entries(run_id, agent_id, role, content, timestamp, scope_id)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     """.trimIndent(),
                 ).use { statement ->
                     statement.setString(1, entry.runId.value)
@@ -34,34 +34,58 @@ class SQLiteMemoryStore(
                     statement.setString(3, entry.role)
                     statement.setString(4, entry.content)
                     statement.setString(5, entry.timestamp.toString())
+                    statement.setString(6, entry.scopeId)
                     statement.executeUpdate()
                 }
             }
         }
     }
 
-    override fun read(runId: RunId, agent: AgentId?): List<MemoryEntry> = synchronized(lock) {
+    override fun read(runId: RunId, agent: AgentId?, scopeId: String?): List<MemoryEntry> = synchronized(lock) {
         connection().use { connection ->
-            val sql = if (agent == null) {
-                """
-                SELECT run_id, agent_id, role, content, timestamp
-                FROM memory_entries
-                WHERE run_id = ?
-                ORDER BY timestamp ASC, id ASC
-                """.trimIndent()
-            } else {
-                """
-                SELECT run_id, agent_id, role, content, timestamp
-                FROM memory_entries
-                WHERE run_id = ? AND agent_id = ?
-                ORDER BY timestamp ASC, id ASC
-                """.trimIndent()
+            val sql = when {
+                agent == null && scopeId == null -> {
+                    """
+                    SELECT run_id, agent_id, role, content, timestamp, scope_id
+                    FROM memory_entries
+                    WHERE run_id = ?
+                    ORDER BY timestamp ASC, id ASC
+                    """.trimIndent()
+                }
+                agent != null && scopeId == null -> {
+                    """
+                    SELECT run_id, agent_id, role, content, timestamp, scope_id
+                    FROM memory_entries
+                    WHERE run_id = ? AND agent_id = ?
+                    ORDER BY timestamp ASC, id ASC
+                    """.trimIndent()
+                }
+                agent == null -> {
+                    """
+                    SELECT run_id, agent_id, role, content, timestamp, scope_id
+                    FROM memory_entries
+                    WHERE run_id = ? AND scope_id = ?
+                    ORDER BY timestamp ASC, id ASC
+                    """.trimIndent()
+                }
+                else -> {
+                    """
+                    SELECT run_id, agent_id, role, content, timestamp, scope_id
+                    FROM memory_entries
+                    WHERE run_id = ? AND agent_id = ? AND scope_id = ?
+                    ORDER BY timestamp ASC, id ASC
+                    """.trimIndent()
+                }
             }
 
             connection.prepareStatement(sql).use { statement ->
                 statement.setString(1, runId.value)
+                var nextIndex = 2
                 if (agent != null) {
-                    statement.setString(2, agent.value)
+                    statement.setString(nextIndex++, agent.value)
+                }
+                if (scopeId != null) {
+                    statement.setString(nextIndex, scopeId)
                 }
 
                 statement.executeQuery().use { results ->
@@ -73,6 +97,7 @@ class SQLiteMemoryStore(
                             role = results.getString("role"),
                             content = results.getString("content"),
                             timestamp = Instant.parse(results.getString("timestamp")),
+                            scopeId = results.getString("scope_id"),
                         )
                     }
                     entries
@@ -104,14 +129,24 @@ class SQLiteMemoryStore(
                             agent_id TEXT NOT NULL,
                             role TEXT NOT NULL,
                             content TEXT NOT NULL,
-                            timestamp TEXT NOT NULL
+                            timestamp TEXT NOT NULL,
+                            scope_id TEXT
                         )
                         """.trimIndent(),
                     )
+                    runCatching {
+                        statement.executeUpdate("ALTER TABLE memory_entries ADD COLUMN scope_id TEXT")
+                    }
                     statement.executeUpdate(
                         """
                         CREATE INDEX IF NOT EXISTS idx_memory_entries_run_agent_time
                         ON memory_entries(run_id, agent_id, timestamp, id)
+                        """.trimIndent(),
+                    )
+                    statement.executeUpdate(
+                        """
+                        CREATE INDEX IF NOT EXISTS idx_memory_entries_scope
+                        ON memory_entries(run_id, agent_id, scope_id, timestamp, id)
                         """.trimIndent(),
                     )
                 }

@@ -1,13 +1,21 @@
 package ai.kaios.cli
 
 import ai.kaios.MemoryStore
+import ai.kaios.MemoryIsolation
+import ai.kaios.ProcessRecoveryPolicy
+import ai.kaios.RuntimeEventType
+import ai.kaios.ToolCapabilityLimits
+import ai.kaios.ToolCostProfile
+import ai.kaios.ToolPermission
 import ai.kaios.ToolRegistry
 import ai.kaios.agent
 import ai.kaios.workflow
 import ai.kaios.Workflow
+import ai.kaios.AgentId
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.time.Duration
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.readText
@@ -30,6 +38,36 @@ internal data class KaiosAgentConfig(
     val fallbackOnly: Boolean = false,
     val retries: Int = 0,
     val memory: Boolean = true,
+    val memoryIsolation: String = "AGENT",
+    val priority: Int = 0,
+    val recovery: KaiosRecoveryConfig? = null,
+    val triggers: List<KaiosTriggerConfig> = emptyList(),
+    val executorHint: String? = null,
+    val capabilities: List<KaiosCapabilityConfig> = emptyList(),
+)
+
+@Serializable
+internal data class KaiosRecoveryConfig(
+    val maxRestarts: Int = 0,
+    val backoffMillis: Long = 0,
+    val memoryIsolation: String = "AGENT",
+)
+
+@Serializable
+internal data class KaiosTriggerConfig(
+    val eventType: String,
+    val agent: String? = null,
+    val node: String? = null,
+)
+
+@Serializable
+internal data class KaiosCapabilityConfig(
+    val tool: String,
+    val permission: String,
+    val scope: String = "*",
+    val maxCalls: Int? = null,
+    val maxMillis: Long? = null,
+    val estimatedCostMicros: Long = 0,
 )
 
 internal data class KaiosProjectTemplate(
@@ -192,8 +230,21 @@ internal fun KaiosProjectConfig.toWorkflow(memory: MemoryStore, knownTools: Set<
     val specs = agents.associate { configuredAgent ->
         configuredAgent.id to agent(configuredAgent.id) {
             instruction(configuredAgent.instruction)
-            configuredAgent.tools.forEach { tool(it) }
+            if (configuredAgent.capabilities.isEmpty()) {
+                configuredAgent.tools.forEach { tool(it) }
+            } else {
+                configuredAgent.capabilities.forEach { grant ->
+                    capability(
+                        tool = grant.tool,
+                        permission = parseToolPermission(grant.permission),
+                        scope = grant.scope,
+                        limits = ToolCapabilityLimits(maxCalls = grant.maxCalls, maxMillis = grant.maxMillis),
+                        cost = ToolCostProfile(estimatedMicros = grant.estimatedCostMicros),
+                    )
+                }
+            }
             if (configuredAgent.memory) this.memory(memory)
+            memoryIsolation(parseMemoryIsolation(configuredAgent.memoryIsolation))
         }
     }
 
@@ -206,6 +257,24 @@ internal fun KaiosProjectConfig.toWorkflow(memory: MemoryStore, knownTools: Set<
                 configuredAgent.fallback?.let { fallbackTo(it) }
                 if (configuredAgent.fallbackOnly) fallbackOnly()
                 retries(configuredAgent.retries)
+                priority(configuredAgent.priority)
+                configuredAgent.recovery?.let { recovery ->
+                    recovery(
+                        ProcessRecoveryPolicy(
+                            maxRestarts = recovery.maxRestarts,
+                            backoff = Duration.ofMillis(recovery.backoffMillis),
+                            memoryIsolation = parseMemoryIsolation(recovery.memoryIsolation),
+                        ),
+                    )
+                }
+                configuredAgent.triggers.forEach { trigger ->
+                    triggeredBy(
+                        eventType = parseRuntimeEventType(trigger.eventType),
+                        agent = trigger.agent?.let(::AgentId),
+                        nodeId = trigger.node,
+                    )
+                }
+                configuredAgent.executorHint?.let { executorHint(it) }
             }
         }
     }
@@ -227,10 +296,30 @@ private fun KaiosProjectConfig.validate(knownTools: Set<String>) {
         require(configuredAgent.retries in 0..10) {
             "Agent '${configuredAgent.id}' retries must be between 0 and 10."
         }
+        parseMemoryIsolation(configuredAgent.memoryIsolation)
+        configuredAgent.executorHint?.let {
+            require(it.isNotBlank()) { "Agent '${configuredAgent.id}' executorHint cannot be blank." }
+        }
+        configuredAgent.recovery?.let { recovery ->
+            require(recovery.maxRestarts in 0..10) { "Agent '${configuredAgent.id}' recovery.maxRestarts must be between 0 and 10." }
+            require(recovery.backoffMillis >= 0) { "Agent '${configuredAgent.id}' recovery.backoffMillis cannot be negative." }
+            parseMemoryIsolation(recovery.memoryIsolation)
+        }
 
         val unknownTools = configuredAgent.tools.filterNot { it in knownTools }.toSortedSet()
         require(unknownTools.isEmpty()) {
             "Agent '${configuredAgent.id}' references unknown tool(s): ${unknownTools.joinToString(", ")}."
+        }
+        val unknownCapabilityTools = configuredAgent.capabilities.map { it.tool }.filterNot { it in knownTools }.toSortedSet()
+        require(unknownCapabilityTools.isEmpty()) {
+            "Agent '${configuredAgent.id}' references unknown capability tool(s): ${unknownCapabilityTools.joinToString(", ")}."
+        }
+        configuredAgent.capabilities.forEach { capability ->
+            parseToolPermission(capability.permission)
+            require(capability.scope.isNotBlank()) { "Agent '${configuredAgent.id}' capability '${capability.tool}' scope cannot be blank." }
+            require(capability.maxCalls == null || capability.maxCalls >= 0) { "Agent '${configuredAgent.id}' capability '${capability.tool}' maxCalls cannot be negative." }
+            require(capability.maxMillis == null || capability.maxMillis >= 0) { "Agent '${configuredAgent.id}' capability '${capability.tool}' maxMillis cannot be negative." }
+            require(capability.estimatedCostMicros >= 0) { "Agent '${configuredAgent.id}' capability '${capability.tool}' estimatedCostMicros cannot be negative." }
         }
 
         val unknownDependencies = configuredAgent.dependsOn.filterNot { it in knownIds }.toSortedSet()
@@ -242,12 +331,33 @@ private fun KaiosProjectConfig.validate(knownTools: Set<String>) {
             require(fallback in knownIds) { "Agent '${configuredAgent.id}' references unknown fallback agent '$fallback'." }
             require(fallback != configuredAgent.id) { "Agent '${configuredAgent.id}' cannot fallback to itself." }
         }
+        configuredAgent.triggers.forEach { trigger ->
+            parseRuntimeEventType(trigger.eventType)
+            trigger.agent?.let { agentId ->
+                require(agentId in knownIds) { "Agent '${configuredAgent.id}' trigger references unknown agent '$agentId'." }
+            }
+            trigger.node?.let { nodeId ->
+                require(nodeId in knownIds) { "Agent '${configuredAgent.id}' trigger references unknown node '$nodeId'." }
+            }
+        }
     }
 
     dependencyCycle(ids, agents.associate { it.id to it.dependsOn })?.let { cycle ->
         error("Workflow dependencies contain a cycle: ${cycle.joinToString(" -> ")}.")
     }
 }
+
+private fun parseMemoryIsolation(value: String): MemoryIsolation =
+    runCatching { MemoryIsolation.valueOf(value.uppercase()) }
+        .getOrElse { error("Unknown memory isolation '$value'. Use AGENT, PROCESS, or WORKFLOW.") }
+
+private fun parseToolPermission(value: String): ToolPermission =
+    runCatching { ToolPermission.valueOf(value.uppercase()) }
+        .getOrElse { error("Unknown tool permission '$value'.") }
+
+private fun parseRuntimeEventType(value: String): RuntimeEventType =
+    runCatching { RuntimeEventType.valueOf(value.uppercase()) }
+        .getOrElse { error("Unknown runtime event type '$value'.") }
 
 private fun dependencyCycle(ids: List<String>, dependencies: Map<String, List<String>>): List<String>? {
     val visiting = linkedSetOf<String>()

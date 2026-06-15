@@ -30,12 +30,13 @@ class ArtifactExporter {
             appendLine()
             appendLine("## Process Table")
             appendLine()
-            appendLine("| PID | Agent | State | Tokens | Memory | Syscalls | Duration |")
-            appendLine("| ---: | --- | --- | ---: | ---: | ---: | ---: |")
+            appendLine("| PID | Agent | State | Tokens | Memory | Syscalls | Tool ms | Cost | Duration |")
+            appendLine("| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |")
             snapshot.processes.forEach { process ->
                 appendLine(
                     "| ${process.pid} | ${escapeCell(process.agent)} | ${process.state} | " +
-                        "${process.tokens} | ${process.contextSize}b | ${process.syscallCount} | ${process.durationMillis}ms |",
+                        "${process.tokens} | ${process.contextSize}b | ${process.syscallCount} | " +
+                        "${process.toolTimeMillis} | ${formatCost(process.estimatedCostMicros)} | ${process.durationMillis}ms |",
                 )
             }
             appendLine()
@@ -70,6 +71,8 @@ class ArtifactExporter {
         val contextBytes = snapshot.processes.sumOf { process -> process.contextSize }
         val syscalls = snapshot.processes.sumOf { process -> process.syscallCount }
         val processMillis = snapshot.processes.sumOf { process -> process.durationMillis }
+        val toolMillis = snapshot.processes.sumOf { process -> process.toolTimeMillis }
+        val cost = snapshot.processes.sumOf { process -> process.estimatedCostMicros }
         val verdict = if (snapshot.success) "Succeeded" else "Failed"
         val inputSummary = if (hasInputs) {
             "Task plus bounded workspace input summaries were attached."
@@ -79,7 +82,7 @@ class ArtifactExporter {
 
         return listOf(
             "Verdict: $verdict for `${snapshot.workflowName}` with ${countLabel(processCount, "agent process", "agent processes")}: $stateSummary.",
-            "Runtime cost: `$tokens` ${unit(tokens, "token")} (`$inputTokens` input / `$outputTokens` output), `${contextBytes}b` context, `$syscalls` ${unit(syscalls, "syscall")}, `${processMillis}ms` process time.",
+            "Runtime cost: `$tokens` ${unit(tokens, "token")} (`$inputTokens` input / `$outputTokens` output), `${contextBytes}b` context, `$syscalls` ${unit(syscalls, "syscall")}, `${toolMillis}ms` tool time, `${formatCost(cost)}` estimated money, `${processMillis}ms` process time.",
             "Inputs: $inputSummary",
             "Inspectability: process table and lifecycle events are embedded below; run `kaios trace ${snapshot.runId} --check` to validate the saved trace contract.",
             "Next: `kaios ps ${snapshot.runId}`, `kaios inspect ${snapshot.runId}`, or `kaios evidence ${snapshot.runId} --out artifacts/run.capsule.json --force`.",
@@ -121,4 +124,7 @@ class ArtifactExporter {
 
     private fun unit(count: Int, singular: String, plural: String = "${singular}s"): String =
         if (count == 1) singular else plural
+
+    private fun formatCost(micros: Long): String =
+        if (micros == 0L) "0" else "${micros}um"
 }

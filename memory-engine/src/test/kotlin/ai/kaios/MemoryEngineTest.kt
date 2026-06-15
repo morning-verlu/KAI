@@ -29,6 +29,19 @@ class MemoryEngineTest {
     }
 
     @Test
+    fun `session memory can isolate entries by scope`() {
+        val store = SessionMemoryStore()
+        val runId = RunId("run-scope")
+        val agent = AgentId("agent")
+
+        store.append(MemoryEntry(runId, agent, "user", "first", clock.instant(), scopeId = "pid-1"))
+        store.append(MemoryEntry(runId, agent, "user", "second", clock.instant().plusSeconds(1), scopeId = "pid-2"))
+
+        assertEquals(listOf("first", "second"), store.read(runId, agent).map { it.content })
+        assertEquals(listOf("second"), store.read(runId, agent, scopeId = "pid-2").map { it.content })
+    }
+
+    @Test
     fun `sqlite memory persists entries across store instances and filters by agent`() {
         val database = Files.createTempDirectory("kaios-sqlite-memory").resolve("memory.db")
         val runId = RunId("run-sqlite")

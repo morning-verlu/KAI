@@ -129,6 +129,7 @@ class KaiosCliSmokeTest {
             "replay" to "Usage: kaios replay",
             "diff" to "Usage: kaios diff",
             "evidence" to "Usage: kaios evidence",
+            "recover" to "Usage: kaios recover",
             "report" to "Usage: kaios report",
             "export" to "Usage: kaios export",
             "doctor" to "Usage: kaios doctor",
@@ -1814,7 +1815,7 @@ class KaiosCliSmokeTest {
         assertTrue(summary.contains("### Changed Runtime Behavior"))
         assertTrue(summary.contains("### Fix First"))
         assertTrue(summary.contains("### Process Table"))
-        assertTrue(summary.contains("| PID | Agent | State | Tokens | Memory | Syscalls | Duration |"))
+        assertTrue(summary.contains("| PID | Agent | State | Tokens | Memory | Syscalls | Tool ms | Cost | Duration |"))
 
         val baselineRunId = runTask("compare", "stable", "task")
         val baselinePath = workspace.resolve("artifacts/baseline.capsule.json")
@@ -1891,7 +1892,7 @@ class KaiosCliSmokeTest {
         assertTrue(artifactText.contains("kaios trace"))
         assertTrue(artifactText.contains("## Final Output"))
         assertTrue(artifactText.contains("## Process Table"))
-        assertTrue(artifactText.contains("| PID | Agent | State | Tokens | Memory | Syscalls | Duration |"))
+        assertTrue(artifactText.contains("| PID | Agent | State | Tokens | Memory | Syscalls | Tool ms | Cost | Duration |"))
 
         val err = ByteArrayOutputStream()
         val secondCode = cli.run(
@@ -2044,6 +2045,9 @@ class KaiosCliSmokeTest {
         val artifactPath = Paths.get(json.getValue("artifact").jsonObject.getValue("path").jsonPrimitive.content)
         val tracePath = Paths.get(json.getValue("trace").jsonObject.getValue("path").jsonPrimitive.content)
         val capsulePath = Paths.get(json.getValue("capsule").jsonObject.getValue("path").jsonPrimitive.content)
+        val cost = json.getValue("cost").jsonObject
+        val recovery = json.getValue("recovery").jsonObject
+        val scheduler = json.getValue("scheduler").jsonObject
         val artifactText = Files.readString(artifactPath)
 
         assertEquals(0, code)
@@ -2065,6 +2069,26 @@ class KaiosCliSmokeTest {
         assertTrue(!artifactText.contains("secrets/private.md"))
         assertEquals("valid", json.getValue("replay").jsonObject.getValue("status").jsonPrimitive.content)
         assertEquals("skipped", json.getValue("baselineDiff").jsonObject.getValue("status").jsonPrimitive.content)
+        assertEquals("in-process", scheduler.getValue("executorBackend").jsonPrimitive.content)
+        assertTrue(json.getValue("syscalls").jsonArray.size >= 3)
+        assertTrue(cost.getValue("toolTimeMillis").jsonPrimitive.int >= 0)
+        assertEquals(0, cost.getValue("estimatedCostMicros").jsonPrimitive.int)
+        assertEquals(0, cost.getValue("deniedSyscallCount").jsonPrimitive.int)
+        assertEquals(0, recovery.getValue("recoveredProcessCount").jsonPrimitive.int)
+
+        val psOut = ByteArrayOutputStream()
+        val psCode = cli.run(arrayOf("ps", json.getValue("runId").jsonPrimitive.content, "--json"), PrintStream(psOut), PrintStream(ByteArrayOutputStream()))
+        val ps = Json.parseToJsonElement(psOut.toString()).jsonObject
+        assertEquals(0, psCode)
+        assertEquals("kaios.process-table/v1", ps.getValue("schema").jsonPrimitive.content)
+        assertTrue(ps.getValue("processes").jsonArray.first().jsonObject.containsKey("toolTimeMillis"))
+
+        val recoverOut = ByteArrayOutputStream()
+        val recoverCode = cli.run(arrayOf("recover", json.getValue("runId").jsonPrimitive.content, "--dry-run", "--json"), PrintStream(recoverOut), PrintStream(ByteArrayOutputStream()))
+        val recover = Json.parseToJsonElement(recoverOut.toString()).jsonObject
+        assertEquals(0, recoverCode)
+        assertEquals("kaios.recover/v1", recover.getValue("schema").jsonPrimitive.content)
+        assertEquals("nothing-to-recover", recover.getValue("status").jsonPrimitive.content)
         assertNextAction(json, "review-current-change", "kaios review --baseline artifacts/baseline.capsule.json --check")
     }
 

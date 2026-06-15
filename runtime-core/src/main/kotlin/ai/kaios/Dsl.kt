@@ -8,8 +8,10 @@ class AgentBuilder(
 ) {
     private val tools = linkedSetOf<String>()
     private val permissions = linkedSetOf<ToolPermission>()
+    private val capabilities = linkedSetOf<ToolCapabilityGrant>()
     private var instruction: String = ""
     private var memoryEnabled: Boolean = false
+    private var memoryIsolation: MemoryIsolation = MemoryIsolation.AGENT
 
     fun instruction(value: String) {
         instruction = value
@@ -30,8 +32,24 @@ class AgentBuilder(
         permissions += permission
     }
 
+    fun capability(
+        tool: String,
+        permission: ToolPermission,
+        scope: String = "*",
+        limits: ToolCapabilityLimits = ToolCapabilityLimits(),
+        cost: ToolCostProfile = ToolCostProfile(),
+    ) {
+        tools += tool
+        permissions += permission
+        capabilities += ToolCapabilityGrant(tool, permission, scope, limits, cost)
+    }
+
     fun memory(store: MemoryStore) {
         memoryEnabled = store !is NoopMemoryStore
+    }
+
+    fun memoryIsolation(isolation: MemoryIsolation) {
+        memoryIsolation = isolation
     }
 
     fun build(): AgentSpec = AgentSpec(
@@ -39,7 +57,9 @@ class AgentBuilder(
         instruction = instruction,
         allowedTools = tools.toSet(),
         permissions = permissions.toSet(),
+        capabilities = capabilities.toSet(),
         memoryEnabled = memoryEnabled,
+        memoryIsolation = memoryIsolation,
     )
 }
 
@@ -68,6 +88,10 @@ class WorkflowNodeBuilder(
     private var fallback: String? = null
     private var fallbackOnly: Boolean = false
     private var maxAttempts: Int = 1
+    private var priority: Int = 0
+    private var recoveryPolicy: ProcessRecoveryPolicy = ProcessRecoveryPolicy()
+    private val triggers = mutableListOf<WorkflowTrigger>()
+    private var executorHint: String? = null
 
     fun dependsOn(vararg ids: String): WorkflowNodeBuilder = apply {
         dependencies += ids
@@ -86,6 +110,26 @@ class WorkflowNodeBuilder(
         maxAttempts = count + 1
     }
 
+    fun priority(value: Int): WorkflowNodeBuilder = apply {
+        priority = value
+    }
+
+    fun recovery(policy: ProcessRecoveryPolicy): WorkflowNodeBuilder = apply {
+        recoveryPolicy = policy
+    }
+
+    fun recovery(maxRestarts: Int, memoryIsolation: MemoryIsolation = MemoryIsolation.AGENT): WorkflowNodeBuilder = apply {
+        recoveryPolicy = ProcessRecoveryPolicy(maxRestarts = maxRestarts, memoryIsolation = memoryIsolation)
+    }
+
+    fun triggeredBy(eventType: RuntimeEventType, agent: AgentId? = null, nodeId: String? = null): WorkflowNodeBuilder = apply {
+        triggers += WorkflowTrigger(eventType = eventType, agent = agent, nodeId = nodeId)
+    }
+
+    fun executorHint(value: String): WorkflowNodeBuilder = apply {
+        executorHint = value
+    }
+
     fun build(): WorkflowNode = WorkflowNode(
         id = id,
         agent = agent,
@@ -93,5 +137,9 @@ class WorkflowNodeBuilder(
         fallback = fallback,
         fallbackOnly = fallbackOnly,
         maxAttempts = maxAttempts,
+        priority = priority,
+        recoveryPolicy = recoveryPolicy,
+        triggers = triggers.toList(),
+        executorHint = executorHint,
     )
 }

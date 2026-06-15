@@ -92,12 +92,14 @@ Top-level fields:
 | `version` | KAI OS CLI version that generated the capsule. |
 | `generatedAt` | ISO-8601 generation time. |
 | `cwd` | Working directory used by the CLI. |
-| `run` | Compact run summary with workflow, success, process count, tokens, context bytes, syscalls, and duration. |
+| `run` | Compact run summary with workflow, success, process count, tokens, context bytes, syscalls, tool time, cost, recovery count, and duration. |
 | `provenance` | Snapshot path, saved snapshot SHA-256, embedded snapshot SHA-256, trace SHA-256, and optional project config hash/validation metadata. |
 | `replay` | Commands for inspecting the same run without re-running agents. |
 | `validation` | Capsule and trace contract status. |
 | `snapshot` | Full saved `.kaios/runs/<run-id>.json` payload. |
 | `trace` | Full `kaios.process-trace/v1` payload generated from the snapshot. |
+
+v0.3 capsules carry the Evidence Core fields in both `snapshot` and `trace`: scheduler evidence, syscall audit records, cost counters, process failure kinds, memory scope ids, worker ids, and recovery lineage. These are additive fields under the existing `kaios.run-capsule/v1` schema, so older capsules still replay and validate.
 
 Replay output uses schema:
 
@@ -137,6 +139,7 @@ Run capsules make KAI OS harder to reduce to a chatbot or wrapper:
 - `kaios replay` proves the embedded snapshot can deterministically rebuild the embedded trace.
 - `kaios diff` proves whether two valid runs changed in stable agent behavior, not timestamp noise.
 - `kaios evidence` makes the full proof path one command, which is easier to standardize across CI, reviews, and release gates.
+- `kaios recover --dry-run` explains crashed process recovery evidence from a saved capsule-backed run without mutating local state.
 
 ## CI Pattern
 

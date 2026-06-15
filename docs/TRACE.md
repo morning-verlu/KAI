@@ -42,11 +42,15 @@ Top-level fields:
 | `workflowName` | Workflow that produced the run. |
 | `task` | Original task summary saved with the run. |
 | `success` | Whether the workflow completed successfully. |
-| `metrics` | Aggregate process, token, context, syscall, duration, and event metrics. |
+| `metrics` | Aggregate process, token, context, syscall, tool time, cost, recovery, duration, and event metrics. |
 | `path` | Observed process path, ordered by PID. |
-| `processes` | Per-agent process table with PID, state, tokens, context bytes, syscalls, duration, and failure. |
+| `processes` | Per-agent process table with PID, state, tokens, context bytes, syscalls, tool time, cost, denied syscalls, duration, failure, worker id, and recovery lineage. |
 | `eventCounts` | Lifecycle event totals by event type. |
 | `events` | Full lifecycle timeline. |
+| `scheduler` | Scheduler evidence: executor backend, priority usage, trigger count, and recovery usage. |
+| `syscalls` | Syscall audit ledger with allowed/denied status, redacted arguments, duration, and estimated cost. |
+| `cost` | Cost summary with token total, tool time, estimated cost micros, and denied syscall count. |
+| `recovery` | Process recovery summary with recovered, crashed, and recoverable process counts. |
 
 Example JSON shape:
 
@@ -60,6 +64,8 @@ Example JSON shape:
     "processCount": 3,
     "tokenTotal": 64,
     "syscallCount": 3,
+    "deniedSyscallCount": 0,
+    "estimatedCostMicros": 0,
     "eventCount": 18
   },
   "path": [
@@ -69,6 +75,8 @@ Example JSON shape:
   ]
 }
 ```
+
+v0.3 keeps the schema id at `kaios.process-trace/v1` and only adds backward-compatible fields. Older consumers can keep reading the original process, metrics, path, and event fields; newer CI gates can additionally depend on scheduler evidence, syscall audit records, process recovery lineage, and cost counters.
 
 ## Stability Rules
 
@@ -91,7 +99,7 @@ You can also generate a trace later from any saved run snapshot:
 kaios trace --json --out artifacts/trace.json --force
 ```
 
-Downstream checks can inspect `metrics.processCount`, `metrics.syscallCount`, `success`, `eventCounts`, or specific process states without scraping terminal output.
+Downstream checks can inspect `metrics.processCount`, `metrics.syscallCount`, `metrics.deniedSyscallCount`, `cost.estimatedCostMicros`, `recovery.recoveredProcessCount`, `success`, `eventCounts`, or specific process states without scraping terminal output.
 
 When you need a full portable evidence package, use the one-command evidence gate. It writes a run capsule, validates it, replays it offline, and can compare it with a baseline:
 

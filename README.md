@@ -45,8 +45,10 @@ Most agent frameworks model AI work as chains, prompts, or chat sessions. KAI OS
 - Track token usage like CPU.
 - Track context size like memory.
 - Track tool calls like IO/syscalls.
+- Track tool time, denied syscalls, and estimated cost through a syscall ledger.
 - Keep real network access behind explicit allowlist policy.
 - Schedule multi-agent workflows as DAGs.
+- Prioritize ready workflow nodes, recover crashed processes with new PIDs, and record scheduler evidence.
 - Persist run snapshots for inspection and debugging.
 - Emit KAI Process Trace JSON for CI, UI, replay, and audit tooling.
 - Package runs as portable KAI Run Capsules with snapshots, traces, provenance hashes, and replay commands.
@@ -475,9 +477,11 @@ KAI OS is early v0.1 infrastructure. Today it includes:
 - OpenAI-compatible and Ollama providers for real model execution.
 - Real providers can request tools through `KAIOS_SYSCALL` directives.
 - Agent lifecycle: spawn, start, suspend, resume, cancel, succeed, fail.
-- Process metrics: PID, state, token usage, context size, syscall count, duration.
-- Coroutine-based DAG scheduler with parallel-ready nodes, observable retry policy, fallback routing, timeout policy, and sibling cancellation.
+- Process metrics: PID, state, token usage, context size, syscall count, tool time, estimated cost, denied syscall count, duration, failure kind, and recovery lineage.
+- Process recovery evidence: runtime crash events, new recovered PIDs, `recoveryOfPid`, memory isolation modes, and `kaios recover --dry-run`.
+- Coroutine-based DAG scheduler with priority-ordered ready nodes, parallel-ready batches, event triggers, observable retry policy, recovery policy, fallback routing, timeout policy, sibling cancellation, and local worker backend evidence.
 - Permissioned tools: `echo`, `clock`, `mock-http`, allowlisted `http`, scoped `file`.
+- Syscall ledger: capability grants, scope and limit denial, audit records, redacted arguments, tool duration, and estimated money fields in trace/capsule/evidence JSON.
 - Project workflow templates, retry policy, config validation, config graph display, and auto-detected `kaios.json` runs.
 - `kaios setup` bootstraps a validated project workflow and can add the CI Agent Gate in one command.
 - Default GitHub Actions Agent Gate with PR-visible Markdown summary, verify JSON, evidence capsule, and failure-time bug report.

@@ -16,6 +16,20 @@ enum class ProcessState {
 val ProcessState.isTerminal: Boolean
     get() = this == ProcessState.SUCCEEDED || this == ProcessState.FAILED || this == ProcessState.CANCELLED
 
+enum class ProcessFailureKind {
+    AGENT_ERROR,
+    TOOL_DENIED,
+    TIMEOUT,
+    RUNTIME_CRASH,
+    CANCELLED,
+}
+
+enum class MemoryIsolation {
+    AGENT,
+    PROCESS,
+    WORKFLOW,
+}
+
 data class TokenUsage(
     val input: Int = 0,
     val output: Int = 0,
@@ -30,7 +44,9 @@ data class AgentSpec(
     val instruction: String = "",
     val allowedTools: Set<String> = emptySet(),
     val permissions: Set<ToolPermission> = emptySet(),
+    val capabilities: Set<ToolCapabilityGrant> = emptySet(),
     val memoryEnabled: Boolean = true,
+    val memoryIsolation: MemoryIsolation = MemoryIsolation.AGENT,
 )
 
 data class AgentProcess(
@@ -41,6 +57,15 @@ data class AgentProcess(
     val tokenUsage: TokenUsage = TokenUsage(),
     val contextSize: Int = 0,
     val syscallCount: Int = 0,
+    val attempt: Int = 1,
+    val parentPid: ProcessId? = null,
+    val recoveryOfPid: ProcessId? = null,
+    val failureKind: ProcessFailureKind? = null,
+    val memoryScopeId: String? = null,
+    val toolTimeMillis: Long = 0,
+    val estimatedCostMicros: Long = 0,
+    val deniedSyscallCount: Int = 0,
+    val workerId: String? = null,
     val createdAt: Instant,
     val updatedAt: Instant,
     val startedAt: Instant? = null,
@@ -63,6 +88,11 @@ enum class RuntimeEventType {
     TOOL_CALLED,
     MEMORY_APPENDED,
     RETRYING,
+    CRASHED,
+    RECOVERING,
+    RECOVERED,
+    SYSCALL_DENIED,
+    COST_RECORDED,
     SUCCEEDED,
     FAILED,
     CANCELLED,

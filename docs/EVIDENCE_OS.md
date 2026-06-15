@@ -28,6 +28,14 @@ Agent output alone is hard to trust. A useful production agent system needs to a
 
 KAI OS treats those answers as first-class runtime output, not as an observability add-on.
 
+## v0.3 Evidence Core
+
+The next moat is three runtime primitives that show up directly in trace, capsule, review, and evidence output:
+
+- Process Recovery: runtime crashes are recorded as `FAILED + RUNTIME_CRASH`, recovery starts a new PID, and `kaios recover --dry-run` reports which processes are recoverable.
+- Priority Scheduler: ready DAG nodes run by priority, event-triggered nodes wait for matching runtime events, and the local worker backend records `workerId` without requiring a real cluster.
+- Syscall Ledger: every tool call produces an audit record with allowed/denied status, redacted arguments, tool duration, estimated cost, and denied syscall counts.
+
 ## The Evidence Chain
 
 `kaios review` is the main product loop for day-to-day development:
@@ -58,6 +66,14 @@ kaios evidence --summary
 ```
 
 The baseline check exits non-zero when stable runtime behavior changes. The summary command prints PR-friendly Markdown with Verdict, Changed Runtime Behavior, Fix First, and Process Table sections.
+
+For recovery inspection:
+
+```bash
+kaios recover latest --dry-run
+```
+
+v0.3 recovery is intentionally dry-run only. It does not mutate snapshots or re-run agents; it explains the crashed processes, recovery evidence, and next commands.
 
 ## Local-First Trust Boundary
 

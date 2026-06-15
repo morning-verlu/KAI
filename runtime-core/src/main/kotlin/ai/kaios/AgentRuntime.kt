@@ -10,13 +10,26 @@ class AgentRuntime(
     private val processes = linkedMapOf<ProcessId, AgentProcess>()
     private val events = mutableListOf<RuntimeEvent>()
 
-    fun spawn(agent: AgentSpec, runId: RunId): AgentProcess = synchronized(lock) {
+    fun spawn(
+        agent: AgentSpec,
+        runId: RunId,
+        attempt: Int = 1,
+        parentPid: ProcessId? = null,
+        recoveryOfPid: ProcessId? = null,
+        memoryScopeId: String? = null,
+        workerId: String? = null,
+    ): AgentProcess = synchronized(lock) {
         val now = clock.instant()
         val process = AgentProcess(
             pid = ProcessId(nextPid++),
             runId = runId,
             agent = agent.id,
             state = ProcessState.CREATED,
+            attempt = attempt,
+            parentPid = parentPid,
+            recoveryOfPid = recoveryOfPid,
+            memoryScopeId = memoryScopeId,
+            workerId = workerId,
             createdAt = now,
             updatedAt = now,
         )
@@ -49,13 +62,23 @@ class AgentRuntime(
         message = "resumed",
     )
 
-    fun cancel(pid: ProcessId): AgentProcess = synchronized(lock) {
+    fun cancel(
+        pid: ProcessId,
+        failureKind: ProcessFailureKind = ProcessFailureKind.CANCELLED,
+        message: String = "cancelled",
+    ): AgentProcess = synchronized(lock) {
         val process = requireProcess(pid)
         check(!process.state.isTerminal) { "Cannot cancel terminal process $pid in state ${process.state}." }
         val now = clock.instant()
-        val updated = process.copy(state = ProcessState.CANCELLED, updatedAt = now, completedAt = now)
+        val updated = process.copy(
+            state = ProcessState.CANCELLED,
+            failureKind = failureKind,
+            failure = if (failureKind == ProcessFailureKind.TIMEOUT) message else process.failure,
+            updatedAt = now,
+            completedAt = now,
+        )
         processes[pid] = updated
-        emit(updated, RuntimeEventType.CANCELLED, "cancelled")
+        emit(updated, RuntimeEventType.CANCELLED, message)
         updated
     }
 
@@ -64,6 +87,9 @@ class AgentRuntime(
         check(process.state == ProcessState.RUNNING) { "Process $pid must be RUNNING to record a syscall." }
         val updated = process.copy(
             syscallCount = process.syscallCount + 1,
+            deniedSyscallCount = process.deniedSyscallCount + if (result.denied) 1 else 0,
+            toolTimeMillis = process.toolTimeMillis + result.durationMillis,
+            estimatedCostMicros = process.estimatedCostMicros + result.estimatedCostMicros,
             updatedAt = clock.instant(),
         )
         processes[pid] = updated
@@ -73,6 +99,12 @@ class AgentRuntime(
             "syscall ${result.tool} -> denied: ${result.error}"
         }
         emit(updated, RuntimeEventType.TOOL_CALLED, message)
+        if (result.denied) {
+            emit(updated, RuntimeEventType.SYSCALL_DENIED, "syscall ${result.tool} denied")
+        }
+        if (result.durationMillis > 0 || result.estimatedCostMicros > 0) {
+            emit(updated, RuntimeEventType.COST_RECORDED, "syscall ${result.tool} ${result.durationMillis}ms cost=${result.estimatedCostMicros}micros")
+        }
         updated
     }
 
@@ -91,6 +123,18 @@ class AgentRuntime(
         process
     }
 
+    fun recordRecovering(pid: ProcessId, nextRestart: Int, maxRestarts: Int, error: String): AgentProcess = synchronized(lock) {
+        val process = requireProcess(pid)
+        emit(process, RuntimeEventType.RECOVERING, "recovering restart $nextRestart/$maxRestarts after: $error")
+        process
+    }
+
+    fun recordRecovered(pid: ProcessId, recoveredPid: ProcessId): AgentProcess = synchronized(lock) {
+        val process = requireProcess(pid)
+        emit(process, RuntimeEventType.RECOVERED, "recovered by pid=${recoveredPid.value}")
+        process
+    }
+
     fun succeed(pid: ProcessId, tokenUsage: TokenUsage, contextSize: Int): AgentProcess = transition(
         pid = pid,
         allowed = setOf(ProcessState.RUNNING),
@@ -106,14 +150,31 @@ class AgentRuntime(
         )
     }
 
-    fun fail(pid: ProcessId, error: String): AgentProcess = transition(
+    fun fail(pid: ProcessId, error: String, failureKind: ProcessFailureKind = ProcessFailureKind.AGENT_ERROR): AgentProcess = transition(
         pid = pid,
         allowed = setOf(ProcessState.RUNNING, ProcessState.CREATED, ProcessState.SUSPENDED),
         next = ProcessState.FAILED,
         type = RuntimeEventType.FAILED,
         message = error,
     ) { process, now ->
-        process.copy(failure = error, updatedAt = now, completedAt = now)
+        process.copy(failure = error, failureKind = failureKind, updatedAt = now, completedAt = now)
+    }
+
+    fun crash(pid: ProcessId, error: String): AgentProcess = synchronized(lock) {
+        val process = requireProcess(pid)
+        check(!process.state.isTerminal) { "Cannot crash terminal process $pid in state ${process.state}." }
+        val now = clock.instant()
+        val updated = process.copy(
+            state = ProcessState.FAILED,
+            failure = error,
+            failureKind = ProcessFailureKind.RUNTIME_CRASH,
+            updatedAt = now,
+            completedAt = now,
+        )
+        processes[pid] = updated
+        emit(updated, RuntimeEventType.CRASHED, error)
+        emit(updated, RuntimeEventType.FAILED, error)
+        updated
     }
 
     fun process(pid: ProcessId): AgentProcess? = synchronized(lock) {

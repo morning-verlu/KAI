@@ -80,6 +80,7 @@ private val TOP_LEVEL_COMMANDS = listOf(
     "replay",
     "diff",
     "evidence",
+    "recover",
     "report",
     "export",
     "doctor",
@@ -165,6 +166,7 @@ class KaiosCli(
             "replay" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("replay")) else replayCapsule(commandArgs, out, err)
             "diff" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("diff")) else diffCapsules(commandArgs, out, err)
             "evidence" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("evidence")) else evidenceRun(commandArgs, out, err)
+            "recover" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("recover")) else recoverRun(commandArgs, out, err)
             "report" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("report")) else generateReport(commandArgs, out, err)
             "export" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("export")) else exportRun(commandArgs, out, err)
             "doctor" -> if (isHelp(commandArgs)) printCommandHelp(out, commandHelp("doctor")) else doctor(commandArgs, out, err)
@@ -625,13 +627,14 @@ class KaiosCli(
                 ),
             )
             "ps" -> CommandHelp(
-                usage = "kaios ps [run-id|latest]",
+                usage = "kaios ps [run-id|latest] [--json|--format json]",
                 summary = "Print the agent process table for a saved run.",
                 examples = listOf(
                     "kaios ps",
                     "kaios ps run-97381ae9",
+                    "kaios ps --json",
                 ),
-                notes = listOf("Tokens behave like CPU, context size like memory, and tool calls like syscalls."),
+                notes = listOf("Tokens behave like CPU, context size like memory, tool calls like syscalls, and TOOL_MS/COST expose the syscall ledger."),
             )
             "inspect" -> CommandHelp(
                 usage = "kaios inspect [run-id|latest]",
@@ -719,6 +722,18 @@ class KaiosCli(
                     "Use --summary for PR-friendly Markdown with Verdict, Changed Runtime Behavior, Fix First, and Process Table.",
                     "--check exits 1 when the baseline diff is different, and 2 when capsule or replay validation fails.",
                     "Existing capsule files are protected unless --force is passed.",
+                ),
+            )
+            "recover" -> CommandHelp(
+                usage = "kaios recover [run-id|latest] --dry-run [--json|--format json]",
+                summary = "Inspect a saved run and report which crashed agent processes are recoverable.",
+                examples = listOf(
+                    "kaios recover latest --dry-run",
+                    "kaios recover run-97381ae9 --dry-run --json",
+                ),
+                notes = listOf(
+                    "v0.3 recovery is dry-run only; it does not re-run or mutate saved evidence.",
+                    "Use the report to decide whether to rerun review/evidence or inspect crash traces first.",
                 ),
             )
             "report" -> CommandHelp(
@@ -1380,6 +1395,7 @@ class KaiosCli(
         tracePath: Path,
         evidence: RunEvidenceReport,
     ): ReviewReport {
+        val trace = buildProcessTrace(snapshot)
         val attachedPaths = changedContextPaths
             .map { path -> displayPath(path) }
             .toSet()
@@ -1439,6 +1455,10 @@ class KaiosCli(
             ),
             replay = evidence.replay,
             baselineDiff = evidence.diff,
+            scheduler = trace.scheduler,
+            syscalls = trace.syscalls,
+            cost = trace.cost,
+            recovery = trace.recovery,
             next = next,
             nextActions = nextActions(next),
         )
@@ -2263,11 +2283,10 @@ class KaiosCli(
         value.replace(Regex("\\s+"), " ").trim()
 
     private fun printProcessTable(args: List<String>, out: PrintStream, err: PrintStream): Int {
-        val runIdText = args.firstOrNull() ?: "latest"
-        if (args.size > 1) {
-            return printCommandUsageError(err, "ps", "Unexpected ps argument '${args[1]}'.")
+        val command = runCatching { parseProcessTableCommand(args) }.getOrElse { error ->
+            return printCommandUsageError(err, "ps", error.message)
         }
-        val runId = runCatching { resolveRunId(runIdText) }.getOrElse {
+        val runId = runCatching { resolveRunId(command.runIdText) }.getOrElse {
             return printSnapshotLoadError(err, it)
         }
 
@@ -2275,10 +2294,30 @@ class KaiosCli(
             return printSnapshotLoadError(err, it)
         }
 
+        if (command.format == ProcessTableFormat.Json) {
+            out.println(TRACE_JSON.encodeToString(buildProcessTableReport(snapshot)))
+            return 0
+        }
+
         out.println("RUN ${snapshot.runId}  workflow=${snapshot.workflowName}  success=${snapshot.success}")
         out.println(formatProcessHeader())
         snapshot.processes.forEach { out.println(formatProcess(it)) }
         return 0
+    }
+
+    private fun buildProcessTableReport(snapshot: StoredRunSnapshot): ProcessTableReport {
+        val trace = buildProcessTrace(snapshot)
+        return ProcessTableReport(
+            schema = "kaios.process-table/v1",
+            version = KAIOS_VERSION,
+            runId = snapshot.runId,
+            workflowName = snapshot.workflowName,
+            success = snapshot.success,
+            processes = snapshot.processes,
+            scheduler = trace.scheduler,
+            cost = trace.cost,
+            recovery = trace.recovery,
+        )
     }
 
     private fun generateReport(args: List<String>, out: PrintStream, err: PrintStream): Int {
@@ -3553,6 +3592,9 @@ class KaiosCli(
                 changes = diff?.differences?.take(EVIDENCE_DIFF_CHANGE_LIMIT) ?: emptyList(),
                 issues = diff?.issues ?: emptyList(),
             ),
+            scheduler = capsule.trace.scheduler,
+            cost = capsule.trace.cost,
+            recovery = capsule.trace.recovery,
             next = next,
             nextActions = nextActions(next),
         )
@@ -3580,6 +3622,10 @@ class KaiosCli(
         out.println("replay_status: ${report.replay.status}")
         out.println("replay_deterministic: ${report.replay.deterministic}")
         out.println("diff_status: ${report.diff.status}")
+        out.println("tool_time: ${report.cost.toolTimeMillis}ms")
+        out.println("estimated_cost: ${formatCost(report.cost.estimatedCostMicros)}")
+        out.println("denied_syscalls: ${report.cost.deniedSyscallCount}")
+        out.println("recovered_processes: ${report.recovery.recoveredProcessCount}")
         report.diff.baselinePath?.let { out.println("baseline: $it") }
         report.diff.leftStableSha256?.let { out.println("baseline_stable_sha256: $it") }
         report.diff.rightStableSha256?.let { out.println("current_stable_sha256: $it") }
@@ -3624,6 +3670,10 @@ class KaiosCli(
         appendLine("- Capsule: `${markdownCell(report.capsulePath)}`")
         appendLine("- Replay: `${report.replay.status}`")
         appendLine("- Baseline diff: `${report.diff.status}`")
+        appendLine("- Tool time: `${report.cost.toolTimeMillis}ms`")
+        appendLine("- Estimated cost: `${formatCost(report.cost.estimatedCostMicros)}`")
+        appendLine("- Denied syscalls: `${report.cost.deniedSyscallCount}`")
+        appendLine("- Recovered processes: `${report.recovery.recoveredProcessCount}`")
         appendLine()
         appendLine("### Changed Runtime Behavior")
         appendLine()
@@ -3643,10 +3693,10 @@ class KaiosCli(
         appendLine()
         appendLine("### Process Table")
         appendLine()
-        appendLine("| PID | Agent | State | Tokens | Memory | Syscalls | Duration |")
-        appendLine("| ---: | --- | --- | ---: | ---: | ---: | ---: |")
+        appendLine("| PID | Agent | State | Tokens | Memory | Syscalls | Tool ms | Cost | Duration |")
+        appendLine("| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |")
         snapshot.processes.forEach { process ->
-            appendLine("| ${process.pid} | `${markdownCell(process.agent)}` | `${process.state}` | ${process.tokens} | ${process.contextSize} | ${process.syscallCount} | ${process.durationMillis}ms |")
+            appendLine("| ${process.pid} | `${markdownCell(process.agent)}` | `${process.state}` | ${process.tokens} | ${process.contextSize} | ${process.syscallCount} | ${process.toolTimeMillis} | ${formatCost(process.estimatedCostMicros)} | ${process.durationMillis}ms |")
         }
     }.trimEnd()
 
@@ -3656,6 +3706,77 @@ class KaiosCli(
             !report.valid -> report.next.firstOrNull()
             else -> report.next.firstOrNull { command -> command.startsWith("kaios replay ") }
         } ?: "kaios evidence ${report.runId} --out ${displayPath(Paths.get(report.capsulePath))} --force"
+
+    private fun recoverRun(args: List<String>, out: PrintStream, err: PrintStream): Int {
+        val command = runCatching { parseRecoverCommand(args) }.getOrElse { error ->
+            return printCommandUsageError(err, "recover", error.message)
+        }
+        val runId = runCatching { resolveRunId(command.runIdText) }.getOrElse {
+            return printSnapshotLoadError(err, it)
+        }
+        val snapshot = runCatching { snapshotStore.load(runId) }.getOrElse {
+            return printSnapshotLoadError(err, it)
+        }
+        val report = buildRecoverReport(snapshot, command.dryRun)
+        when (command.format) {
+            RecoverFormat.Text -> printRecoverSummary(report, out)
+            RecoverFormat.Json -> out.println(TRACE_JSON.encodeToString(report))
+        }
+        return 0
+    }
+
+    private fun buildRecoverReport(snapshot: StoredRunSnapshot, dryRun: Boolean): RecoverReport {
+        val trace = buildProcessTrace(snapshot)
+        val processes = snapshot.processes.map { process ->
+            val recoverable = process.failureKind == "RUNTIME_CRASH"
+            RecoverProcess(
+                pid = process.pid,
+                agent = process.agent,
+                state = process.state,
+                failureKind = process.failureKind,
+                recoverable = recoverable,
+                recommendation = if (recoverable) {
+                    "rerun with recovery policy or inspect trace before re-running"
+                } else {
+                    "no recovery needed"
+                },
+            )
+        }
+        val recoverableCount = processes.count { it.recoverable }
+        val next = buildList {
+            add("kaios trace ${snapshot.runId} --check")
+            add("kaios evidence ${snapshot.runId} --summary")
+            if (recoverableCount > 0) add("kaios review")
+        }.distinct()
+        return RecoverReport(
+            schema = "kaios.recover/v1",
+            version = KAIOS_VERSION,
+            runId = snapshot.runId,
+            dryRun = dryRun,
+            status = if (recoverableCount > 0) "recoverable" else "nothing-to-recover",
+            scheduler = trace.scheduler,
+            recovery = trace.recovery,
+            processes = processes,
+            next = next,
+            nextActions = nextActions(next),
+        )
+    }
+
+    private fun printRecoverSummary(report: RecoverReport, out: PrintStream) {
+        out.println("KAI RECOVERY")
+        out.println("schema: ${report.schema}")
+        out.println("run: ${report.runId}")
+        out.println("dry_run: ${report.dryRun}")
+        out.println("status: ${report.status}")
+        out.println("recovered_processes: ${report.recovery.recoveredProcessCount}")
+        out.println("recoverable_processes: ${report.processes.count { it.recoverable }}")
+        out.println("processes:")
+        report.processes.forEach { process ->
+            out.println("  pid=${process.pid} agent=${process.agent} state=${process.state} failureKind=${process.failureKind ?: "-"} recoverable=${process.recoverable}")
+        }
+        out.println("next:")
+        report.next.forEach { command -> out.println("  $command") }
+    }
 
     private fun buildRunDiffReport(
         left: RunCapsule,
@@ -3822,6 +3943,9 @@ class KaiosCli(
     private fun formatDelta(value: Int): String =
         if (value > 0) "+$value" else value.toString()
 
+    private fun formatCost(micros: Long): String =
+        if (micros == 0L) "0" else "${micros}um"
+
     private fun loadRunCapsule(path: Path): RunCapsule {
         require(path.exists()) { "Capsule file '$path' was not found." }
         return CAPSULE_JSON.decodeFromString(Files.readString(path))
@@ -3857,6 +3981,10 @@ class KaiosCli(
                 syscallCount = snapshot.processes.sumOf { it.syscallCount },
                 contextBytes = snapshot.processes.sumOf { it.contextSize },
                 durationMillis = snapshot.processes.sumOf { it.durationMillis },
+                toolTimeMillis = snapshot.processes.sumOf { it.toolTimeMillis },
+                estimatedCostMicros = snapshot.processes.sumOf { it.estimatedCostMicros },
+                deniedSyscallCount = snapshot.processes.sumOf { it.deniedSyscallCount },
+                recoveredProcessCount = snapshot.processes.count { it.recoveryOfPid != null },
             ),
             provenance = RunCapsuleProvenance(
                 snapshotPath = snapshotPath.toString(),
@@ -4002,11 +4130,20 @@ class KaiosCli(
         requireTrace(trace.metrics.outputTokens == trace.processes.sumOf { it.outputTokens }, "metrics.outputTokens must equal the process output token sum.")
         requireTrace(trace.metrics.contextBytes == trace.processes.sumOf { it.contextBytes }, "metrics.contextBytes must equal the process context byte sum.")
         requireTrace(trace.metrics.syscallCount == trace.processes.sumOf { it.syscallCount }, "metrics.syscallCount must equal the process syscall sum.")
+        requireTrace(trace.metrics.toolTimeMillis == trace.processes.sumOf { it.toolTimeMillis }, "metrics.toolTimeMillis must equal the process tool time sum.")
+        requireTrace(trace.metrics.estimatedCostMicros == trace.processes.sumOf { it.estimatedCostMicros }, "metrics.estimatedCostMicros must equal the process cost sum.")
+        requireTrace(trace.metrics.deniedSyscallCount == trace.processes.sumOf { it.deniedSyscallCount }, "metrics.deniedSyscallCount must equal the process denied syscall sum.")
+        requireTrace(trace.metrics.recoveredProcessCount == trace.processes.count { it.recoveryOfPid != null }, "metrics.recoveredProcessCount must equal recovered process count.")
         requireTrace(
             trace.metrics.processDurationMillis == trace.processes.sumOf { it.durationMillis },
             "metrics.processDurationMillis must equal the process duration sum.",
         )
         requireTrace(trace.metrics.wallDurationMillis >= 0, "metrics.wallDurationMillis must be non-negative.")
+        requireTrace(trace.cost.tokenTotal == trace.metrics.tokenTotal, "cost.tokenTotal must equal metrics.tokenTotal.")
+        requireTrace(trace.cost.toolTimeMillis == trace.metrics.toolTimeMillis, "cost.toolTimeMillis must equal metrics.toolTimeMillis.")
+        requireTrace(trace.cost.estimatedCostMicros == trace.metrics.estimatedCostMicros, "cost.estimatedCostMicros must equal metrics.estimatedCostMicros.")
+        requireTrace(trace.cost.deniedSyscallCount == trace.metrics.deniedSyscallCount, "cost.deniedSyscallCount must equal metrics.deniedSyscallCount.")
+        requireTrace(trace.recovery.recoveredProcessCount == trace.metrics.recoveredProcessCount, "recovery.recoveredProcessCount must equal metrics.recoveredProcessCount.")
 
         val pids = mutableSetOf<Long>()
         val agentByPid = mutableMapOf<Long, String>()
@@ -4022,6 +4159,10 @@ class KaiosCli(
             requireTrace(process.tokens == process.inputTokens + process.outputTokens, "processes[$index].tokens must equal inputTokens + outputTokens.")
             requireTrace(process.contextBytes >= 0, "processes[$index].contextBytes must be non-negative.")
             requireTrace(process.syscallCount >= 0, "processes[$index].syscallCount must be non-negative.")
+            requireTrace(process.attempt >= 1, "processes[$index].attempt must be positive.")
+            requireTrace(process.toolTimeMillis >= 0, "processes[$index].toolTimeMillis must be non-negative.")
+            requireTrace(process.estimatedCostMicros >= 0, "processes[$index].estimatedCostMicros must be non-negative.")
+            requireTrace(process.deniedSyscallCount >= 0, "processes[$index].deniedSyscallCount must be non-negative.")
             requireTrace(process.durationMillis >= 0, "processes[$index].durationMillis must be non-negative.")
         }
 
@@ -4042,6 +4183,14 @@ class KaiosCli(
             requireTrace(event.type.isNotBlank(), "events[$index].type must not be blank.")
             requireTrace(event.message.isNotBlank(), "events[$index].message must not be blank.")
         }
+        trace.syscalls.forEachIndexed { index, syscall ->
+            requireTrace(syscall.callId.isNotBlank(), "syscalls[$index].callId must not be blank.")
+            requireTrace(syscall.agent.isNotBlank(), "syscalls[$index].agent must not be blank.")
+            requireTrace(syscall.tool.isNotBlank(), "syscalls[$index].tool must not be blank.")
+            requireTrace(syscall.durationMillis >= 0, "syscalls[$index].durationMillis must be non-negative.")
+            requireTrace(syscall.estimatedCostMicros >= 0, "syscalls[$index].estimatedCostMicros must be non-negative.")
+            syscall.pid?.let { pid -> requireTrace(pid in pids, "syscalls[$index].pid must reference a process pid.") }
+        }
 
         return issues
     }
@@ -4059,6 +4208,32 @@ class KaiosCli(
         } else {
             processes.sumOf { it.durationMillis }
         }
+        val traceSyscalls = snapshot.syscalls.map { syscall ->
+            ProcessTraceSyscall(
+                callId = syscall.callId,
+                pid = syscall.pid,
+                agent = syscall.agent,
+                tool = syscall.tool,
+                permission = syscall.permission,
+                allowed = syscall.allowed,
+                denied = syscall.denied,
+                durationMillis = syscall.durationMillis,
+                estimatedCostMicros = syscall.estimatedCostMicros,
+                redactedArguments = syscall.redactedArguments,
+                error = syscall.error,
+            )
+        }
+        val cost = ProcessTraceCost(
+            tokenTotal = processes.sumOf { it.tokens },
+            toolTimeMillis = processes.sumOf { it.toolTimeMillis },
+            estimatedCostMicros = processes.sumOf { it.estimatedCostMicros },
+            deniedSyscallCount = processes.sumOf { it.deniedSyscallCount },
+        )
+        val recovery = ProcessTraceRecovery(
+            recoveredProcessCount = processes.count { it.recoveryOfPid != null },
+            crashCount = processes.count { it.failureKind == "RUNTIME_CRASH" },
+            recoverableProcessCount = processes.count { it.failureKind == "RUNTIME_CRASH" || it.recoveryOfPid != null },
+        )
 
         return ProcessTrace(
             schema = PROCESS_TRACE_SCHEMA,
@@ -4075,6 +4250,10 @@ class KaiosCli(
                 syscallCount = processes.sumOf { it.syscallCount },
                 processDurationMillis = processes.sumOf { it.durationMillis },
                 wallDurationMillis = wallDurationMillis,
+                toolTimeMillis = cost.toolTimeMillis,
+                estimatedCostMicros = cost.estimatedCostMicros,
+                deniedSyscallCount = cost.deniedSyscallCount,
+                recoveredProcessCount = recovery.recoveredProcessCount,
                 eventCount = events.size,
             ),
             path = processes.map { process -> "${process.agent}(pid=${process.pid})" },
@@ -4088,10 +4267,28 @@ class KaiosCli(
                     outputTokens = process.outputTokens,
                     contextBytes = process.contextSize,
                     syscallCount = process.syscallCount,
+                    attempt = process.attempt,
+                    parentPid = process.parentPid,
+                    recoveryOfPid = process.recoveryOfPid,
+                    failureKind = process.failureKind,
+                    memoryScopeId = process.memoryScopeId,
+                    toolTimeMillis = process.toolTimeMillis,
+                    estimatedCostMicros = process.estimatedCostMicros,
+                    deniedSyscallCount = process.deniedSyscallCount,
+                    workerId = process.workerId,
                     durationMillis = process.durationMillis,
                     failure = process.failure,
                 )
             },
+            scheduler = ProcessTraceScheduler(
+                executorBackend = snapshot.scheduler.executorBackend,
+                priorityEnabled = snapshot.scheduler.priorityEnabled,
+                triggerCount = snapshot.scheduler.triggerCount,
+                recoveryEnabled = snapshot.scheduler.recoveryEnabled,
+            ),
+            syscalls = traceSyscalls,
+            cost = cost,
+            recovery = recovery,
             eventCounts = events
                 .groupingBy { event -> event.type }
                 .eachCount()
@@ -4121,6 +4318,11 @@ class KaiosCli(
         appendLine("  tokens: ${trace.metrics.tokenTotal} (input=${trace.metrics.inputTokens}, output=${trace.metrics.outputTokens})")
         appendLine("  context: ${trace.metrics.contextBytes}b")
         appendLine("  syscalls: ${trace.metrics.syscallCount}")
+        appendLine("  denied_syscalls: ${trace.metrics.deniedSyscallCount}")
+        appendLine("  tool_time: ${trace.metrics.toolTimeMillis}ms")
+        appendLine("  estimated_cost: ${formatCost(trace.metrics.estimatedCostMicros)}")
+        appendLine("  recovered_processes: ${trace.metrics.recoveredProcessCount}")
+        appendLine("  scheduler: ${trace.scheduler.executorBackend} priority=${trace.scheduler.priorityEnabled} triggers=${trace.scheduler.triggerCount} recovery=${trace.scheduler.recoveryEnabled}")
         appendLine("  process_duration: ${trace.metrics.processDurationMillis}ms")
         appendLine("  wall_duration: ${trace.metrics.wallDurationMillis}ms")
         appendLine("  events: ${trace.metrics.eventCount}")
@@ -4220,6 +4422,7 @@ class KaiosCli(
                 kaios replay --file capsule.json [--json]
                 kaios diff baseline.capsule.json current.capsule.json [--check]
                 kaios evidence [latest] [--out capsule.json] [--baseline baseline.capsule.json] [--summary] [--check]
+                kaios recover [latest] --dry-run
                 kaios report [latest]
                 kaios export [latest] [--out artifact.md]
                 kaios doctor [--config kaios.json] [--fix] [--dry-run]
@@ -4270,7 +4473,7 @@ class KaiosCli(
         }
 
     private fun formatProcessHeader(): String =
-        listOf("PID", "AGENT", "STATE", "TOKENS", "MEMORY", "SYSCALLS", "DURATION").joinToString("  ") {
+        listOf("PID", "AGENT", "STATE", "TOKENS", "MEMORY", "SYSCALLS", "TOOL_MS", "COST", "DURATION").joinToString("  ") {
             it.padEnd(columnWidth(it))
         }
 
@@ -4282,6 +4485,8 @@ class KaiosCli(
             process.tokens.toString(),
             "${process.contextSize}b",
             process.syscallCount.toString(),
+            process.toolTimeMillis.toString(),
+            formatCost(process.estimatedCostMicros),
             "${process.durationMillis}ms",
         ).mapIndexed { index, value -> value.padEnd(columnWidth(index)) }
             .joinToString("  ")
@@ -4295,11 +4500,13 @@ class KaiosCli(
         "TOKENS" -> 3
         "MEMORY" -> 4
         "SYSCALLS" -> 5
-        else -> 6
+        "TOOL_MS" -> 6
+        "COST" -> 7
+        else -> 8
     }
 
     private fun formatTraceProcessHeader(): String =
-        listOf("PID", "AGENT", "STATE", "TOKENS", "IN", "OUT", "MEMORY", "SYSCALLS", "DURATION").joinToString("  ") {
+        listOf("PID", "AGENT", "STATE", "TOKENS", "IN", "OUT", "MEMORY", "SYSCALLS", "TOOL_MS", "COST", "DURATION").joinToString("  ") {
             it.padEnd(traceColumnWidth(it))
         }
 
@@ -4313,6 +4520,8 @@ class KaiosCli(
             process.outputTokens.toString(),
             "${process.contextBytes}b",
             process.syscallCount.toString(),
+            process.toolTimeMillis.toString(),
+            formatCost(process.estimatedCostMicros),
             "${process.durationMillis}ms",
         ).mapIndexed { index, value -> value.padEnd(traceColumnWidth(index)) }
             .joinToString("  ")
@@ -4932,6 +5141,48 @@ class KaiosCli(
             "text", "plain" -> ReviewFormat.Text
             "json" -> ReviewFormat.Json
             else -> error("Unknown review format '$value'. Use text or json.")
+        }
+
+    private fun parseProcessTableCommand(args: List<String>): ProcessTableCommand {
+        var runIdText: String? = null
+        var format = ProcessTableFormat.Text
+        var index = 0
+
+        while (index < args.size) {
+            val arg = args[index]
+            when {
+                arg == "--json" -> {
+                    format = ProcessTableFormat.Json
+                    index += 1
+                }
+                arg == "--format" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--format requires text or json.")
+                    format = parseProcessTableFormat(value)
+                    index += 2
+                }
+                arg.startsWith("--format=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--format requires text or json." }
+                    format = parseProcessTableFormat(value)
+                    index += 1
+                }
+                arg.startsWith("-") -> error("Unknown ps option '$arg'.")
+                runIdText == null -> {
+                    runIdText = arg
+                    index += 1
+                }
+                else -> error("Unexpected ps argument '$arg'.")
+            }
+        }
+
+        return ProcessTableCommand(runIdText ?: "latest", format)
+    }
+
+    private fun parseProcessTableFormat(value: String): ProcessTableFormat =
+        when (value.lowercase().trim()) {
+            "text", "plain" -> ProcessTableFormat.Text
+            "json" -> ProcessTableFormat.Json
+            else -> error("Unknown ps format '$value'. Use text or json.")
         }
 
     private fun parseContextCommand(args: List<String>): List<Path> {
@@ -5841,6 +6092,54 @@ class KaiosCli(
             else -> error("Unknown evidence format '$value'. Use text, json, or summary.")
         }
 
+    private fun parseRecoverCommand(args: List<String>): RecoverCommand {
+        var runIdText: String? = null
+        var dryRun = false
+        var format = RecoverFormat.Text
+        var index = 0
+
+        while (index < args.size) {
+            val arg = args[index]
+            when {
+                arg == "--dry-run" -> {
+                    dryRun = true
+                    index += 1
+                }
+                arg == "--json" -> {
+                    format = RecoverFormat.Json
+                    index += 1
+                }
+                arg == "--format" -> {
+                    val value = args.getOrNull(index + 1) ?: error("--format requires text or json.")
+                    format = parseRecoverFormat(value)
+                    index += 2
+                }
+                arg.startsWith("--format=") -> {
+                    val value = arg.substringAfter("=")
+                    require(value.isNotBlank()) { "--format requires text or json." }
+                    format = parseRecoverFormat(value)
+                    index += 1
+                }
+                arg.startsWith("-") -> error("Unknown recover option '$arg'.")
+                runIdText == null -> {
+                    runIdText = arg
+                    index += 1
+                }
+                else -> error("Unexpected recover argument '$arg'.")
+            }
+        }
+
+        require(dryRun) { "recover requires --dry-run in v0.3." }
+        return RecoverCommand(runIdText ?: "latest", dryRun, format)
+    }
+
+    private fun parseRecoverFormat(value: String): RecoverFormat =
+        when (value.lowercase().trim()) {
+            "text", "plain" -> RecoverFormat.Text
+            "json" -> RecoverFormat.Json
+            else -> error("Unknown recover format '$value'. Use text or json.")
+        }
+
     private fun parseDoctorCommand(args: List<String>): DoctorCommand {
         var configPath = defaultConfigPath()
         var format = DoctorFormat.Text
@@ -6128,6 +6427,11 @@ private data class ReviewCommand(
     val format: ReviewFormat,
 )
 
+private data class ProcessTableCommand(
+    val runIdText: String,
+    val format: ProcessTableFormat,
+)
+
 private data class QuickstartCommand(
     val force: Boolean,
     val writeCi: Boolean,
@@ -6354,6 +6658,12 @@ private data class EvidenceCommand(
     val forceOutput: Boolean,
 )
 
+private data class RecoverCommand(
+    val runIdText: String,
+    val dryRun: Boolean,
+    val format: RecoverFormat,
+)
+
 private enum class TraceFormat(val id: String) {
     Text("text"),
     Json("json"),
@@ -6375,10 +6685,57 @@ private enum class EvidenceFormat(val id: String) {
     Summary("summary"),
 }
 
+private enum class RecoverFormat(val id: String) {
+    Text("text"),
+    Json("json"),
+}
+
 private enum class ReviewFormat(val id: String) {
     Text("text"),
     Json("json"),
 }
+
+private enum class ProcessTableFormat(val id: String) {
+    Text("text"),
+    Json("json"),
+}
+
+@Serializable
+private data class ProcessTableReport(
+    val schema: String,
+    val version: String,
+    val runId: String,
+    val workflowName: String,
+    val success: Boolean,
+    val processes: List<StoredProcess>,
+    val scheduler: ProcessTraceScheduler = ProcessTraceScheduler(),
+    val cost: ProcessTraceCost = ProcessTraceCost(),
+    val recovery: ProcessTraceRecovery = ProcessTraceRecovery(),
+)
+
+@Serializable
+private data class RecoverReport(
+    val schema: String,
+    val version: String,
+    val runId: String,
+    val dryRun: Boolean,
+    val status: String,
+    val scheduler: ProcessTraceScheduler = ProcessTraceScheduler(),
+    val recovery: ProcessTraceRecovery = ProcessTraceRecovery(),
+    val processes: List<RecoverProcess>,
+    val next: List<String>,
+    val nextActions: List<NextAction>,
+)
+
+@Serializable
+private data class RecoverProcess(
+    val pid: Long,
+    val agent: String,
+    val state: String,
+    val failureKind: String?,
+    val recoverable: Boolean,
+    val recommendation: String,
+)
 
 @Serializable
 private data class ReviewReport(
@@ -6395,6 +6752,10 @@ private data class ReviewReport(
     val capsule: ReviewOutputFile,
     val replay: EvidenceReplayStatus,
     val baselineDiff: EvidenceDiffStatus,
+    val scheduler: ProcessTraceScheduler = ProcessTraceScheduler(),
+    val syscalls: List<ProcessTraceSyscall> = emptyList(),
+    val cost: ProcessTraceCost = ProcessTraceCost(),
+    val recovery: ProcessTraceRecovery = ProcessTraceRecovery(),
     val next: List<String>,
     val nextActions: List<NextAction>,
 )
@@ -6448,6 +6809,10 @@ private data class RunCapsuleRun(
     val syscallCount: Int,
     val contextBytes: Int,
     val durationMillis: Long,
+    val toolTimeMillis: Long = 0,
+    val estimatedCostMicros: Long = 0,
+    val deniedSyscallCount: Int = 0,
+    val recoveredProcessCount: Int = 0,
 )
 
 @Serializable
@@ -6573,6 +6938,9 @@ private data class RunEvidenceReport(
     val capsule: EvidenceCapsuleStatus,
     val replay: EvidenceReplayStatus,
     val diff: EvidenceDiffStatus,
+    val scheduler: ProcessTraceScheduler = ProcessTraceScheduler(),
+    val cost: ProcessTraceCost = ProcessTraceCost(),
+    val recovery: ProcessTraceRecovery = ProcessTraceRecovery(),
     val next: List<String>,
     val nextActions: List<NextAction>,
 )
@@ -6656,6 +7024,10 @@ private data class ProcessTrace(
     val metrics: ProcessTraceMetrics,
     val path: List<String>,
     val processes: List<ProcessTraceProcess>,
+    val scheduler: ProcessTraceScheduler = ProcessTraceScheduler(),
+    val syscalls: List<ProcessTraceSyscall> = emptyList(),
+    val cost: ProcessTraceCost = ProcessTraceCost(),
+    val recovery: ProcessTraceRecovery = ProcessTraceRecovery(),
     val eventCounts: Map<String, Int>,
     val events: List<ProcessTraceEvent>,
 )
@@ -6670,6 +7042,10 @@ private data class ProcessTraceMetrics(
     val syscallCount: Int,
     val processDurationMillis: Long,
     val wallDurationMillis: Long,
+    val toolTimeMillis: Long = 0,
+    val estimatedCostMicros: Long = 0,
+    val deniedSyscallCount: Int = 0,
+    val recoveredProcessCount: Int = 0,
     val eventCount: Int,
 )
 
@@ -6683,8 +7059,55 @@ private data class ProcessTraceProcess(
     val outputTokens: Int,
     val contextBytes: Int,
     val syscallCount: Int,
+    val attempt: Int = 1,
+    val parentPid: Long? = null,
+    val recoveryOfPid: Long? = null,
+    val failureKind: String? = null,
+    val memoryScopeId: String? = null,
+    val toolTimeMillis: Long = 0,
+    val estimatedCostMicros: Long = 0,
+    val deniedSyscallCount: Int = 0,
+    val workerId: String? = null,
     val durationMillis: Long,
     val failure: String? = null,
+)
+
+@Serializable
+private data class ProcessTraceScheduler(
+    val executorBackend: String = "in-process",
+    val priorityEnabled: Boolean = false,
+    val triggerCount: Int = 0,
+    val recoveryEnabled: Boolean = false,
+)
+
+@Serializable
+private data class ProcessTraceSyscall(
+    val callId: String,
+    val pid: Long? = null,
+    val agent: String,
+    val tool: String,
+    val permission: String? = null,
+    val allowed: Boolean,
+    val denied: Boolean,
+    val durationMillis: Long,
+    val estimatedCostMicros: Long,
+    val redactedArguments: Map<String, String>,
+    val error: String? = null,
+)
+
+@Serializable
+private data class ProcessTraceCost(
+    val tokenTotal: Int = 0,
+    val toolTimeMillis: Long = 0,
+    val estimatedCostMicros: Long = 0,
+    val deniedSyscallCount: Int = 0,
+)
+
+@Serializable
+private data class ProcessTraceRecovery(
+    val recoveredProcessCount: Int = 0,
+    val crashCount: Int = 0,
+    val recoverableProcessCount: Int = 0,
 )
 
 @Serializable

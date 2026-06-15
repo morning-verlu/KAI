@@ -8,12 +8,13 @@ data class MemoryEntry(
     val role: String,
     val content: String,
     val timestamp: Instant,
+    val scopeId: String? = null,
 )
 
 interface MemoryStore {
     fun append(entry: MemoryEntry)
 
-    fun read(runId: RunId, agent: AgentId? = null): List<MemoryEntry>
+    fun read(runId: RunId, agent: AgentId? = null, scopeId: String? = null): List<MemoryEntry>
 
     fun clear(runId: RunId)
 }
@@ -21,7 +22,7 @@ interface MemoryStore {
 object NoopMemoryStore : MemoryStore {
     override fun append(entry: MemoryEntry) = Unit
 
-    override fun read(runId: RunId, agent: AgentId?): List<MemoryEntry> = emptyList()
+    override fun read(runId: RunId, agent: AgentId?, scopeId: String?): List<MemoryEntry> = emptyList()
 
     override fun clear(runId: RunId) = Unit
 }

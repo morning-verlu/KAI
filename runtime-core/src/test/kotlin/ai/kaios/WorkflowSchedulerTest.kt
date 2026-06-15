@@ -201,6 +201,127 @@ class WorkflowSchedulerTest {
         assertEquals(ProcessState.CANCELLED, result.processes.first { it.agent.value == "slow" }.state)
     }
 
+    @Test
+    fun `ready nodes run in priority order with local worker backend`() {
+        val provider = RecordingModelProvider()
+        val scheduler = WorkflowScheduler(
+            runtime = AgentRuntime(),
+            modelProvider = provider,
+            executorBackend = LocalWorkerExecutorBackend(parallelism = 1),
+        )
+
+        val result = scheduler.run(
+            Workflow(
+                name = "priority",
+                nodes = listOf(
+                    WorkflowNode("low", AgentSpec(AgentId("low")), priority = 0),
+                    WorkflowNode("high", AgentSpec(AgentId("high")), priority = 10),
+                ),
+            ),
+            input = "priority",
+            runId = RunId("run-priority"),
+        )
+
+        assertTrue(result.success)
+        assertEquals(listOf("high", "low"), provider.calls)
+        assertEquals("local-worker", result.scheduler.executorBackend)
+        assertTrue(result.scheduler.priorityEnabled)
+        assertTrue(result.processes.all { process -> process.workerId?.startsWith("local-worker-") == true })
+    }
+
+    @Test
+    fun `runtime crash can recover with a new process id`() {
+        val provider = CrashingThenRecoveringProvider()
+        val scheduler = WorkflowScheduler(
+            runtime = AgentRuntime(),
+            modelProvider = provider,
+        )
+
+        val result = scheduler.run(
+            Workflow(
+                name = "recovery",
+                nodes = listOf(
+                    WorkflowNode(
+                        id = "worker",
+                        agent = AgentSpec(AgentId("worker")),
+                        recoveryPolicy = ProcessRecoveryPolicy(maxRestarts = 1, memoryIsolation = MemoryIsolation.PROCESS),
+                    ),
+                ),
+            ),
+            input = "recover crash",
+            runId = RunId("run-recovery"),
+        )
+
+        assertTrue(result.success)
+        assertEquals(listOf(ProcessState.FAILED, ProcessState.SUCCEEDED), result.processes.map { it.state })
+        assertEquals(ProcessFailureKind.RUNTIME_CRASH, result.processes.first().failureKind)
+        assertEquals(result.processes.first().pid, result.processes.last().recoveryOfPid)
+        assertTrue(result.events.any { it.type == RuntimeEventType.RECOVERING })
+        assertTrue(result.events.any { it.type == RuntimeEventType.RECOVERED })
+        assertTrue(result.scheduler.recoveryEnabled)
+    }
+
+    @Test
+    fun `process memory isolation does not read previous attempt memory`() {
+        val provider = MemoryRecordingFlakyProvider()
+        val scheduler = WorkflowScheduler(
+            runtime = AgentRuntime(),
+            modelProvider = provider,
+            memory = TestMemoryStore(),
+        )
+
+        val result = scheduler.run(
+            Workflow(
+                name = "process-memory",
+                nodes = listOf(
+                    WorkflowNode(
+                        id = "worker",
+                        agent = AgentSpec(
+                            id = AgentId("worker"),
+                            memoryIsolation = MemoryIsolation.PROCESS,
+                        ),
+                        maxAttempts = 2,
+                    ),
+                ),
+            ),
+            input = "memory retry",
+            runId = RunId("run-process-memory"),
+        )
+
+        assertTrue(result.success)
+        assertEquals(listOf(1, 1), provider.memorySizes)
+        assertEquals(2, result.processes.mapNotNull { it.memoryScopeId }.distinct().size)
+    }
+
+    @Test
+    fun `event trigger waits for matching runtime event`() {
+        val provider = RecordingModelProvider()
+        val scheduler = WorkflowScheduler(
+            runtime = AgentRuntime(),
+            modelProvider = provider,
+        )
+
+        val result = scheduler.run(
+            Workflow(
+                name = "triggered",
+                nodes = listOf(
+                    WorkflowNode("starter", AgentSpec(AgentId("starter"))),
+                    WorkflowNode(
+                        id = "watcher",
+                        agent = AgentSpec(AgentId("watcher")),
+                        triggers = listOf(WorkflowTrigger(RuntimeEventType.SUCCEEDED, nodeId = "starter")),
+                    ),
+                ),
+            ),
+            input = "trigger",
+            runId = RunId("run-trigger"),
+        )
+
+        assertTrue(result.success)
+        assertEquals(listOf("starter", "watcher"), provider.calls)
+        assertEquals(1, result.scheduler.triggerCount)
+    }
+
     private class FailingModelProvider(
         private val failingAgent: String,
         private val delegate: ModelProvider = MockModelProvider(),
@@ -261,6 +382,60 @@ class WorkflowSchedulerTest {
                 }
                 else -> ModelResponse("ok", TokenUsage(input = 1, output = 1))
             }
+        }
+    }
+
+    private class RecordingModelProvider : ModelProvider {
+        val calls = mutableListOf<String>()
+
+        override fun complete(request: ModelRequest): ModelResponse {
+            calls += request.agent.id.value
+            return ModelResponse("ok ${request.agent.id.value}", TokenUsage(input = 1, output = 1))
+        }
+    }
+
+    private class CrashingThenRecoveringProvider : ModelProvider {
+        private var calls = 0
+
+        override fun complete(request: ModelRequest): ModelResponse {
+            calls += 1
+            if (calls == 1) {
+                throw RuntimeCrashException("simulated runtime crash")
+            }
+            return ModelResponse("recovered", TokenUsage(input = 1, output = 1))
+        }
+    }
+
+    private class MemoryRecordingFlakyProvider : ModelProvider {
+        val memorySizes = mutableListOf<Int>()
+        private var calls = 0
+
+        override fun complete(request: ModelRequest): ModelResponse {
+            calls += 1
+            memorySizes += request.memory.size
+            if (calls == 1) {
+                error("first attempt failed")
+            }
+            return ModelResponse("second attempt succeeded", TokenUsage(input = 1, output = 1))
+        }
+    }
+
+    private class TestMemoryStore : MemoryStore {
+        private val entries = mutableListOf<MemoryEntry>()
+
+        override fun append(entry: MemoryEntry) {
+            entries += entry
+        }
+
+        override fun read(runId: RunId, agent: AgentId?, scopeId: String?): List<MemoryEntry> =
+            entries.filter { entry ->
+                entry.runId == runId &&
+                    (agent == null || entry.agent == agent) &&
+                    (scopeId == null || entry.scopeId == scopeId)
+            }
+
+        override fun clear(runId: RunId) {
+            entries.removeAll { entry -> entry.runId == runId }
         }
     }
 }

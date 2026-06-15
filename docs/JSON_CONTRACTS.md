@@ -23,11 +23,13 @@ The rule of thumb is simple:
 | `kaios doctor --fix --json` | `kaios.doctor-fix/v1` | Preview or apply the local repair path for project workflow files. |
 | `kaios bug-report --json` | `kaios.bug-report/v1` | Safe support bundle for issues and handoff. |
 | `kaios runs --json` | `kaios.runs/v1` | Saved run registry for local tooling and UI lists. |
+| `kaios ps --json` | `kaios.process-table/v1` | Process table with recovery, scheduler, and cost summaries. |
 | `kaios trace <run> --json` | `kaios.process-trace/v1` | Process metrics, path, and lifecycle timeline. |
 | `kaios capsule <run> --json` | `kaios.run-capsule/v1` | Portable run package with snapshot, trace, and provenance. |
 | `kaios replay --file capsule.json --json` | `kaios.run-replay/v1` | Offline capsule replay and deterministic trace rebuild checks. |
 | `kaios diff left.capsule.json right.capsule.json --json` | `kaios.run-diff/v1` | Stable run comparison for regression gates. |
 | `kaios evidence <run> --json` | `kaios.evidence/v1` | Capsule packaging, validation, replay, optional diff, and next actions. |
+| `kaios recover <run> --dry-run --json` | `kaios.recover/v1` | Dry-run recovery report for crashed agent processes. |
 | `kaios analyze . --format json` | `schemaVersion: 1` | No-key workspace analysis report. |
 
 ## Stability Rules
@@ -321,6 +323,17 @@ Use `kaios.next/v1` when the support surface only needs the first command instea
 - `path`
 - `processes`
 - `events`
+- `scheduler`
+- `syscalls`
+- `cost`
+- `recovery`
+
+v0.3 adds Evidence Core fields without changing existing field meanings:
+
+- `scheduler`: executor backend, priority usage, trigger count, and recovery policy usage.
+- `syscalls`: audit records with call id, PID, agent, tool, permission, allowed/denied, duration, estimated cost, redacted arguments, and error.
+- `cost`: token total, tool time, estimated cost micros, and denied syscall count.
+- `recovery`: recovered process count, crash count, and recoverable process count.
 
 `kaios.run-capsule/v1` is the best source for portable evidence:
 

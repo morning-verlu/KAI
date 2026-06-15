@@ -10,6 +10,8 @@ class ProcessReportRenderer {
         val totalMemory = snapshot.processes.sumOf { it.contextSize }
         val totalSyscalls = snapshot.processes.sumOf { it.syscallCount }
         val totalDuration = snapshot.processes.sumOf { it.durationMillis }
+        val totalToolTime = snapshot.processes.sumOf { it.toolTimeMillis }
+        val totalCost = snapshot.processes.sumOf { it.estimatedCostMicros }
         val recentRuns = allRuns.take(12)
 
         return """
@@ -367,6 +369,8 @@ class ProcessReportRenderer {
                     ${metric("Tokens", totalTokens.toString())}
                     ${metric("Memory", "${totalMemory}b")}
                     ${metric("Syscalls", totalSyscalls.toString())}
+                    ${metric("Tool Time", "${totalToolTime}ms")}
+                    ${metric("Cost", formatCost(totalCost))}
                   </section>
                   <section class="grid">
                     <div class="panel">
@@ -384,6 +388,8 @@ class ProcessReportRenderer {
                               <th>Tokens</th>
                               <th>Memory</th>
                               <th>Syscalls</th>
+                              <th>Tool ms</th>
+                              <th>Cost</th>
                               <th>Duration</th>
                             </tr>
                           </thead>
@@ -449,10 +455,15 @@ class ProcessReportRenderer {
               <td>${process.tokens} <span style="color: var(--muted)">(${process.inputTokens}/${process.outputTokens})</span></td>
               <td>${process.contextSize}b</td>
               <td>${process.syscallCount}</td>
+              <td>${process.toolTimeMillis}</td>
+              <td>${formatCost(process.estimatedCostMicros)}</td>
               <td>${process.durationMillis}ms</td>
             </tr>
         """.trimIndent()
     }
+
+    private fun formatCost(micros: Long): String =
+        if (micros == 0L) "0" else "${micros}um"
 
     private fun workflowGraph(processes: List<StoredProcess>): String =
         processes.mapIndexed { index, process ->

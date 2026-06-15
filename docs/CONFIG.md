@@ -179,13 +179,57 @@ Fields:
 - `id`: unique agent process name.
 - `instruction`: system-style guidance passed to the configured model provider.
 - `tools`: syscall tools the agent may call.
+- `capabilities`: optional v0.3 syscall grants that override `tools` for the same agent and add permission, scope, limit, and estimated cost metadata.
 - `dependsOn`: upstream agent ids that must complete before this agent is scheduled.
+- `priority`: scheduler priority for ready nodes. Higher numbers run first; ties keep config order.
 - `retries`: additional attempts for transient node failures. Defaults to `0`, maximum `10`.
 - `memory`: enables the configured memory store for that agent. Defaults to `true`.
+- `memoryIsolation`: `AGENT`, `PROCESS`, or `WORKFLOW`. Defaults to `AGENT`.
+- `recovery`: optional process recovery policy with `maxRestarts`, `backoffMillis`, and `memoryIsolation`.
+- `triggers`: optional event-driven scheduler triggers with `eventType`, `agent`, or `node`.
+- `executorHint`: optional local worker label recorded in process evidence.
 - `fallback`: optional fallback agent id to run when this node fails.
 - `fallbackOnly`: keeps a node out of the normal DAG and reserves it for fallback routing.
 
 Retries are observable. Every attempt spawns its own agent process, failed attempts remain visible in `kaios ps`, and the event log records `RETRYING` before the next attempt starts.
+Recovery is observable too: a runtime crash records `RUNTIME_CRASH`, a recovered process gets a new PID, and `kaios recover <run-id> --dry-run` reports recovery evidence without mutating the saved run.
+
+Minimal v0.3 Evidence Core example:
+
+```json
+{
+  "name": "evidence-core",
+  "agents": [
+    {
+      "id": "planner",
+      "tools": ["echo"],
+      "priority": 10,
+      "recovery": {
+        "maxRestarts": 1,
+        "memoryIsolation": "PROCESS"
+      }
+    },
+    {
+      "id": "auditor",
+      "dependsOn": ["planner"],
+      "capabilities": [
+        {
+          "tool": "echo",
+          "permission": "ECHO",
+          "scope": "*",
+          "estimatedCostMicros": 0
+        }
+      ],
+      "triggers": [
+        {
+          "eventType": "SUCCEEDED",
+          "node": "planner"
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Built-In Tools
 
@@ -217,9 +261,12 @@ Validation checks:
 - at least one non-fallback agent exists.
 - agent ids are non-blank and unique.
 - every tool exists in the built-in registry.
+- every capability tool exists and every capability permission is valid.
 - every dependency points to a known agent.
 - every fallback points to a known agent and does not point to itself.
 - every retry count is between `0` and `10`.
+- every recovery restart count is between `0` and `10`.
+- every trigger references a known event type, agent, or node.
 - dependency edges do not contain cycles.
 
 For CI or release gates, use the machine-readable validation contract:

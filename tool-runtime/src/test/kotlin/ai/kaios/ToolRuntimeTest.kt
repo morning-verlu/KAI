@@ -43,6 +43,74 @@ class ToolRuntimeTest {
     }
 
     @Test
+    fun `capability grants produce audit and cost records`() {
+        val agent = AgentSpec(
+            id = AgentId("agent"),
+            capabilities = setOf(
+                ToolCapabilityGrant(
+                    tool = "echo",
+                    permission = ToolPermission.ECHO,
+                    cost = ToolCostProfile(estimatedMicros = 25),
+                ),
+            ),
+        )
+        val registry = ToolRegistry(listOf(EchoTool()))
+
+        val result = registry.execute(
+            agent,
+            ToolCall("echo", mapOf("message" to "hello", "apiToken" to "secret")),
+            ToolExecutionContext(runId = RunId("run-audit"), pid = ProcessId(7), agent = agent.id),
+        )
+        val record = registry.auditRecords(RunId("run-audit")).single()
+
+        assertTrue(result.ok)
+        assertEquals(25, result.estimatedCostMicros)
+        assertEquals("sys-1", record.callId)
+        assertEquals(7, record.pid?.value)
+        assertEquals("<redacted>", record.redactedArguments.getValue("apiToken"))
+        assertEquals(25, registry.estimatedCostMicros(RunId("run-audit")))
+    }
+
+    @Test
+    fun `capability scope and max calls deny syscalls before tool execution`() {
+        var called = 0
+        val tool = object : Tool {
+            override val name: String = "echo"
+            override val description: String = "counting echo"
+            override val permission: ToolPermission = ToolPermission.ECHO
+
+            override fun call(call: ToolCall): ToolResult {
+                called += 1
+                return ToolResult.success(name, call.arguments["message"].orEmpty())
+            }
+        }
+        val agent = AgentSpec(
+            id = AgentId("agent"),
+            capabilities = setOf(
+                ToolCapabilityGrant(
+                    tool = "echo",
+                    permission = ToolPermission.ECHO,
+                    scope = "allowed",
+                    limits = ToolCapabilityLimits(maxCalls = 1),
+                ),
+            ),
+        )
+        val registry = ToolRegistry(listOf(tool))
+
+        val allowed = registry.execute(agent, ToolCall("echo", mapOf("message" to "allowed")))
+        val scopeDenied = registry.execute(agent, ToolCall("echo", mapOf("message" to "denied")))
+        val limitDenied = registry.execute(agent, ToolCall("echo", mapOf("message" to "allowed")))
+
+        assertTrue(allowed.ok)
+        assertFalse(scopeDenied.ok)
+        assertTrue(scopeDenied.denied)
+        assertFalse(limitDenied.ok)
+        assertTrue(limitDenied.denied)
+        assertEquals(1, called)
+        assertEquals(3, registry.auditRecords().size)
+    }
+
+    @Test
     fun `runtime syscall count tracks denied syscalls too`() {
         val runtime = AgentRuntime()
         val process = runtime.spawn(AgentSpec(AgentId("agent")), RunId("run-tools"))

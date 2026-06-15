@@ -10,9 +10,9 @@ class SessionMemoryStore : MemoryStore {
         }
     }
 
-    override fun read(runId: RunId, agent: AgentId?): List<MemoryEntry> = synchronized(lock) {
+    override fun read(runId: RunId, agent: AgentId?, scopeId: String?): List<MemoryEntry> = synchronized(lock) {
         entries
-            .filter { it.runId == runId && (agent == null || it.agent == agent) }
+            .filter { it.runId == runId && (agent == null || it.agent == agent) && (scopeId == null || it.scopeId == scopeId) }
             .sortedBy { it.timestamp }
     }
 

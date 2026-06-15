@@ -30,13 +30,13 @@ Runtime events create an inspectable trace for every run.
 `runtime-core` owns lifecycle and scheduling:
 
 - `AgentRuntime` creates and transitions processes.
-- `WorkflowScheduler` executes a workflow DAG with coroutine-based structured concurrency.
+- `WorkflowScheduler` executes a workflow DAG with coroutine-based structured concurrency, priority-ordered ready nodes, local worker leases, event triggers, retry, fallback, and recovery policy.
 - `ModelProvider` abstracts model execution.
 - `MockModelProvider` provides deterministic local behavior for tests, demos, and project-aware no-key summaries when Workspace Index or context input is attached.
 - `OpenAiCompatibleModelProvider` and `OllamaModelProvider` connect the same runtime boundary to real model APIs.
-- `ToolRegistry` enforces syscall registration and agent permissions.
+- `ToolRegistry` enforces syscall registration, capability grants, agent permissions, scope/limit checks, audit records, and cost ledger updates.
 
-The scheduler runs ready nodes in coroutine batches, records failure and cancellation state, retries nodes with an observable retry policy, can route a failed node to a declared fallback node, and can enforce per-node timeouts.
+The scheduler runs ready nodes in coroutine batches, records failure and cancellation state, retries nodes with an observable retry policy, recovers crashed nodes into new PIDs when policy allows it, can route a failed node to a declared fallback node, and can enforce per-node timeouts.
 
 ## Tools as Syscalls
 
@@ -47,6 +47,9 @@ The tool system checks:
 - the tool is registered
 - the agent is allowed to call it
 - the agent has the required permission
+- the capability scope and limits allow the call
+
+Every call writes a syscall audit record, including denied calls. The trace and capsule carry tool duration, denied syscall counts, and estimated cost counters so CI can reason about runtime behavior without scraping logs.
 
 Built-in tools in v0.1:
 
@@ -70,7 +73,7 @@ The `file` syscall is rooted to a configured directory, defaults to `.kaios/file
 
 Snapshots are JSON files under `.kaios/runs/` and are used by the CLI to inspect prior runs.
 
-`SessionMemoryStore` is the default for short local runs. `SQLiteMemoryStore` persists memory entries to a local database for longer-running local runtimes.
+`SessionMemoryStore` is the default for short local runs. `SQLiteMemoryStore` persists memory entries to a local database for longer-running local runtimes. Memory can be scoped by agent, process attempt, or workflow, which lets recovered processes avoid inheriting a failed PID's context when `PROCESS` isolation is configured.
 
 ## CLI
 

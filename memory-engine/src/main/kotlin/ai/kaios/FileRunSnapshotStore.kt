@@ -21,6 +21,8 @@ data class StoredRunSnapshot(
     val finalOutput: String,
     val processes: List<StoredProcess>,
     val events: List<StoredRuntimeEvent>,
+    val scheduler: StoredScheduler = StoredScheduler(),
+    val syscalls: List<StoredToolExecutionRecord> = emptyList(),
 )
 
 @Serializable
@@ -35,6 +37,15 @@ data class StoredProcess(
     val syscallCount: Int,
     val durationMillis: Long,
     val failure: String? = null,
+    val attempt: Int = 1,
+    val parentPid: Long? = null,
+    val recoveryOfPid: Long? = null,
+    val failureKind: String? = null,
+    val memoryScopeId: String? = null,
+    val toolTimeMillis: Long = 0,
+    val estimatedCostMicros: Long = 0,
+    val deniedSyscallCount: Int = 0,
+    val workerId: String? = null,
 )
 
 @Serializable
@@ -44,6 +55,30 @@ data class StoredRuntimeEvent(
     val agent: String,
     val type: String,
     val message: String,
+)
+
+@Serializable
+data class StoredScheduler(
+    val executorBackend: String = "in-process",
+    val priorityEnabled: Boolean = false,
+    val triggerCount: Int = 0,
+    val recoveryEnabled: Boolean = false,
+)
+
+@Serializable
+data class StoredToolExecutionRecord(
+    val callId: String,
+    val runId: String? = null,
+    val pid: Long? = null,
+    val agent: String,
+    val tool: String,
+    val permission: String? = null,
+    val allowed: Boolean,
+    val denied: Boolean,
+    val durationMillis: Long,
+    val estimatedCostMicros: Long,
+    val redactedArguments: Map<String, String>,
+    val error: String? = null,
 )
 
 class FileRunSnapshotStore(
@@ -109,6 +144,15 @@ class FileRunSnapshotStore(
                     syscallCount = process.syscallCount,
                     durationMillis = process.durationMillis,
                     failure = process.failure,
+                    attempt = process.attempt,
+                    parentPid = process.parentPid?.value,
+                    recoveryOfPid = process.recoveryOfPid?.value,
+                    failureKind = process.failureKind?.name,
+                    memoryScopeId = process.memoryScopeId,
+                    toolTimeMillis = process.toolTimeMillis,
+                    estimatedCostMicros = process.estimatedCostMicros,
+                    deniedSyscallCount = process.deniedSyscallCount,
+                    workerId = process.workerId,
                 )
             },
             events = events.map { event ->
@@ -118,6 +162,28 @@ class FileRunSnapshotStore(
                     agent = event.agent.value,
                     type = event.type.name,
                     message = event.message,
+                )
+            },
+            scheduler = StoredScheduler(
+                executorBackend = scheduler.executorBackend,
+                priorityEnabled = scheduler.priorityEnabled,
+                triggerCount = scheduler.triggerCount,
+                recoveryEnabled = scheduler.recoveryEnabled,
+            ),
+            syscalls = syscalls.map { record ->
+                StoredToolExecutionRecord(
+                    callId = record.callId,
+                    runId = record.runId?.value,
+                    pid = record.pid?.value,
+                    agent = record.agent.value,
+                    tool = record.tool,
+                    permission = record.permission?.name,
+                    allowed = record.allowed,
+                    denied = record.denied,
+                    durationMillis = record.durationMillis,
+                    estimatedCostMicros = record.estimatedCostMicros,
+                    redactedArguments = record.redactedArguments,
+                    error = record.error,
                 )
             },
         )

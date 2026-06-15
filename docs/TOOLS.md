@@ -2,6 +2,8 @@
 
 KAI OS treats tools as syscalls: an agent process can only call a registered tool when the workflow grants that tool and the matching runtime permission.
 
+v0.3 adds a syscall ledger. Every allowed or denied call records call id, PID, agent, tool, permission, redacted arguments, duration, estimated cost, and error. These records are embedded in process traces, run capsules, `kaios review --json`, and evidence summaries.
+
 ## Built-In Syscalls
 
 - `echo`: returns a supplied message. Useful for deterministic local demos and validation.
@@ -56,6 +58,25 @@ Responses are bounded to 20,000 characters by default so tool output cannot floo
   ]
 }
 ```
+
+For tighter grants, use `capabilities` instead of plain `tools`:
+
+```json
+{
+  "id": "reviewer",
+  "capabilities": [
+    {
+      "tool": "echo",
+      "permission": "ECHO",
+      "scope": "*",
+      "maxCalls": 3,
+      "estimatedCostMicros": 0
+    }
+  ]
+}
+```
+
+Capability scope and limits can only narrow access. They do not bypass the HTTP allowlist, file root, `.kaiosignore`, or built-in syscall safety checks.
 
 Run it with:
 

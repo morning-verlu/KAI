@@ -57,4 +57,51 @@ class AgentRuntimeTest {
             runtime.cancel(process.pid)
         }
     }
+
+    @Test
+    fun `crash records runtime failure kind and crashed event`() {
+        val runtime = AgentRuntime(clock)
+        val runId = RunId("run-crash")
+        val process = runtime.spawn(AgentSpec(AgentId("worker")), runId)
+
+        runtime.start(process.pid)
+        runtime.crash(process.pid, "host process crashed")
+
+        val failed = runtime.process(process.pid)
+        assertEquals(ProcessState.FAILED, failed?.state)
+        assertEquals(ProcessFailureKind.RUNTIME_CRASH, failed?.failureKind)
+        assertEquals(
+            listOf(
+                RuntimeEventType.SPAWNED,
+                RuntimeEventType.STARTED,
+                RuntimeEventType.CRASHED,
+                RuntimeEventType.FAILED,
+            ),
+            runtime.events(runId).map { it.type },
+        )
+    }
+
+    @Test
+    fun `syscall metrics track denied calls tool time and estimated cost`() {
+        val runtime = AgentRuntime(clock)
+        val process = runtime.spawn(AgentSpec(AgentId("agent")), RunId("run-cost"))
+
+        runtime.start(process.pid)
+        runtime.recordSyscall(
+            process.pid,
+            ToolResult.failure("echo", "denied by capability").copy(
+                durationMillis = 7,
+                estimatedCostMicros = 11,
+                denied = true,
+            ),
+        )
+
+        val updated = runtime.process(process.pid)
+        assertEquals(1, updated?.syscallCount)
+        assertEquals(1, updated?.deniedSyscallCount)
+        assertEquals(7, updated?.toolTimeMillis)
+        assertEquals(11, updated?.estimatedCostMicros)
+        assertEquals(RuntimeEventType.SYSCALL_DENIED, runtime.events(RunId("run-cost")).map { it.type }.dropLast(1).last())
+        assertEquals(RuntimeEventType.COST_RECORDED, runtime.events(RunId("run-cost")).last().type)
+    }
 }
