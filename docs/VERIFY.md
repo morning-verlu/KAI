@@ -46,6 +46,12 @@ To validate the checked-in Evidence Sample and Baseline Gate artifacts without a
 ./scripts/evidence-samples-smoke.sh
 ```
 
+To validate the browser-only Codespaces path from a fresh checkout:
+
+```bash
+./scripts/codespaces-smoke.sh
+```
+
 When a GitHub Actions workflow wants a human-readable PR summary and a clean JSON artifact at the same time:
 
 ```bash

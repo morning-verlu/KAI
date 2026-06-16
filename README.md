@@ -10,6 +10,8 @@
 
 Website: [morning-verlu.github.io/KAI](https://morning-verlu.github.io/KAI/)
 
+New here? Start with [START_HERE.md](START_HERE.md) for the browser-only, local CLI, and artifact-only evaluation paths.
+
 KAI OS is a Kotlin runtime that turns multi-agent work into observable, controllable processes.
 
 Agents get lifecycle, memory, permissions, metrics, and syscall-style tool boundaries. Workflows run as DAGs, and every run can be inspected, replayed, compared, and packaged as portable evidence.
@@ -25,6 +27,12 @@ kaios tour
 ```
 
 No local Java setup? [Open KAI OS in GitHub Codespaces](https://codespaces.new/morning-verlu/KAI?quickstart=1), wait for the dev container to build, then run `build/install/kaios-cli/bin/kaios tour`.
+
+Want one command to verify the browser path? In Codespaces, run:
+
+```bash
+./scripts/codespaces-smoke.sh
+```
 
 Want to inspect the evidence artifacts before installing? Open the checked-in [Evidence Sample](examples/evidence-sample/) with a review artifact, process trace, replayable capsule, and `kaios.review/v1` JSON. Feedback on the evidence path belongs in the [Evidence feedback issue template](https://github.com/morning-verlu/KAI/issues/new?template=evidence_feedback.yml).
 
@@ -102,6 +110,12 @@ To verify the checked-in evidence examples locally:
 
 ```bash
 ./scripts/evidence-samples-smoke.sh
+```
+
+To verify the Codespaces/browser-only path from a fresh checkout:
+
+```bash
+./scripts/codespaces-smoke.sh
 ```
 
 `kaios quickstart` runs the deterministic demo, creates a validated `kaios.json`, writes a no-key GitHub Actions Agent Gate, verifies the workflow, writes a portable evidence capsule, and prints the next command to inspect the agent processes. It is safe to rerun: existing config and CI files are kept unless you pass `--force`.

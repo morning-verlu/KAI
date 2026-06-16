@@ -7,7 +7,7 @@ Use Codespaces when you want to try KAI OS without installing Java, Gradle, or t
 The dev container uses Java 17 and runs:
 
 ```bash
-./gradlew :kaios-cli:installDist --no-daemon
+./gradlew installDist --no-daemon
 ```
 
 After the workspace finishes creating, run the no-key tour:
@@ -15,6 +15,14 @@ After the workspace finishes creating, run the no-key tour:
 ```bash
 build/install/kaios-cli/bin/kaios tour
 ```
+
+To verify the full browser-only path with one command:
+
+```bash
+./scripts/codespaces-smoke.sh
+```
+
+The smoke script builds the CLI, runs `kaios tour --json`, validates the generated tour capsule, replays it offline, validates the checked-in Evidence Sample, and replays that sample offline.
 
 Useful follow-up commands:
 
@@ -30,5 +38,7 @@ The Codespaces path still uses the deterministic mock provider by default, so no
 If the dev container build is interrupted, rerun:
 
 ```bash
-./gradlew :kaios-cli:installDist --no-daemon
+./gradlew installDist --no-daemon
 ```
+
+For the complete evaluator path, read [START_HERE.md](../START_HERE.md).

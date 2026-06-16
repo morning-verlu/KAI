@@ -9,8 +9,8 @@
       ]
     }
   },
-  "postCreateCommand": "./gradlew :kaios-cli:installDist --no-daemon",
-  "postAttachCommand": "echo 'KAI OS ready. Try: build/install/kaios-cli/bin/kaios tour'",
+  "postCreateCommand": "./gradlew installDist --no-daemon",
+  "postAttachCommand": "echo 'KAI OS ready. Try: ./scripts/codespaces-smoke.sh or build/install/kaios-cli/bin/kaios tour'",
   "remoteEnv": {
     "KAIOS_RUNS_DIR": "${containerWorkspaceFolder}/.kaios/runs",
     "KAIOS_ARTIFACTS_DIR": "${containerWorkspaceFolder}/artifacts"

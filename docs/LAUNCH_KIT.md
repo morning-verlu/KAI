@@ -35,6 +35,7 @@ https://codespaces.new/morning-verlu/KAI?quickstart=1
 
 - Repo: https://github.com/morning-verlu/KAI
 - Site: https://morning-verlu.github.io/KAI/
+- Start here: https://github.com/morning-verlu/KAI/blob/main/START_HERE.md
 - Codespaces: https://codespaces.new/morning-verlu/KAI?quickstart=1
 - Release: https://github.com/morning-verlu/KAI/releases/tag/v0.3.1
 - Installer: https://morning-verlu.github.io/KAI/install.sh
@@ -45,6 +46,7 @@ https://codespaces.new/morning-verlu/KAI?quickstart=1
 - JVM service review example: https://github.com/morning-verlu/KAI/tree/main/examples/jvm-service-review
 - Baseline gate example: https://github.com/morning-verlu/KAI/tree/main/examples/baseline-gate
 - Local evidence samples smoke: `./scripts/evidence-samples-smoke.sh`
+- Codespaces/browser smoke: `./scripts/codespaces-smoke.sh`
 - Trust contract: https://github.com/morning-verlu/KAI/blob/main/docs/TRUST.md
 
 ## Do Not Lead With
