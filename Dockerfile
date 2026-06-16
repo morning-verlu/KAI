@@ -1,9 +1,9 @@
-FROM alpine:3.20
+FROM bellsoft/liberica-openjre-alpine:17
 
 ARG KAIOS_VERSION=0.3.1
 ARG KAIOS_RELEASE_URL=https://github.com/morning-verlu/KAI/releases/download/v${KAIOS_VERSION}/kaios-${KAIOS_VERSION}.zip
 
-RUN apk add --no-cache ca-certificates curl git openjdk17-jre-headless unzip \
+RUN apk add --no-cache ca-certificates curl git unzip \
     && curl -fsSL "$KAIOS_RELEASE_URL" -o /tmp/kaios.zip \
     && unzip -q /tmp/kaios.zip -d /opt \
     && ln -s "/opt/kaios-${KAIOS_VERSION}" /opt/kaios \

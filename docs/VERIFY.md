@@ -58,6 +58,12 @@ To validate the Docker path:
 ./scripts/docker-smoke.sh
 ```
 
+When the image is already built, rerun the same smoke without another Docker build:
+
+```bash
+./scripts/docker-smoke.sh --no-build
+```
+
 To run the same no-key checks intended for this repository's future public CI:
 
 ```bash

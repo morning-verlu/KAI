@@ -50,6 +50,12 @@ To verify the Docker path end to end:
 ./scripts/docker-smoke.sh
 ```
 
+If the image already exists locally:
+
+```bash
+./scripts/docker-smoke.sh --no-build
+```
+
 ### 3. Local CLI
 
 Use this path when you want the installed `kaios` command on your machine.

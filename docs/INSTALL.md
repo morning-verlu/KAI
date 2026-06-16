@@ -124,7 +124,7 @@ docker build -t kaios:local .
 docker run --rm kaios:local tour
 ```
 
-The Dockerfile installs the published `v0.3.1` release ZIP by default. Override the release source when testing another published version:
+The Dockerfile uses a prebuilt Java 17 runtime base image and installs the published `v0.3.1` release ZIP by default. Override the release source when testing another published version:
 
 ```bash
 docker build --build-arg KAIOS_VERSION=0.3.1 -t kaios:local .
@@ -141,6 +141,12 @@ Verify the Docker path end to end:
 
 ```bash
 ./scripts/docker-smoke.sh
+```
+
+To reuse an image that already exists locally:
+
+```bash
+./scripts/docker-smoke.sh --no-build
 ```
 
 ## Download ZIP

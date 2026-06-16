@@ -3,9 +3,69 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE="${KAIOS_DOCKER_IMAGE:-kaios:local}"
-WORKDIR="${KAIOS_DOCKER_SMOKE_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/kaios-docker-smoke.XXXXXX")}"
+WORKDIR="${KAIOS_DOCKER_SMOKE_DIR:-}"
+BUILD_IMAGE="${KAIOS_DOCKER_BUILD:-1}"
+WORKDIR_IS_TEMP=0
 
-if [[ -z "${KAIOS_KEEP_SMOKE:-}" && -z "${KAIOS_DOCKER_SMOKE_DIR:-}" ]]; then
+usage() {
+  cat <<'USAGE'
+Usage: ./scripts/docker-smoke.sh [--image IMAGE] [--workdir DIR] [--no-build]
+
+Builds and verifies the KAI OS Docker trial image by default.
+
+Options:
+  --image IMAGE   Image tag to build or reuse. Defaults to kaios:local.
+  --workdir DIR   Host directory for generated smoke artifacts.
+  --no-build      Reuse an existing image instead of running docker build.
+
+Environment:
+  KAIOS_DOCKER_IMAGE       Default image tag.
+  KAIOS_DOCKER_SMOKE_DIR   Default smoke artifact directory.
+  KAIOS_DOCKER_BUILD=0     Reuse an existing image.
+  KAIOS_KEEP_SMOKE=1       Keep generated smoke artifacts.
+USAGE
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --image)
+      IMAGE="${2:-}"
+      if [[ -z "$IMAGE" ]]; then
+        echo "--image requires a value." >&2
+        exit 1
+      fi
+      shift 2
+      ;;
+    --workdir)
+      WORKDIR="${2:-}"
+      if [[ -z "$WORKDIR" ]]; then
+        echo "--workdir requires a value." >&2
+        exit 1
+      fi
+      shift 2
+      ;;
+    --no-build|--skip-build)
+      BUILD_IMAGE=0
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "$WORKDIR" ]]; then
+  WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/kaios-docker-smoke.XXXXXX")"
+  WORKDIR_IS_TEMP=1
+fi
+
+if [[ -z "${KAIOS_KEEP_SMOKE:-}" && "$WORKDIR_IS_TEMP" == "1" ]]; then
   trap 'rm -rf "$WORKDIR"' EXIT
 fi
 
@@ -34,8 +94,13 @@ run_step() {
 }
 
 mkdir -p "$WORKDIR"
+WORKDIR="$(cd "$WORKDIR" && pwd)"
 
-run_step "build Docker image" docker build -t "$IMAGE" "$ROOT"
+if [[ "$BUILD_IMAGE" == "0" || "$BUILD_IMAGE" == "false" ]]; then
+  run_step "reuse existing Docker image" docker image inspect "$IMAGE" >/dev/null
+else
+  run_step "build Docker image" docker build -t "$IMAGE" "$ROOT"
+fi
 
 run_step "print CLI version from image" docker run --rm "$IMAGE" --version > "$WORKDIR/version.out"
 assert_contains "$WORKDIR/version.out" "kaios"

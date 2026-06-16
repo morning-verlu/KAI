@@ -54,6 +54,12 @@ docker build -t kaios:local .
 docker run --rm kaios:local tour
 ```
 
+Already built the image and just want to rerun the smoke checks?
+
+```bash
+./scripts/docker-smoke.sh --no-build
+```
+
 Want to inspect the evidence artifacts before installing? Open the checked-in [Evidence Sample](examples/evidence-sample/) with a review artifact, process trace, replayable capsule, and `kaios.review/v1` JSON. Feedback on the evidence path belongs in the [Evidence feedback issue template](https://github.com/morning-verlu/KAI/issues/new?template=evidence_feedback.yml).
 Prefer a visual no-install path? Open the [Evidence Viewer](https://morning-verlu.github.io/KAI/evidence-viewer.html).
 
