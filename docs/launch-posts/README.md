@@ -20,6 +20,12 @@ Before posting externally:
 docs/assets/kaios-social-card.png
 ```
 
+For Evidence Viewer-first social posts, use the product-proof image:
+
+```text
+https://morning-verlu.github.io/KAI/assets/kaios-evidence-proof.png
+```
+
 3. Verify GitHub metadata:
 
 ```bash

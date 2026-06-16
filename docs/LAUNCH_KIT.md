@@ -58,6 +58,7 @@ docker run --rm kaios:local tour
 - Installer: https://morning-verlu.github.io/KAI/install.sh
 - Demo GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
 - Social card: https://morning-verlu.github.io/KAI/assets/kaios-social-card.png
+- Product-proof image: https://morning-verlu.github.io/KAI/assets/kaios-evidence-proof.png
 - Evidence map PNG: https://morning-verlu.github.io/KAI/assets/kaios-evidence-map.png
 - Evidence map SVG: https://morning-verlu.github.io/KAI/assets/kaios-evidence-map.svg
 - Evidence OS: https://github.com/morning-verlu/KAI/blob/main/docs/EVIDENCE_OS.md
@@ -95,6 +96,7 @@ Each channel draft is also available as a standalone file so posting does not re
 - [First external wave](launch-posts/first-wave.md)
 - [Evidence Viewer-first posts](launch-posts/evidence-viewer-first.md)
 - [Short social post](launch-posts/short-social.md)
+- [Second wave visual post](launch-posts/second-wave.md)
 - [X / LinkedIn thread](launch-posts/x-linkedin-thread.md)
 - [Kotlin community post](launch-posts/kotlin-community.md)
 - [Show HN post](launch-posts/show-hn.md)
