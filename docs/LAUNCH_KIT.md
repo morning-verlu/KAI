@@ -41,6 +41,8 @@ https://codespaces.new/morning-verlu/KAI?quickstart=1
 - Installer: https://morning-verlu.github.io/KAI/install.sh
 - Demo GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
 - Social card: https://morning-verlu.github.io/KAI/assets/kaios-social-card.png
+- Evidence map PNG: https://morning-verlu.github.io/KAI/assets/kaios-evidence-map.png
+- Evidence map SVG: https://morning-verlu.github.io/KAI/assets/kaios-evidence-map.svg
 - Evidence OS: https://github.com/morning-verlu/KAI/blob/main/docs/EVIDENCE_OS.md
 - Comparison: https://github.com/morning-verlu/KAI/blob/main/docs/COMPARISON.md
 - JVM service review example: https://github.com/morning-verlu/KAI/tree/main/examples/jvm-service-review
@@ -87,6 +89,35 @@ The tour creates a disposable repo and outputs a process table, Markdown review,
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
+```
+
+Attach this image when the platform supports image posts:
+
+```text
+https://morning-verlu.github.io/KAI/assets/kaios-evidence-map.png
+```
+
+## Visual-First Short Post
+
+```text
+KAI OS turns agent runs into runtime evidence:
+
+Git change -> kaios review -> review.md + trace.json + capsule.json -> review/audit/baseline gate
+
+No API key needed for the first-run path.
+
+curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+export PATH="$HOME/.kaios/bin:$PATH"
+kaios tour
+
+Repo: https://github.com/morning-verlu/KAI
+Start here: https://github.com/morning-verlu/KAI/blob/main/START_HERE.md
+```
+
+Attach:
+
+```text
+https://morning-verlu.github.io/KAI/assets/kaios-evidence-map.png
 ```
 
 ## X / LinkedIn Thread
