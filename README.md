@@ -120,6 +120,12 @@ To verify the Codespaces/browser-only path from a fresh checkout:
 ./scripts/codespaces-smoke.sh
 ```
 
+To run the same no-key checks intended for this repository's public CI:
+
+```bash
+./scripts/repository-ci-smoke.sh
+```
+
 `kaios quickstart` runs the deterministic demo, creates a validated `kaios.json`, writes a no-key GitHub Actions Agent Gate, verifies the workflow, writes a portable evidence capsule, and prints the next command to inspect the agent processes. It is safe to rerun: existing config and CI files are kept unless you pass `--force`.
 `kaios review` is the Evidence OS loop for a dirty Git workspace: it reads the current change set, attaches bounded changed-file context, honors `.kaiosignore`, runs the deterministic agent review, and writes `artifacts/change-review.md`, `artifacts/change-review.trace.json`, and `artifacts/change-review.capsule.json`.
 `kaios evidence --baseline ... --check` turns a run capsule into a CI-ready evidence gate by validating the capsule, replaying it offline, and failing when stable runtime behavior differs from the baseline.

@@ -1,0 +1,30 @@
+name: KAI OS Repository CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Build, test, and replay evidence
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.3
+
+      - name: Set up Java
+        uses: actions/setup-java@v5.2.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6.2.0
+
+      - name: Run repository smoke
+        run: ./scripts/repository-ci-smoke.sh

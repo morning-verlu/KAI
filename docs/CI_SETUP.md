@@ -39,7 +39,24 @@ This source repository is ready for GitHub Actions. If workflow-file pushes are 
 gh auth refresh -h github.com -s workflow
 ```
 
-Then add `.github/workflows/ci.yml`:
+Until that scope is available, the repository CI path can still be verified locally:
+
+```bash
+./scripts/repository-ci-smoke.sh
+```
+
+That script runs the full no-key trust path intended for public CI:
+
+- `./gradlew clean test installDist --no-daemon`
+- CLI version check
+- checked-in Evidence Sample and Baseline Gate replay checks
+- no-key `kaios tour`
+- generated tour capsule validation
+- generated tour capsule offline replay
+
+For a copyable workflow template, see [../examples/github-actions-repository-ci.yml](../examples/github-actions-repository-ci.yml). Once `workflow` scope is available, copy it to `.github/workflows/ci.yml`.
+
+The workflow body is:
 
 ```yaml
 name: CI
@@ -67,9 +84,7 @@ jobs:
         uses: gradle/actions/wrapper-validation@v6.2.0
 
       - name: Build and test
-        uses: gradle/actions/setup-gradle@v6.2.0
-        with:
-          arguments: clean test installDist
+        run: ./scripts/repository-ci-smoke.sh
 ```
 
 After pushing the workflow, restore this README badge if desired:

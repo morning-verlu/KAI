@@ -52,6 +52,12 @@ To validate the browser-only Codespaces path from a fresh checkout:
 ./scripts/codespaces-smoke.sh
 ```
 
+To run the same no-key checks intended for this repository's future public CI:
+
+```bash
+./scripts/repository-ci-smoke.sh
+```
+
 When a GitHub Actions workflow wants a human-readable PR summary and a clean JSON artifact at the same time:
 
 ```bash

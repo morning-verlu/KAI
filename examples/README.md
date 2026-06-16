@@ -77,6 +77,22 @@ examples/github-actions-agent-gate.yml
 
 That workflow matches the default generated Agent Gate: it pins the KAI OS version, uses the deterministic mock provider, writes `artifacts/kaios-verify.json`, writes `artifacts/kaios-run.capsule.json`, and collects `artifacts/kaios-bug-report.json` when the gate fails.
 
+## Repository CI Template
+
+This repository cannot publish `.github/workflows/ci.yml` until the GitHub token has `workflow` scope. The copyable template is checked in outside `.github/workflows`:
+
+```text
+examples/github-actions-repository-ci.yml
+```
+
+It runs the same command that maintainers can verify locally:
+
+```bash
+./scripts/repository-ci-smoke.sh
+```
+
+The smoke command builds, tests, installs the CLI, validates checked-in evidence samples, runs the no-key tour, validates the generated capsule, and replays it offline.
+
 ## Run the Default Workflow
 
 ```bash
