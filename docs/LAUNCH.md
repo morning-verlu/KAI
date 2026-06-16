@@ -95,6 +95,8 @@ Use [launch-posts/first-wave.md](launch-posts/first-wave.md) when posting extern
 
 Lead with the no-install Evidence Viewer, then offer the repo and `kaios tour`.
 
+If X/LinkedIn does not distribute the visual post, switch to [launch-posts/community-wave.md](launch-posts/community-wave.md) instead of repeating the same social copy. The community wave has channel-specific Kotlin/JVM, Reddit, Show HN, and LinkedIn versions with tracked Evidence Viewer links.
+
 ## Contributor Intake
 
 Visible, scoped issues help turn early attention into participation. Keep these queues maintained during launch:

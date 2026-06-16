@@ -44,6 +44,7 @@ Capture a metrics snapshot before posting and again at +2h, +24h, and +72h:
 - [Evidence Viewer-first posts](evidence-viewer-first.md)
 - [Short social post](short-social.md)
 - [Second wave visual post](second-wave.md)
+- [Community wave](community-wave.md)
 - [X / LinkedIn thread](x-linkedin-thread.md)
 - [Kotlin community post](kotlin-community.md)
 - [Show HN post](show-hn.md)

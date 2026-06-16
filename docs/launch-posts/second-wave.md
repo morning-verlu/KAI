@@ -51,3 +51,4 @@ Measurement target:
 
 - If the image post still gets fewer than 50 impressions after two hours, prioritize community posts over more X posts.
 - If it gets impressions but no link clicks, simplify the image and lead with a concrete `kaios review` use case.
+- Use [community-wave.md](community-wave.md) for Kotlin/JVM, Reddit, Show HN, and LinkedIn variants instead of reposting the same text everywhere.
