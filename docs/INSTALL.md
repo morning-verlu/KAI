@@ -95,6 +95,26 @@ Set `KAIOS_INSTALL_DIR` to install somewhere else:
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | KAIOS_INSTALL_DIR="$HOME/.local/kaios" sh
 ```
 
+## GitHub Codespaces
+
+Use Codespaces when you want to try KAI OS without installing Java or Gradle locally:
+
+[Open KAI OS in GitHub Codespaces](https://codespaces.new/morning-verlu/KAI?quickstart=1)
+
+The dev container installs the CLI distribution with:
+
+```bash
+./gradlew :kaios-cli:installDist --no-daemon
+```
+
+Then run:
+
+```bash
+build/install/kaios-cli/bin/kaios tour
+```
+
+See [CODESPACES.md](CODESPACES.md) for the full no-local-install path.
+
 ## Download ZIP
 
 ```bash

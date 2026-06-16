@@ -6,6 +6,7 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-7F52FF.svg)](https://kotlinlang.org/)
 [![Release](https://img.shields.io/github/v/release/morning-verlu/KAI?label=release)](https://github.com/morning-verlu/KAI/releases)
 [![Discussions](https://img.shields.io/badge/discussions-open-8A63D2.svg)](https://github.com/morning-verlu/KAI/discussions)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/morning-verlu/KAI?quickstart=1)
 
 Website: [morning-verlu.github.io/KAI](https://morning-verlu.github.io/KAI/)
 
@@ -22,6 +23,8 @@ curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
 kaios tour
 ```
+
+No local Java setup? [Open KAI OS in GitHub Codespaces](https://codespaces.new/morning-verlu/KAI?quickstart=1), wait for the dev container to build, then run `build/install/kaios-cli/bin/kaios tour`.
 
 Want to inspect the proof artifacts before installing? Open the checked-in [Evidence Sample](examples/evidence-sample/) with a review artifact, process trace, replayable capsule, and `kaios.review/v1` JSON. Feedback on the evidence path belongs in the [Evidence feedback issue template](https://github.com/morning-verlu/KAI/issues/new?template=evidence_feedback.yml).
 
@@ -493,6 +496,8 @@ For Workspace Index and project context, see [docs/INDEX.md](docs/INDEX.md).
 For issue diagnostics and safe bug reports, see [docs/SUPPORT.md](docs/SUPPORT.md).
 
 For all install options, see [docs/INSTALL.md](docs/INSTALL.md).
+
+For no-local-install trial, see [docs/CODESPACES.md](docs/CODESPACES.md).
 
 ## Current Status
 

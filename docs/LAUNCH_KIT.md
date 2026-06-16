@@ -25,10 +25,17 @@ kaios tour
 
 The tour creates a disposable Git repo, runs the Evidence OS loop, generates a review artifact, writes a process trace, writes a replayable capsule, prints a process table, and shows recovery/evidence commands.
 
+No local Java setup fallback:
+
+```text
+https://codespaces.new/morning-verlu/KAI?quickstart=1
+```
+
 ## Links
 
 - Repo: https://github.com/morning-verlu/KAI
 - Site: https://morning-verlu.github.io/KAI/
+- Codespaces: https://codespaces.new/morning-verlu/KAI?quickstart=1
 - Release: https://github.com/morning-verlu/KAI/releases/tag/v0.3.1
 - Installer: https://morning-verlu.github.io/KAI/install.sh
 - Demo GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif

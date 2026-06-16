@@ -54,6 +54,7 @@ The tour is the clearest proof because it shows the full Evidence OS loop withou
 
 - [x] CI/test command is green.
 - [x] Hosted install command works.
+- [x] GitHub Codespaces path exists for no-local-install trials.
 - [x] `kaios tour` works without API keys.
 - [x] README has a clear first screen.
 - [x] GitHub Pages has a direct launch landing page.
