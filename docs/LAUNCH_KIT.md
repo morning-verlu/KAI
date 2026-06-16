@@ -41,6 +41,7 @@ https://codespaces.new/morning-verlu/KAI?quickstart=1
 - Demo GIF: https://morning-verlu.github.io/KAI/assets/kaios-demo.gif
 - Social card: https://morning-verlu.github.io/KAI/assets/kaios-social-card.png
 - Evidence OS: https://github.com/morning-verlu/KAI/blob/main/docs/EVIDENCE_OS.md
+- Comparison: https://github.com/morning-verlu/KAI/blob/main/docs/COMPARISON.md
 - Trust contract: https://github.com/morning-verlu/KAI/blob/main/docs/TRUST.md
 
 ## Do Not Lead With

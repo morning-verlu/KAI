@@ -26,7 +26,7 @@ kaios tour
 
 No local Java setup? [Open KAI OS in GitHub Codespaces](https://codespaces.new/morning-verlu/KAI?quickstart=1), wait for the dev container to build, then run `build/install/kaios-cli/bin/kaios tour`.
 
-Want to inspect the proof artifacts before installing? Open the checked-in [Evidence Sample](examples/evidence-sample/) with a review artifact, process trace, replayable capsule, and `kaios.review/v1` JSON. Feedback on the evidence path belongs in the [Evidence feedback issue template](https://github.com/morning-verlu/KAI/issues/new?template=evidence_feedback.yml).
+Want to inspect the evidence artifacts before installing? Open the checked-in [Evidence Sample](examples/evidence-sample/) with a review artifact, process trace, replayable capsule, and `kaios.review/v1` JSON. Feedback on the evidence path belongs in the [Evidence feedback issue template](https://github.com/morning-verlu/KAI/issues/new?template=evidence_feedback.yml).
 
 ![KAI OS CLI demo](docs/assets/kaios-demo.gif)
 
@@ -50,6 +50,7 @@ KAI OS is intentionally small in v0.3. If you only need a chatbot UI or a thin p
 
 For concrete workflows, read [KAI OS Use Cases](docs/USE_CASES.md).
 For the product moat, read [Evidence OS for Agents](docs/EVIDENCE_OS.md).
+For positioning against LangGraph, OpenAI Agents SDK, Koog, and LangChain4j, read [KAI OS Compared](docs/COMPARISON.md).
 For safety, reproducibility, and artifact-sharing boundaries, read the [KAI OS Trust Contract](docs/TRUST.md).
 For release highlights, read the [Changelog](CHANGELOG.md).
 
@@ -70,7 +71,7 @@ Most agent frameworks model AI work as chains, prompts, or chat sessions. KAI OS
 - Package runs as portable KAI Run Capsules with snapshots, traces, provenance hashes, and replay commands.
 - Replay shared capsules offline by rebuilding traces from embedded snapshots.
 - Diff two capsules offline for stable agent-run regression checks.
-- Review the current Git change as a first-class product path that writes a Markdown artifact, process trace, capsule, offline replay proof, and optional baseline diff.
+- Review the current Git change as a first-class product path that writes a Markdown artifact, process trace, capsule, offline replay result, and optional baseline diff.
 - Create one-command evidence bundles for CI by packaging, validating, replaying, and optionally diffing a run.
 
 Kotlin gives this model a strong foundation: JVM ecosystem reach, type safety, coroutines-ready concurrency, DSL ergonomics, and a path toward Kotlin Multiplatform.
@@ -95,7 +96,7 @@ kaios evidence --baseline artifacts/baseline.capsule.json --check
 
 `kaios quickstart` runs the deterministic demo, creates a validated `kaios.json`, writes a no-key GitHub Actions Agent Gate, verifies the workflow, writes a portable evidence capsule, and prints the next command to inspect the agent processes. It is safe to rerun: existing config and CI files are kept unless you pass `--force`.
 `kaios review` is the Evidence OS loop for a dirty Git workspace: it reads the current change set, attaches bounded changed-file context, honors `.kaiosignore`, runs the deterministic agent review, and writes `artifacts/change-review.md`, `artifacts/change-review.trace.json`, and `artifacts/change-review.capsule.json`.
-`kaios evidence --baseline ... --check` turns a run capsule into a CI-grade gate by validating the capsule, replaying it offline, and failing when stable runtime behavior differs from the baseline.
+`kaios evidence --baseline ... --check` turns a run capsule into a CI-ready evidence gate by validating the capsule, replaying it offline, and failing when stable runtime behavior differs from the baseline.
 
 Want the source-tree version of the guided local tour?
 
@@ -151,7 +152,7 @@ kaios gate
 ```
 
 `kaios setup --ci` creates a validated `kaios.json` and a no-key GitHub Actions Agent Gate without overwriting existing files. The setup output names the uploaded `kaios-agent-gate` artifact and its evidence files so CI failures are easy to inspect.
-`kaios gate` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, leaves a normal run snapshot for `ps`, `inspect`, and `trace`, writes a portable proof package at `artifacts/kaios-run.capsule.json`, and can append a PR-visible Markdown summary with `--summary-out "$GITHUB_STEP_SUMMARY"`. It is the short product path for `kaios verify --evidence --force`.
+`kaios gate` checks the local runtime, validates the workflow, runs a deterministic mock smoke workflow, validates the process trace contract, leaves a normal run snapshot for `ps`, `inspect`, and `trace`, writes a portable evidence package at `artifacts/kaios-run.capsule.json`, and can append a PR-visible Markdown summary with `--summary-out "$GITHUB_STEP_SUMMARY"`. It is the short product path for `kaios verify --evidence --force`.
 
 When the gate is ready, create a project artifact:
 
@@ -402,6 +403,7 @@ Modules:
 
 Read the deeper design notes in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Read why evidence is the moat in [docs/EVIDENCE_OS.md](docs/EVIDENCE_OS.md).
+Read the framework positioning in [docs/COMPARISON.md](docs/COMPARISON.md).
 Read concrete workflows in [docs/USE_CASES.md](docs/USE_CASES.md).
 Read the safety and reproducibility boundary in [docs/TRUST.md](docs/TRUST.md).
 Read the JSON automation contracts in [docs/JSON_CONTRACTS.md](docs/JSON_CONTRACTS.md).
@@ -487,7 +489,7 @@ For the no-key readiness gate, see [docs/VERIFY.md](docs/VERIFY.md).
 
 For copyable project examples, including the default GitHub Actions Agent Gate, see [examples/README.md](examples/README.md).
 
-For a checked-in no-install proof artifact, see [examples/evidence-sample](examples/evidence-sample/).
+For a checked-in no-install evidence artifact, see [examples/evidence-sample](examples/evidence-sample/).
 
 For persisted memory, see [docs/MEMORY.md](docs/MEMORY.md).
 

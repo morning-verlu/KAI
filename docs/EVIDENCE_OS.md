@@ -4,7 +4,7 @@ KAI OS chooses one main moat: local-first evidence for agent work.
 
 The product claim is:
 
-> KAI OS is the local-first Evidence OS that turns agent runs into process traces, replayable capsules, and CI-grade proof.
+> KAI OS is the local-first Evidence OS that turns agent runs into process traces, replayable capsules, and CI-ready runtime evidence.
 
 This is different from building another Kotlin prompt framework. The runtime still has agents, workflows, tools, memory, and providers, but the product path is evidence:
 
@@ -99,7 +99,7 @@ private/
 
 The moat is not a chat UI, visual workflow builder, plugin marketplace, or more model providers.
 
-Those can matter later, but they do not prove the core product. The core product is that a developer can run one local command and get evidence that is inspectable, portable, replayable, and gateable.
+Those can matter later, but they do not validate the core product. The core product is that a developer can run one local command and get evidence that is inspectable, portable, replayable, and gateable.
 
 ## Positioning Against The Market
 
@@ -112,10 +112,12 @@ Many agent systems are moving toward production runtime concerns:
 
 KAI OS should not compete by claiming "more agents" or "more integrations" first. It should compete by making evidence portable and local-first.
 
+For a more detailed framework-by-framework view, read [KAI OS Compared](COMPARISON.md).
+
 | Axis | KAI OS | LangGraph / OpenAI Agents / CrewAI | Koog / LangChain4j |
 | --- | --- | --- | --- |
 | Primary identity | Evidence OS for agent runs | Agent runtime or agent framework | JVM/Kotlin LLM and agent development |
-| Default demo | Local deterministic review and replay | Usually provider-backed runtime examples | Library and framework integration examples |
+| Default demo | Local deterministic review and replay | Provider or framework integrated examples; deployment varies by stack | Library and framework integration examples |
 | First artifact | Markdown review, process trace, capsule | Trace or runtime output, depending on stack | Application code and model/tool abstractions |
 | Offline replay | Core product path through capsules | Varies by stack and deployment | Not usually the main product surface |
 | CI gate | `review --baseline --check` and `evidence --summary` | Possible through integrations | Built by the application team |
