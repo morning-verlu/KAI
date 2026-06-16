@@ -26,7 +26,15 @@ The core model is:
 - Tool = Syscall
 - Memory = Process state
 
-The current v0.3.1 release is small but runnable. The easiest way to try it is the no-key tour:
+The current v0.3.1 release is small but runnable. The fastest way to understand it is the no-install Evidence Viewer:
+
+No install needed to see the product surface:
+
+https://morning-verlu.github.io/KAI/evidence-viewer.html
+
+It shows a checked-in KAI OS run as a process table, syscall ledger, replayable capsule, offline replay result, and baseline gate drift example.
+
+Hands-on no-key tour:
 
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
@@ -45,10 +53,13 @@ Site: https://morning-verlu.github.io/KAI/
 First reply if someone asks for proof without installing:
 
 ```text
-There are checked-in evidence samples here:
+The no-install Evidence Viewer is here:
+
+https://morning-verlu.github.io/KAI/evidence-viewer.html
+
+The checked-in evidence samples are here:
 
 https://github.com/morning-verlu/KAI/tree/main/examples/evidence-sample
 
 That directory includes the Markdown review artifact, process trace JSON, replayable capsule, and kaios.review/v1 output.
 ```
-

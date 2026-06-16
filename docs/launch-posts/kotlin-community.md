@@ -16,7 +16,13 @@ Workflow = Scheduler
 Tool = Syscall
 Memory = Process state
 
-The v0.3.1 release has a no-key first-run tour:
+No install needed to see the product surface:
+
+https://morning-verlu.github.io/KAI/evidence-viewer.html
+
+It shows a checked-in run as a process table, syscall ledger, replayable capsule, and baseline gate.
+
+The v0.3.1 release also has a no-key first-run tour:
 
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
@@ -40,4 +46,3 @@ Follow-up reply if someone asks what makes it different:
 ```text
 The difference is the evidence layer. KAI OS records process traces, replayable capsules, syscall audit records, recovery evidence, and baseline diffs so agent runs can be inspected or gated later without relying on provider logs.
 ```
-

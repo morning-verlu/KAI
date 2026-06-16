@@ -22,13 +22,19 @@ Workflow = Scheduler
 Tool = Syscall
 Memory = Process state
 
-3/ The first-run path needs no API key:
+3/ No install needed to see the product surface:
+
+https://morning-verlu.github.io/KAI/evidence-viewer.html
+
+It shows a checked-in run as a process table, syscall ledger, replayable capsule, and baseline gate.
+
+4/ The first-run path needs no API key:
 
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
 kaios tour
 
-4/ `kaios tour` creates a disposable Git repo, runs a current-change review, and writes:
+5/ `kaios tour` creates a disposable Git repo, runs a current-change review, and writes:
 
 - Markdown review artifact
 - process trace
@@ -37,7 +43,7 @@ kaios tour
 - evidence summary
 - recovery dry-run report
 
-5/ The moat is evidence, not more agents:
+6/ The moat is evidence, not more agents:
 
 - process recovery evidence
 - priority scheduler evidence
@@ -46,9 +52,8 @@ kaios tour
 - baseline diff gates
 - PR-friendly evidence summaries
 
-6/ I would love feedback from Kotlin/JVM developers, OSS maintainers, and people building agent infrastructure.
+7/ I would love feedback from Kotlin/JVM developers, OSS maintainers, and people building agent infrastructure.
 
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 ```
-

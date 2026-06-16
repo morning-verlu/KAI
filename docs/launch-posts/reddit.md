@@ -24,6 +24,14 @@ The model:
 
 The current release is intentionally small and local-first. It has a deterministic no-key tour:
 
+No install needed to see the product surface:
+
+https://morning-verlu.github.io/KAI/evidence-viewer.html
+
+It shows a checked-in run as a process table, syscall ledger, replayable capsule, and baseline gate.
+
+Hands-on no-key tour:
+
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
 kaios tour
@@ -43,4 +51,3 @@ Attach when image posts are useful:
 ```text
 https://morning-verlu.github.io/KAI/assets/kaios-evidence-map.png
 ```
-

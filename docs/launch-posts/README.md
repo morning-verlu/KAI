@@ -28,7 +28,7 @@ gh repo view morning-verlu/KAI --json description,usesCustomOpenGraphImage,starg
 
 4. Use the post that matches the channel:
 
-- No-install visual sample: https://morning-verlu.github.io/KAI/evidence-viewer.html
+- [Evidence Viewer-first posts](evidence-viewer-first.md)
 - [Short social post](short-social.md)
 - [X / LinkedIn thread](x-linkedin-thread.md)
 - [Kotlin community post](kotlin-community.md)
@@ -48,7 +48,13 @@ Tool     = Syscall
 Memory   = Process state
 ```
 
-Lead with `kaios tour`, not with installation mechanics:
+Lead with product evidence, not installation mechanics:
+
+```text
+https://morning-verlu.github.io/KAI/evidence-viewer.html
+```
+
+For cold audiences, lead with the Evidence Viewer first. It shows the product surface without requiring Java, Gradle, Docker, Codespaces, or an API key. Follow with `kaios tour` when someone wants the hands-on path:
 
 ```bash
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh

@@ -15,7 +15,15 @@ Memory = Process state
 
 ## Main CTA
 
-Lead every post to the no-key tour:
+For cold audiences, lead with the no-install Evidence Viewer:
+
+```text
+https://morning-verlu.github.io/KAI/evidence-viewer.html
+```
+
+The viewer shows the product surface before asking anyone to install Java, Gradle, Docker, Codespaces, or an API key: process table, syscall ledger, replayable capsule, and baseline gate.
+
+For hands-on audiences, lead to the no-key tour:
 
 ```bash
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
@@ -84,6 +92,7 @@ docker run --rm kaios:local tour
 
 Each channel draft is also available as a standalone file so posting does not require editing this long launch kit:
 
+- [Evidence Viewer-first posts](launch-posts/evidence-viewer-first.md)
 - [Short social post](launch-posts/short-social.md)
 - [X / LinkedIn thread](launch-posts/x-linkedin-thread.md)
 - [Kotlin community post](launch-posts/kotlin-community.md)

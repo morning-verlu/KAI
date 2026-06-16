@@ -20,7 +20,12 @@ Workflow = Scheduler
 Tool = Syscall
 Memory = Process state
 
-Run a no-key tour:
+No install needed to see the product surface:
+https://morning-verlu.github.io/KAI/evidence-viewer.html
+
+It shows a checked-in run as a process table, syscall ledger, replayable capsule, and baseline gate.
+
+Hands-on no-key tour:
 
 curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
 export PATH="$HOME/.kaios/bin:$PATH"
@@ -31,4 +36,3 @@ The tour creates a disposable repo and outputs a process table, Markdown review,
 Repo: https://github.com/morning-verlu/KAI
 Site: https://morning-verlu.github.io/KAI/
 ```
-
