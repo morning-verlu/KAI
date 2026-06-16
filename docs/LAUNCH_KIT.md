@@ -52,6 +52,7 @@ docker run --rm kaios:local tour
 - Evidence map PNG: https://morning-verlu.github.io/KAI/assets/kaios-evidence-map.png
 - Evidence map SVG: https://morning-verlu.github.io/KAI/assets/kaios-evidence-map.svg
 - Evidence OS: https://github.com/morning-verlu/KAI/blob/main/docs/EVIDENCE_OS.md
+- Trust matrix: https://github.com/morning-verlu/KAI/blob/main/docs/TRUST_MATRIX.md
 - Kotlin Runtime API: https://github.com/morning-verlu/KAI/blob/main/docs/KOTLIN_API.md
 - Comparison: https://github.com/morning-verlu/KAI/blob/main/docs/COMPARISON.md
 - Kotlin runtime API example: https://github.com/morning-verlu/KAI/tree/main/examples/kotlin-runtime-api

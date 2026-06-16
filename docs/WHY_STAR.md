@@ -59,6 +59,7 @@ Start with:
 
 - [Start here](../START_HERE.md)
 - [Evaluate in 5 minutes](EVALUATE.md)
+- [Trust Matrix](TRUST_MATRIX.md)
 - [Kotlin Runtime API](KOTLIN_API.md)
 - [Good first issues](https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22)
 

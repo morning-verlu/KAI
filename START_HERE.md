@@ -6,6 +6,7 @@ KAI OS is a local-first Evidence OS for AI agents in Kotlin.
 
 Trying to decide whether to star, try, or ignore it? Use the [5-minute evaluator checklist](docs/EVALUATE.md).
 Want the shortest star/watch/fork rationale? Read [Why Star KAI OS](docs/WHY_STAR.md).
+Want claim-by-claim proof? Read the [KAI OS Trust Matrix](docs/TRUST_MATRIX.md).
 
 It is for developers who want agent work to be inspectable like runtime infrastructure:
 

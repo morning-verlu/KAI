@@ -34,6 +34,7 @@ gh repo view morning-verlu/KAI --json description,usesCustomOpenGraphImage,starg
 - [Show HN post](show-hn.md)
 - [Reddit post](reddit.md)
 - [Why Star KAI OS](../WHY_STAR.md)
+- [Trust Matrix](../TRUST_MATRIX.md)
 
 ## Core Message
 

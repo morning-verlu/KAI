@@ -15,6 +15,7 @@ Website: [morning-verlu.github.io/KAI](https://morning-verlu.github.io/KAI/)
 New here? Start with [START_HERE.md](START_HERE.md) for the browser-only, local CLI, and artifact-only evaluation paths.
 Trying to decide whether KAI OS is worth a star or deeper trial? Use the [5-minute evaluator checklist](docs/EVALUATE.md).
 Want the shortest star/watch/fork rationale? Read [Why Star KAI OS](docs/WHY_STAR.md).
+Want claim-by-claim proof? Read the [KAI OS Trust Matrix](docs/TRUST_MATRIX.md).
 Community signal: the first external PR is merged and covered by `./scripts/repository-ci-smoke.sh`; see [Contributors](CONTRIBUTORS.md).
 
 KAI OS is a Kotlin runtime that turns multi-agent work into observable, controllable processes.
@@ -83,6 +84,7 @@ For the product moat, read [Evidence OS for Agents](docs/EVIDENCE_OS.md).
 For the Kotlin library entrypoint, read [Kotlin Runtime API](docs/KOTLIN_API.md).
 For positioning against LangGraph, OpenAI Agents SDK, Koog, and LangChain4j, read [KAI OS Compared](docs/COMPARISON.md).
 For safety, reproducibility, and artifact-sharing boundaries, read the [KAI OS Trust Contract](docs/TRUST.md).
+For claim-by-claim verification, read the [KAI OS Trust Matrix](docs/TRUST_MATRIX.md).
 For community contributions, read [Contributors](CONTRIBUTORS.md).
 For release highlights, read the [Changelog](CHANGELOG.md).
 
