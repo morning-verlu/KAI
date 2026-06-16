@@ -65,7 +65,7 @@ The tour is the clearest proof because it shows the full Evidence OS loop withou
 - [x] Contributing guide points new contributors at tour/review/evidence.
 - [x] Repository is pinned on the maintainer profile.
 - [x] Custom GitHub social preview image is uploaded from `docs/assets/kaios-social-card.png`.
-- [ ] Short social post is published.
+- [x] Short social post is published.
 - [x] GitHub Discussion is updated with v0.3.1 tour CTA.
 - [ ] Kotlin community post is published.
 - [ ] Show HN post is published.

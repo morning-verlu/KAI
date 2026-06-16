@@ -172,3 +172,7 @@ forks: 2
 watchers: 0
 social preview: uploaded
 ```
+
+## Posted Links
+
+- X short post: https://x.com/wurslu/status/2066846887983096042 (posted 2026-06-16)
