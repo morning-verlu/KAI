@@ -26,7 +26,9 @@ metric() {
 
 require gh
 
-repo_line="$(metric '{}' gh repo view "$repo" --json nameWithOwner,description,homepageUrl,stargazerCount,forkCount,watchers,usesCustomOpenGraphImage --jq '{repo:.nameWithOwner,description,homepage:.homepageUrl,stars:.stargazerCount,forks:.forkCount,watchers:.watchers.totalCount,socialPreview:.usesCustomOpenGraphImage}')"
+repo_line="$(metric '{}' gh api "repos/$repo" --jq '{repo:.full_name,description,homepage:.homepage,stars:.stargazers_count,forks:.forks_count,watchers:.subscribers_count}')"
+social_preview="$(metric 'null' gh repo view "$repo" --json usesCustomOpenGraphImage --jq '.usesCustomOpenGraphImage')"
+repo_line="${repo_line%?},\"socialPreview\":${social_preview}}"
 topics="$(metric '[]' gh api -H 'Accept: application/vnd.github+json' "repos/$repo/topics" --jq '.names')"
 views="$(metric '{"count":null,"uniques":null}' gh api "repos/$repo/traffic/views" --jq '{count:.count,uniques:.uniques}')"
 clones="$(metric '{"count":null,"uniques":null}' gh api "repos/$repo/traffic/clones" --jq '{count:.count,uniques:.uniques}')"
