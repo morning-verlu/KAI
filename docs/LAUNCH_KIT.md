@@ -43,6 +43,7 @@ https://codespaces.new/morning-verlu/KAI?quickstart=1
 - Evidence OS: https://github.com/morning-verlu/KAI/blob/main/docs/EVIDENCE_OS.md
 - Comparison: https://github.com/morning-verlu/KAI/blob/main/docs/COMPARISON.md
 - JVM service review example: https://github.com/morning-verlu/KAI/tree/main/examples/jvm-service-review
+- Baseline gate example: https://github.com/morning-verlu/KAI/tree/main/examples/baseline-gate
 - Trust contract: https://github.com/morning-verlu/KAI/blob/main/docs/TRUST.md
 
 ## Do Not Lead With

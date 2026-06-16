@@ -1,0 +1,61 @@
+{
+  "schema": "kaios.run-diff/v1",
+  "result": "different",
+  "valid": true,
+  "same": false,
+  "checks": {
+    "leftCapsule": true,
+    "rightCapsule": true,
+    "leftReplay": true,
+    "rightReplay": true
+  },
+  "metricsDelta": {
+    "processCount": 0,
+    "tokenTotal": 216,
+    "inputTokens": 216,
+    "outputTokens": 0,
+    "contextBytes": 3060,
+    "syscallCount": 0,
+    "eventCount": 0
+  },
+  "fields": [
+    "task",
+    "finalOutputSha256",
+    "metrics.tokenTotal",
+    "metrics.inputTokens",
+    "metrics.contextBytes",
+    "processes"
+  ],
+  "differences": [
+    {
+      "field": "task",
+      "left": "review billing risk service runtime behavior\n\nWorkspace Index:\n- 8 files, 234 lines, Kotlin:6, JSON:1, Git Ignore:1\n- build.gradle.kts (Kotlin, 23 lines)\n- settings.gradle.kts (Kotlin, 15 lines)\n- kaios.json (JSON, 56 lines)\n- src/main/kotlin/examples/kaios/billing/App.kt (Kotlin, 18 lines)\n- src/main/kotlin/examples/kaios/billing/Invoice.kt (Kotlin, 23 lines)\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (Kotlin, 36 lines)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (Kotlin, 56 lines)\n\nContext:\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (1128 chars)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (1512 chars)",
+      "right": "review billing risk service runtime behavior\n\nWorkspace Index:\n- 8 files, 250 lines, Kotlin:6, JSON:1, Git Ignore:1\n- build.gradle.kts (Kotlin, 23 lines)\n- settings.gradle.kts (Kotlin, 15 lines)\n- kaios.json (JSON, 56 lines)\n- src/main/kotlin/examples/kaios/billing/App.kt (Kotlin, 18 lines)\n- src/main/kotlin/examples/kaios/billing/Invoice.kt (Kotlin, 24 lines)\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (Kotlin, 36 lines)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (Kotlin, 71 lines)\n\nContext:\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (1161 chars)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (1989 chars)"
+    },
+    {
+      "field": "finalOutputSha256",
+      "left": "82f978cdaea0c93797c95d9242ab634f6f10203d658b7cd11bc5c2e6328f4950",
+      "right": "dbf75dd22e9f7bd3d558f523cb242071a20135256ab6d8c611c67d337c2bf942"
+    },
+    {
+      "field": "metrics.tokenTotal",
+      "left": "2054",
+      "right": "2270"
+    },
+    {
+      "field": "metrics.inputTokens",
+      "left": "1970",
+      "right": "2186"
+    },
+    {
+      "field": "metrics.contextBytes",
+      "left": "23055",
+      "right": "26115"
+    },
+    {
+      "field": "processes",
+      "left": "[inspector:SUCCEEDED:tokens=660:input=647:output=13:context=7412:syscalls=1:failure=-, reviewer:SUCCEEDED:tokens=674:input=662:output=12:context=7544:syscalls=1:failure=-, validator:SUCCEEDED:tokens=720:input=661:output=59:context=8099:syscalls=1:failure=-]",
+      "right": "[inspector:SUCCEEDED:tokens=732:input=719:output=13:context=8432:syscalls=1:failure=-, reviewer:SUCCEEDED:tokens=746:input=734:output=12:context=8564:syscalls=1:failure=-, validator:SUCCEEDED:tokens=792:input=733:output=59:context=9119:syscalls=1:failure=-]"
+    }
+  ]
+}

@@ -76,6 +76,8 @@ kaios diff --left artifacts/baseline.capsule.json --right artifacts/current.caps
 
 Diff validates and replays both capsules first, then compares a stable runtime signature. It ignores run ids, timestamps, and duration noise, while comparing workflow, task, success, final output hash, process path, process states, tokens, context, syscalls, and event counts. `--check` exits `1` when valid capsules differ, which makes it useful as a regression gate.
 
+For a no-key checked-in sample with a known-good baseline and a current changed run, see [examples/baseline-gate](../examples/baseline-gate/).
+
 ## Schema
 
 Current schema id:

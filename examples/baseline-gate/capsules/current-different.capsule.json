@@ -1,0 +1,602 @@
+{
+    "schema": "kaios.run-capsule/v1",
+    "version": "0.3.1",
+    "generatedAt": "2026-06-16T04:53:48.571553Z",
+    "cwd": "/private/var/folders/28/gr5fp33d6hj6sm_wd4qyf1bc0000gn/T/tmp.zJar8izMld",
+    "run": {
+        "runId": "run-525b711e",
+        "workflowName": "code-review",
+        "success": true,
+        "task": "review billing risk service runtime behavior\n\nWorkspace Index:\n- 8 files, 250 lines, Kotlin:6, JSON:1, Git Ignore:1\n- build.gradle.kts (Kotlin, 23 lines)\n- settings.gradle.kts (Kotlin, 15 lines)\n- kaios.json (JSON, 56 lines)\n- src/main/kotlin/examples/kaios/billing/App.kt (Kotlin, 18 lines)\n- src/main/kotlin/examples/kaios/billing/Invoice.kt (Kotlin, 24 lines)\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (Kotlin, 36 lines)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (Kotlin, 71 lines)\n\nContext:\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (1161 chars)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (1989 chars)",
+        "processCount": 3,
+        "tokenTotal": 2270,
+        "syscallCount": 3,
+        "contextBytes": 26115,
+        "durationMillis": 6,
+        "toolTimeMillis": 0,
+        "estimatedCostMicros": 0,
+        "deniedSyscallCount": 0,
+        "recoveredProcessCount": 0
+    },
+    "provenance": {
+        "snapshotPath": "/private/var/folders/28/gr5fp33d6hj6sm_wd4qyf1bc0000gn/T/tmp.zJar8izMld/.kaios/runs/run-525b711e.json",
+        "snapshotSha256": "0df6e1db346c067b384270df7c86bc8ac93fdec79b6b2dbd20cae4fab054a7e6",
+        "embeddedSnapshotSha256": "4a7bd080c78134e370e050a58b443ca072e545652d16461bd74002ae0ef451ed",
+        "traceSha256": "e132f6e42e9132cf7843e61ccf9dd8142e186f47081a647a68a5cf4cbfb8f54a",
+        "configPath": "/private/var/folders/28/gr5fp33d6hj6sm_wd4qyf1bc0000gn/T/tmp.zJar8izMld/kaios.json",
+        "configSha256": "6180bbfe27f216530f81f8bbf2589a10243b22896e95d019461a109b55b567cc",
+        "configValid": true,
+        "configWorkflowName": "code-review",
+        "configAgentIds": [
+            "inspector",
+            "reviewer",
+            "validator"
+        ]
+    },
+    "replay": {
+        "commands": [
+            "kaios replay --file <capsule.json>",
+            "kaios capsule --file <capsule.json> --check",
+            "kaios ps run-525b711e",
+            "kaios inspect run-525b711e",
+            "kaios trace run-525b711e --check",
+            "kaios report run-525b711e",
+            "kaios export run-525b711e"
+        ],
+        "note": "Capsules are generated from saved run snapshots and can be inspected without re-running agents."
+    },
+    "validation": {
+        "valid": true,
+        "issues": [],
+        "checkedAt": "2026-06-16T04:53:48.580354Z"
+    },
+    "snapshot": {
+        "runId": "run-525b711e",
+        "workflowName": "code-review",
+        "task": "review billing risk service runtime behavior\n\nWorkspace Index:\n- 8 files, 250 lines, Kotlin:6, JSON:1, Git Ignore:1\n- build.gradle.kts (Kotlin, 23 lines)\n- settings.gradle.kts (Kotlin, 15 lines)\n- kaios.json (JSON, 56 lines)\n- src/main/kotlin/examples/kaios/billing/App.kt (Kotlin, 18 lines)\n- src/main/kotlin/examples/kaios/billing/Invoice.kt (Kotlin, 24 lines)\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (Kotlin, 36 lines)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (Kotlin, 71 lines)\n\nContext:\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (1161 chars)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (1989 chars)",
+        "success": true,
+        "finalOutput": "validate:06bc2189 accepted project summary from after reviewer\n\nProject summary for 'review billing risk service runtime behavior'\n- Shape: 8 files, 250 lines.\n- Languages: Kotlin:6, JSON:1, Git Ignore:1.\n- Notable files: build.gradle.kts, settings.gradle.kts, kaios.json, src/main/kotlin/examples/kaios/billing/App.kt, src/main/kotlin/examples/kaios/billing/Invoice.kt.\n- Context used: src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt, src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt.\n- Next: inspect process telemetry with `kaios ps run-525b711e` and validate trace evidence with `kaios trace run-525b711e --check`.\nsyscall echo: validated:06bc2189",
+        "processes": [
+            {
+                "pid": 1,
+                "agent": "inspector",
+                "state": "SUCCEEDED",
+                "tokens": 732,
+                "inputTokens": 719,
+                "outputTokens": 13,
+                "contextSize": 8432,
+                "syscallCount": 1,
+                "durationMillis": 5,
+                "failure": null,
+                "attempt": 1,
+                "parentPid": null,
+                "recoveryOfPid": null,
+                "failureKind": null,
+                "memoryScopeId": "run-525b711e:inspector",
+                "toolTimeMillis": 0,
+                "estimatedCostMicros": 0,
+                "deniedSyscallCount": 0,
+                "workerId": "in-process"
+            },
+            {
+                "pid": 2,
+                "agent": "reviewer",
+                "state": "SUCCEEDED",
+                "tokens": 746,
+                "inputTokens": 734,
+                "outputTokens": 12,
+                "contextSize": 8564,
+                "syscallCount": 1,
+                "durationMillis": 0,
+                "failure": null,
+                "attempt": 1,
+                "parentPid": null,
+                "recoveryOfPid": null,
+                "failureKind": null,
+                "memoryScopeId": "run-525b711e:reviewer",
+                "toolTimeMillis": 0,
+                "estimatedCostMicros": 0,
+                "deniedSyscallCount": 0,
+                "workerId": "in-process"
+            },
+            {
+                "pid": 3,
+                "agent": "validator",
+                "state": "SUCCEEDED",
+                "tokens": 792,
+                "inputTokens": 733,
+                "outputTokens": 59,
+                "contextSize": 9119,
+                "syscallCount": 1,
+                "durationMillis": 1,
+                "failure": null,
+                "attempt": 1,
+                "parentPid": null,
+                "recoveryOfPid": null,
+                "failureKind": null,
+                "memoryScopeId": "run-525b711e:validator",
+                "toolTimeMillis": 0,
+                "estimatedCostMicros": 0,
+                "deniedSyscallCount": 0,
+                "workerId": "in-process"
+            }
+        ],
+        "events": [
+            {
+                "timestamp": "2026-06-16T04:52:47.100497Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "SPAWNED",
+                "message": "spawned 'inspector'"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.100692Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "STARTED",
+                "message": "started"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.100947Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "MEMORY_APPENDED",
+                "message": "memory user +4154 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.105281Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "TOOL_CALLED",
+                "message": "syscall file -> ok"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.105340Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "MEMORY_APPENDED",
+                "message": "memory assistant +124 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.105754Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "SUCCEEDED",
+                "message": "succeeded"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.106547Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "SPAWNED",
+                "message": "spawned 'reviewer'"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.106554Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "STARTED",
+                "message": "started"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.106562Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "MEMORY_APPENDED",
+                "message": "memory user +4154 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107370Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "TOOL_CALLED",
+                "message": "syscall echo -> ok"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107380Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "MEMORY_APPENDED",
+                "message": "memory assistant +132 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107388Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "SUCCEEDED",
+                "message": "succeeded"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107593Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "SPAWNED",
+                "message": "spawned 'validator'"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107598Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "STARTED",
+                "message": "started"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107603Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "MEMORY_APPENDED",
+                "message": "memory user +4154 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.109471Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "TOOL_CALLED",
+                "message": "syscall echo -> ok"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.109482Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "MEMORY_APPENDED",
+                "message": "memory assistant +679 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.109489Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "SUCCEEDED",
+                "message": "succeeded"
+            }
+        ],
+        "scheduler": {
+            "executorBackend": "in-process",
+            "priorityEnabled": true,
+            "triggerCount": 0,
+            "recoveryEnabled": false
+        },
+        "syscalls": [
+            {
+                "callId": "sys-1",
+                "runId": "run-525b711e",
+                "pid": 1,
+                "agent": "inspector",
+                "tool": "file",
+                "permission": "FILE",
+                "allowed": true,
+                "denied": false,
+                "durationMillis": 0,
+                "estimatedCostMicros": 0,
+                "redactedArguments": {
+                    "op": "exists",
+                    "path": "."
+                },
+                "error": null
+            },
+            {
+                "callId": "sys-2",
+                "runId": "run-525b711e",
+                "pid": 2,
+                "agent": "reviewer",
+                "tool": "echo",
+                "permission": "ECHO",
+                "allowed": true,
+                "denied": false,
+                "durationMillis": 0,
+                "estimatedCostMicros": 0,
+                "redactedArguments": {
+                    "message": "reviewed:10428e0e"
+                },
+                "error": null
+            },
+            {
+                "callId": "sys-3",
+                "runId": "run-525b711e",
+                "pid": 3,
+                "agent": "validator",
+                "tool": "echo",
+                "permission": "ECHO",
+                "allowed": true,
+                "denied": false,
+                "durationMillis": 0,
+                "estimatedCostMicros": 0,
+                "redactedArguments": {
+                    "message": "validated:06bc2189"
+                },
+                "error": null
+            }
+        ]
+    },
+    "trace": {
+        "schema": "kaios.process-trace/v1",
+        "runId": "run-525b711e",
+        "workflowName": "code-review",
+        "task": "review billing risk service runtime behavior\n\nWorkspace Index:\n- 8 files, 250 lines, Kotlin:6, JSON:1, Git Ignore:1\n- build.gradle.kts (Kotlin, 23 lines)\n- settings.gradle.kts (Kotlin, 15 lines)\n- kaios.json (JSON, 56 lines)\n- src/main/kotlin/examples/kaios/billing/App.kt (Kotlin, 18 lines)\n- src/main/kotlin/examples/kaios/billing/Invoice.kt (Kotlin, 24 lines)\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (Kotlin, 36 lines)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (Kotlin, 71 lines)\n\nContext:\n- src/main/kotlin/examples/kaios/billing/InvoiceRiskService.kt (1161 chars)\n- src/test/kotlin/examples/kaios/billing/InvoiceRiskServiceTest.kt (1989 chars)",
+        "success": true,
+        "metrics": {
+            "processCount": 3,
+            "tokenTotal": 2270,
+            "inputTokens": 2186,
+            "outputTokens": 84,
+            "contextBytes": 26115,
+            "syscallCount": 3,
+            "processDurationMillis": 6,
+            "wallDurationMillis": 8,
+            "toolTimeMillis": 0,
+            "estimatedCostMicros": 0,
+            "deniedSyscallCount": 0,
+            "recoveredProcessCount": 0,
+            "eventCount": 18
+        },
+        "path": [
+            "inspector(pid=1)",
+            "reviewer(pid=2)",
+            "validator(pid=3)"
+        ],
+        "processes": [
+            {
+                "pid": 1,
+                "agent": "inspector",
+                "state": "SUCCEEDED",
+                "tokens": 732,
+                "inputTokens": 719,
+                "outputTokens": 13,
+                "contextBytes": 8432,
+                "syscallCount": 1,
+                "attempt": 1,
+                "parentPid": null,
+                "recoveryOfPid": null,
+                "failureKind": null,
+                "memoryScopeId": "run-525b711e:inspector",
+                "toolTimeMillis": 0,
+                "estimatedCostMicros": 0,
+                "deniedSyscallCount": 0,
+                "workerId": "in-process",
+                "durationMillis": 5,
+                "failure": null
+            },
+            {
+                "pid": 2,
+                "agent": "reviewer",
+                "state": "SUCCEEDED",
+                "tokens": 746,
+                "inputTokens": 734,
+                "outputTokens": 12,
+                "contextBytes": 8564,
+                "syscallCount": 1,
+                "attempt": 1,
+                "parentPid": null,
+                "recoveryOfPid": null,
+                "failureKind": null,
+                "memoryScopeId": "run-525b711e:reviewer",
+                "toolTimeMillis": 0,
+                "estimatedCostMicros": 0,
+                "deniedSyscallCount": 0,
+                "workerId": "in-process",
+                "durationMillis": 0,
+                "failure": null
+            },
+            {
+                "pid": 3,
+                "agent": "validator",
+                "state": "SUCCEEDED",
+                "tokens": 792,
+                "inputTokens": 733,
+                "outputTokens": 59,
+                "contextBytes": 9119,
+                "syscallCount": 1,
+                "attempt": 1,
+                "parentPid": null,
+                "recoveryOfPid": null,
+                "failureKind": null,
+                "memoryScopeId": "run-525b711e:validator",
+                "toolTimeMillis": 0,
+                "estimatedCostMicros": 0,
+                "deniedSyscallCount": 0,
+                "workerId": "in-process",
+                "durationMillis": 1,
+                "failure": null
+            }
+        ],
+        "scheduler": {
+            "executorBackend": "in-process",
+            "priorityEnabled": true,
+            "triggerCount": 0,
+            "recoveryEnabled": false
+        },
+        "syscalls": [
+            {
+                "callId": "sys-1",
+                "pid": 1,
+                "agent": "inspector",
+                "tool": "file",
+                "permission": "FILE",
+                "allowed": true,
+                "denied": false,
+                "durationMillis": 0,
+                "estimatedCostMicros": 0,
+                "redactedArguments": {
+                    "op": "exists",
+                    "path": "."
+                },
+                "error": null
+            },
+            {
+                "callId": "sys-2",
+                "pid": 2,
+                "agent": "reviewer",
+                "tool": "echo",
+                "permission": "ECHO",
+                "allowed": true,
+                "denied": false,
+                "durationMillis": 0,
+                "estimatedCostMicros": 0,
+                "redactedArguments": {
+                    "message": "reviewed:10428e0e"
+                },
+                "error": null
+            },
+            {
+                "callId": "sys-3",
+                "pid": 3,
+                "agent": "validator",
+                "tool": "echo",
+                "permission": "ECHO",
+                "allowed": true,
+                "denied": false,
+                "durationMillis": 0,
+                "estimatedCostMicros": 0,
+                "redactedArguments": {
+                    "message": "validated:06bc2189"
+                },
+                "error": null
+            }
+        ],
+        "cost": {
+            "tokenTotal": 2270,
+            "toolTimeMillis": 0,
+            "estimatedCostMicros": 0,
+            "deniedSyscallCount": 0
+        },
+        "recovery": {
+            "recoveredProcessCount": 0,
+            "crashCount": 0,
+            "recoverableProcessCount": 0
+        },
+        "eventCounts": {
+            "MEMORY_APPENDED": 6,
+            "SPAWNED": 3,
+            "STARTED": 3,
+            "SUCCEEDED": 3,
+            "TOOL_CALLED": 3
+        },
+        "events": [
+            {
+                "timestamp": "2026-06-16T04:52:47.100497Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "SPAWNED",
+                "message": "spawned 'inspector'"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.100692Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "STARTED",
+                "message": "started"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.100947Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "MEMORY_APPENDED",
+                "message": "memory user +4154 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.105281Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "TOOL_CALLED",
+                "message": "syscall file -> ok"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.105340Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "MEMORY_APPENDED",
+                "message": "memory assistant +124 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.105754Z",
+                "pid": 1,
+                "agent": "inspector",
+                "type": "SUCCEEDED",
+                "message": "succeeded"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.106547Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "SPAWNED",
+                "message": "spawned 'reviewer'"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.106554Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "STARTED",
+                "message": "started"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.106562Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "MEMORY_APPENDED",
+                "message": "memory user +4154 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107370Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "TOOL_CALLED",
+                "message": "syscall echo -> ok"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107380Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "MEMORY_APPENDED",
+                "message": "memory assistant +132 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107388Z",
+                "pid": 2,
+                "agent": "reviewer",
+                "type": "SUCCEEDED",
+                "message": "succeeded"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107593Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "SPAWNED",
+                "message": "spawned 'validator'"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107598Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "STARTED",
+                "message": "started"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.107603Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "MEMORY_APPENDED",
+                "message": "memory user +4154 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.109471Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "TOOL_CALLED",
+                "message": "syscall echo -> ok"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.109482Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "MEMORY_APPENDED",
+                "message": "memory assistant +679 chars"
+            },
+            {
+                "timestamp": "2026-06-16T04:52:47.109489Z",
+                "pid": 3,
+                "agent": "validator",
+                "type": "SUCCEEDED",
+                "message": "succeeded"
+            }
+        ]
+    }
+}

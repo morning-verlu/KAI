@@ -30,6 +30,8 @@ Want to inspect the evidence artifacts before installing? Open the checked-in [E
 
 Want to run the review loop on a realistic Kotlin/JVM backend change? Try the [JVM Service Review example](examples/jvm-service-review/).
 
+Want to see the CI baseline gate block a stable behavior change? Inspect the [Baseline Gate example](examples/baseline-gate/).
+
 ![KAI OS CLI demo](docs/assets/kaios-demo.gif)
 
 ![KAI OS process table preview](docs/assets/kaios-process-table.svg)
@@ -493,6 +495,7 @@ For copyable project examples, including the default GitHub Actions Agent Gate, 
 
 For a checked-in no-install evidence artifact, see [examples/evidence-sample](examples/evidence-sample/).
 For a runnable Kotlin/JVM service review, see [examples/jvm-service-review](examples/jvm-service-review/).
+For an offline baseline diff gate, see [examples/baseline-gate](examples/baseline-gate/).
 
 For persisted memory, see [docs/MEMORY.md](docs/MEMORY.md).
 

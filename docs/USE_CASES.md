@@ -92,6 +92,8 @@ kaios evidence --out artifacts/current.capsule.json --baseline artifacts/baselin
 kaios review --baseline artifacts/baseline.capsule.json --check
 ```
 
+For a checked-in offline sample where `--check` intentionally exits `1`, see [examples/baseline-gate](../examples/baseline-gate/).
+
 What KAI OS gives you:
 
 - a portable KAI Run Capsule with snapshot, trace, and provenance hashes.

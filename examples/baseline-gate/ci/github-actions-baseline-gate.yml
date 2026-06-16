@@ -1,0 +1,37 @@
+name: KAI OS Baseline Gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  kaios-baseline-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install KAI OS
+        run: |
+          curl -fsSL https://morning-verlu.github.io/KAI/install.sh | sh
+          echo "$HOME/.kaios/bin" >> "$GITHUB_PATH"
+
+      - name: Run baseline gate
+        run: |
+          mkdir -p artifacts
+          kaios gate \
+            --config kaios.json \
+            --baseline baselines/kaios-run.capsule.json \
+            --check \
+            --summary-out "$GITHUB_STEP_SUMMARY" \
+            --json | tee artifacts/kaios-verify.json
+
+      - name: Upload KAI OS evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kaios-baseline-gate
+          path: |
+            artifacts/kaios-verify.json
+            artifacts/kaios-run.capsule.json
+            artifacts/kaios-bug-report.json
