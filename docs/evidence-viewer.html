@@ -123,6 +123,13 @@
         line-height: 1.3;
       }
 
+      .hero-note {
+        max-width: 720px;
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 16px;
+      }
+
       .actions {
         display: flex;
         flex-wrap: wrap;
@@ -150,6 +157,12 @@
       .button.secondary {
         color: var(--text);
         background: rgba(27, 36, 45, 0.76);
+      }
+
+      .button.ghost {
+        color: var(--cyan);
+        background: rgba(120, 217, 255, 0.08);
+        border-color: rgba(120, 217, 255, 0.36);
       }
 
       main {
@@ -353,6 +366,27 @@
         font-size: 14px;
       }
 
+      .star-cta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 22px;
+        border: 1px solid rgba(143, 240, 189, 0.32);
+        border-radius: 8px;
+        padding: 22px;
+        background: rgba(143, 240, 189, 0.08);
+      }
+
+      .star-cta h2 {
+        font-size: clamp(25px, 3vw, 36px);
+      }
+
+      .star-cta p {
+        max-width: 700px;
+        margin: 10px 0 0;
+        color: var(--muted);
+      }
+
       footer {
         padding: 28px 0 44px;
         color: var(--muted);
@@ -374,6 +408,11 @@
         .hero {
           padding-top: 44px;
         }
+
+        .star-cta {
+          align-items: flex-start;
+          flex-direction: column;
+        }
       }
     </style>
   </head>
@@ -387,6 +426,7 @@
           </a>
           <div class="nav-links">
             <a href="https://github.com/morning-verlu/KAI">Repository</a>
+            <a href="https://github.com/morning-verlu/KAI">Star / Fork</a>
             <a href="https://github.com/morning-verlu/KAI/blob/main/START_HERE.md">Start here</a>
             <a href="https://github.com/morning-verlu/KAI/blob/main/docs/TRUST_MATRIX.md">Trust matrix</a>
           </div>
@@ -394,9 +434,12 @@
         <div class="hero">
           <h1>Evidence you can inspect before installing.</h1>
           <p class="lead">This viewer turns a checked-in KAI OS run into the product surface: process table, syscall ledger, replayable capsule, and baseline gate evidence.</p>
+          <p class="hero-note">If this local-first evidence layer should exist for JVM/Kotlin agents, star the repo and try the no-key tour when you are ready.</p>
           <div class="actions">
-            <a class="button primary" href="https://github.com/morning-verlu/KAI/tree/main/examples/evidence-sample">Open sample artifacts</a>
+            <a class="button primary" href="https://github.com/morning-verlu/KAI">Star / Fork on GitHub</a>
+            <a class="button secondary" href="https://github.com/morning-verlu/KAI/tree/main/examples/evidence-sample">Open sample artifacts</a>
             <a class="button secondary" href="https://github.com/morning-verlu/KAI/blob/main/docs/WHY_STAR.md">Why star KAI OS</a>
+            <a class="button ghost" href="https://github.com/morning-verlu/KAI/blob/main/START_HERE.md">Start here</a>
           </div>
         </div>
       </div>
@@ -607,6 +650,19 @@ kaios diff examples/baseline-gate/capsules/baseline.capsule.json \
             <strong>Baseline diff</strong>
             <span>Normalized stable diff used by the smoke test.</span>
           </a>
+        </div>
+      </section>
+
+      <section aria-labelledby="star-kaios">
+        <div class="star-cta">
+          <div>
+            <h2 id="star-kaios">Want this Evidence OS direction to exist?</h2>
+            <p>Star or watch KAI OS on GitHub, then use the no-key tour to see the same process table, syscall ledger, replay capsule, and baseline gate from your terminal.</p>
+          </div>
+          <div class="actions" style="margin-top: 0;">
+            <a class="button primary" href="https://github.com/morning-verlu/KAI">Star / Fork</a>
+            <a class="button secondary" href="https://github.com/morning-verlu/KAI/blob/main/docs/EVALUATE.md">Evaluate in 5 minutes</a>
+          </div>
         </div>
       </section>
     </main>
