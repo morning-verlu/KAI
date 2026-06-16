@@ -14,7 +14,7 @@ Before posting externally:
 ./scripts/repository-ci-smoke.sh
 ```
 
-2. Upload the GitHub social preview image in repository settings:
+2. Confirm the GitHub social preview image is uploaded in repository settings:
 
 ```text
 docs/assets/kaios-social-card.png

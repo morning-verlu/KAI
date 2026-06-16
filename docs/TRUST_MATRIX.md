@@ -21,7 +21,7 @@ Which Evidence OS claims are backed by checked-in artifacts or repeatable comman
 | Repository trust path is repeatable locally | build, tests, samples, tour, replay | `./scripts/repository-ci-smoke.sh` | Working locally |
 | Public GitHub Actions CI is ready to install | copyable workflow template | `examples/github-actions-repository-ci.yml` | Blocked by missing `workflow` token scope |
 | External contribution path is open | first external PR merged and acknowledged | `CONTRIBUTORS.md` | Working |
-| GitHub social preview is configured | custom OpenGraph image in repo settings | `docs/assets/kaios-social-card.png` | Manual upload still pending |
+| GitHub social preview is configured | custom OpenGraph image in repo settings | `docs/assets/kaios-social-card.png` | Working |
 
 ## Fast Verification
 
@@ -66,7 +66,7 @@ This also runs Gradle tests, installs the CLI, runs the Kotlin runtime API examp
 - Public GitHub Actions CI is not committed yet because the current GitHub token does not include `workflow` scope. The workflow template is ready in `examples/github-actions-repository-ci.yml`.
 - Docker is documented, but full Docker smoke has been slow in this environment because of external image/package downloads. Track it in issue #16.
 - Real model providers are intentionally outside the default trust path. The first-run path stays deterministic and local.
-- The GitHub Social Preview image still needs manual upload in repository settings.
+- Public GitHub Actions CI and Docker smoke are the remaining infrastructure trust gaps; the GitHub Social Preview image is uploaded and verified.
 
 ## Why This Matters
 
