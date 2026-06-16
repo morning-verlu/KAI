@@ -28,6 +28,7 @@ gh repo view morning-verlu/KAI --json description,usesCustomOpenGraphImage,starg
 
 4. Use the post that matches the channel:
 
+- No-install visual sample: https://morning-verlu.github.io/KAI/evidence-viewer.html
 - [Short social post](short-social.md)
 - [X / LinkedIn thread](x-linkedin-thread.md)
 - [Kotlin community post](kotlin-community.md)

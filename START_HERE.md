@@ -5,6 +5,7 @@ KAI OS is a local-first Evidence OS for AI agents in Kotlin.
 ![KAI OS evidence artifact map](docs/assets/kaios-evidence-map.png)
 
 Trying to decide whether to star, try, or ignore it? Use the [5-minute evaluator checklist](docs/EVALUATE.md).
+Want to see a no-install visual sample first? Open the [Evidence Viewer](https://morning-verlu.github.io/KAI/evidence-viewer.html).
 Want the shortest star/watch/fork rationale? Read [Why Star KAI OS](docs/WHY_STAR.md).
 Want claim-by-claim proof? Read the [KAI OS Trust Matrix](docs/TRUST_MATRIX.md).
 
@@ -63,6 +64,8 @@ kaios tour
 ### 4. Artifact-Only Review
 
 Use this path when you want to understand the product before running anything.
+
+Open the [Evidence Viewer](https://morning-verlu.github.io/KAI/evidence-viewer.html) for a visual no-install tour of the same checked-in evidence.
 
 Open [examples/evidence-sample](examples/evidence-sample/) and inspect:
 

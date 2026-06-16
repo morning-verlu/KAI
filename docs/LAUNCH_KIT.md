@@ -42,6 +42,7 @@ docker run --rm kaios:local tour
 
 - Repo: https://github.com/morning-verlu/KAI
 - Site: https://morning-verlu.github.io/KAI/
+- Evidence viewer: https://morning-verlu.github.io/KAI/evidence-viewer.html
 - Start here: https://github.com/morning-verlu/KAI/blob/main/START_HERE.md
 - Evaluate in 5 minutes: https://github.com/morning-verlu/KAI/blob/main/docs/EVALUATE.md
 - Codespaces: https://codespaces.new/morning-verlu/KAI?quickstart=1

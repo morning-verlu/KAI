@@ -13,6 +13,7 @@
 Website: [morning-verlu.github.io/KAI](https://morning-verlu.github.io/KAI/)
 
 New here? Start with [START_HERE.md](START_HERE.md) for the browser-only, local CLI, and artifact-only evaluation paths.
+Want to see the product without installing? Open the [Evidence Viewer](https://morning-verlu.github.io/KAI/evidence-viewer.html).
 Trying to decide whether KAI OS is worth a star or deeper trial? Use the [5-minute evaluator checklist](docs/EVALUATE.md).
 Want the shortest star/watch/fork rationale? Read [Why Star KAI OS](docs/WHY_STAR.md).
 Want claim-by-claim proof? Read the [KAI OS Trust Matrix](docs/TRUST_MATRIX.md).
@@ -48,6 +49,7 @@ docker run --rm kaios:local tour
 ```
 
 Want to inspect the evidence artifacts before installing? Open the checked-in [Evidence Sample](examples/evidence-sample/) with a review artifact, process trace, replayable capsule, and `kaios.review/v1` JSON. Feedback on the evidence path belongs in the [Evidence feedback issue template](https://github.com/morning-verlu/KAI/issues/new?template=evidence_feedback.yml).
+Prefer a visual no-install path? Open the [Evidence Viewer](https://morning-verlu.github.io/KAI/evidence-viewer.html).
 
 Want to run the review loop on a realistic Kotlin/JVM backend change? Try the [JVM Service Review example](examples/jvm-service-review/).
 

@@ -19,6 +19,8 @@ Can an agent run leave process evidence that I can inspect, replay, compare, and
 
 ## Path 1: Inspect Evidence Without Installing
 
+Open the visual [Evidence Viewer](https://morning-verlu.github.io/KAI/evidence-viewer.html) for process table, syscall ledger, capsule, replay, and baseline gate panels.
+
 Open the checked-in [Evidence Sample](../examples/evidence-sample/).
 
 Look for:
