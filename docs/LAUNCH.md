@@ -58,7 +58,7 @@ The tour is the clearest proof because it shows the full Evidence OS loop withou
 - [x] `kaios tour` works without API keys.
 - [x] README has a clear first screen.
 - [x] GitHub Pages has a direct launch landing page.
-- [x] Social preview image works for shared links.
+- [x] Social card asset is published for launch posts.
 - [x] Demo GIF shows the CLI flow.
 - [x] Release ZIP/TAR assets are attached.
 - [x] Roadmap reflects v0.3.1 Evidence OS, not stale milestones.
@@ -84,6 +84,14 @@ Stars should come from real interest, not automation or artificial engagement. T
 - visible issues for contributors
 
 See [LAUNCH_KIT.md](LAUNCH_KIT.md) for copy-paste launch posts, channel-specific drafts, reply guidance, and metrics to capture.
+
+## Contributor Intake
+
+Visible, scoped issues help turn early attention into participation. Keep these queues maintained during launch:
+
+- Good first issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22
+- Help wanted issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22
+- Feedback issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3Afeedback
 
 ## Manual GitHub Settings Tasks
 

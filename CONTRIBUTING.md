@@ -14,6 +14,22 @@ build/install/kaios-cli/bin/kaios quickstart --no-ci
 
 You need Java 17+. The Gradle wrapper is included.
 
+## First Contribution Path
+
+1. Run the no-key tour:
+
+```bash
+build/install/kaios-cli/bin/kaios tour
+```
+
+2. Pick a scoped issue:
+
+- Good first issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22
+- Help wanted issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22
+- Feedback issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3Afeedback
+
+3. Keep the PR small and include the command you used to verify it.
+
 ## Good First Areas
 
 - `kaios tour` examples that help new users understand KAI OS in under one minute.
