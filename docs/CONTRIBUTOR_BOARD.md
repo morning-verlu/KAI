@@ -41,7 +41,7 @@ Pick one narrow thing:
 - Try `kaios review` on a small JVM project and report missing context.
 - Improve one CLI output table so process evidence is easier to scan.
 - Add one regression test around scheduler priority, recovery, or syscall denial.
-- Validate Docker startup on a network that can download packages reliably.
+- Run `./scripts/docker-smoke.sh --preflight`, then validate full Docker startup on a network that can download layers reliably.
 - Share the [Evidence Viewer](https://morning-verlu.github.io/KAI/evidence-viewer.html) with one Kotlin/JVM developer and capture their first question.
 
 ## What Makes A Good PR

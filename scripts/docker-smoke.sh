@@ -5,11 +5,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 IMAGE="${KAIOS_DOCKER_IMAGE:-kaios:local}"
 WORKDIR="${KAIOS_DOCKER_SMOKE_DIR:-}"
 BUILD_IMAGE="${KAIOS_DOCKER_BUILD:-1}"
+PREFLIGHT_ONLY=0
 WORKDIR_IS_TEMP=0
 
 usage() {
   cat <<'USAGE'
-Usage: ./scripts/docker-smoke.sh [--image IMAGE] [--workdir DIR] [--no-build]
+Usage: ./scripts/docker-smoke.sh [--image IMAGE] [--workdir DIR] [--no-build] [--preflight]
 
 Builds and verifies the KAI OS Docker trial image by default.
 
@@ -17,6 +18,7 @@ Options:
   --image IMAGE   Image tag to build or reuse. Defaults to kaios:local.
   --workdir DIR   Host directory for generated smoke artifacts.
   --no-build      Reuse an existing image instead of running docker build.
+  --preflight     Run Dockerfile and base-image checks without building the image.
 
 Environment:
   KAIOS_DOCKER_IMAGE       Default image tag.
@@ -46,6 +48,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-build|--skip-build)
       BUILD_IMAGE=0
+      shift
+      ;;
+    --preflight|--check-only)
+      PREFLIGHT_ONLY=1
       shift
       ;;
     -h|--help)
@@ -95,6 +101,27 @@ run_step() {
 
 mkdir -p "$WORKDIR"
 WORKDIR="$(cd "$WORKDIR" && pwd)"
+
+if [[ "$PREFLIGHT_ONLY" == "1" ]]; then
+  BASE_IMAGE="$(awk 'toupper($1) == "FROM" { print $2; exit }' "$ROOT/Dockerfile")"
+  if [[ -z "$BASE_IMAGE" ]]; then
+    echo "Could not find a FROM image in Dockerfile." >&2
+    exit 1
+  fi
+
+  run_step "check Dockerfile" docker build --check "$ROOT"
+  run_step "inspect Docker base image manifest" docker manifest inspect "$BASE_IMAGE" > "$WORKDIR/base-manifest.json"
+  assert_contains "$WORKDIR/base-manifest.json" '"os": "linux"'
+  assert_contains "$WORKDIR/base-manifest.json" '"architecture": "amd64"'
+  assert_contains "$WORKDIR/base-manifest.json" '"architecture": "arm64"'
+
+  echo "kaios docker preflight ok"
+  echo "base_image: $BASE_IMAGE"
+  if [[ -n "${KAIOS_KEEP_SMOKE:-}" || -n "${KAIOS_DOCKER_SMOKE_DIR:-}" ]]; then
+    echo "smoke_workspace: $WORKDIR"
+  fi
+  exit 0
+fi
 
 if [[ "$BUILD_IMAGE" == "0" || "$BUILD_IMAGE" == "false" ]]; then
   run_step "reuse existing Docker image" docker image inspect "$IMAGE" >/dev/null

@@ -56,6 +56,12 @@ If the image already exists locally:
 ./scripts/docker-smoke.sh --no-build
 ```
 
+If Docker Hub downloads are slow, run the lightweight preflight first:
+
+```bash
+./scripts/docker-smoke.sh --preflight
+```
+
 ### 3. Local CLI
 
 Use this path when you want the installed `kaios` command on your machine.

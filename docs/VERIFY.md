@@ -64,6 +64,12 @@ When the image is already built, rerun the same smoke without another Docker bui
 ./scripts/docker-smoke.sh --no-build
 ```
 
+When Docker Hub layer downloads are slow, verify Dockerfile syntax and base-image architecture support without building:
+
+```bash
+./scripts/docker-smoke.sh --preflight
+```
+
 To run the same no-key checks intended for this repository's future public CI:
 
 ```bash

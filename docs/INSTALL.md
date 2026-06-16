@@ -149,6 +149,12 @@ To reuse an image that already exists locally:
 ./scripts/docker-smoke.sh --no-build
 ```
 
+If Docker Hub layer downloads are slow, run the lightweight preflight first:
+
+```bash
+./scripts/docker-smoke.sh --preflight
+```
+
 ## Download ZIP
 
 ```bash
