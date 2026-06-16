@@ -52,6 +52,12 @@ To validate the browser-only Codespaces path from a fresh checkout:
 ./scripts/codespaces-smoke.sh
 ```
 
+To validate the Docker path:
+
+```bash
+./scripts/docker-smoke.sh
+```
+
 To run the same no-key checks intended for this repository's future public CI:
 
 ```bash

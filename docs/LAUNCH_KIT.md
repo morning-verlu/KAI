@@ -31,6 +31,13 @@ No local Java setup fallback:
 https://codespaces.new/morning-verlu/KAI?quickstart=1
 ```
 
+Docker fallback:
+
+```bash
+docker build -t kaios:local .
+docker run --rm kaios:local tour
+```
+
 ## Links
 
 - Repo: https://github.com/morning-verlu/KAI
@@ -49,6 +56,7 @@ https://codespaces.new/morning-verlu/KAI?quickstart=1
 - Baseline gate example: https://github.com/morning-verlu/KAI/tree/main/examples/baseline-gate
 - Local evidence samples smoke: `./scripts/evidence-samples-smoke.sh`
 - Codespaces/browser smoke: `./scripts/codespaces-smoke.sh`
+- Docker smoke: `./scripts/docker-smoke.sh`
 - Trust contract: https://github.com/morning-verlu/KAI/blob/main/docs/TRUST.md
 
 ## Do Not Lead With

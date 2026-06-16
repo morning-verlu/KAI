@@ -34,6 +34,13 @@ Want one command to verify the browser path? In Codespaces, run:
 ./scripts/codespaces-smoke.sh
 ```
 
+Prefer Docker over local Java/Gradle?
+
+```bash
+docker build -t kaios:local .
+docker run --rm kaios:local tour
+```
+
 Want to inspect the evidence artifacts before installing? Open the checked-in [Evidence Sample](examples/evidence-sample/) with a review artifact, process trace, replayable capsule, and `kaios.review/v1` JSON. Feedback on the evidence path belongs in the [Evidence feedback issue template](https://github.com/morning-verlu/KAI/issues/new?template=evidence_feedback.yml).
 
 Want to run the review loop on a realistic Kotlin/JVM backend change? Try the [JVM Service Review example](examples/jvm-service-review/).
@@ -118,6 +125,12 @@ To verify the Codespaces/browser-only path from a fresh checkout:
 
 ```bash
 ./scripts/codespaces-smoke.sh
+```
+
+To verify the Docker path:
+
+```bash
+./scripts/docker-smoke.sh
 ```
 
 To run the same no-key checks intended for this repository's public CI:

@@ -1,0 +1,13 @@
+.git
+.gradle
+.kotlin
+.kaios
+artifacts
+build
+**/build
+out
+tmp
+.DS_Store
+.idea
+*.iml
+*.log

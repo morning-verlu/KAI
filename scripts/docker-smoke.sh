@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+IMAGE="${KAIOS_DOCKER_IMAGE:-kaios:local}"
+WORKDIR="${KAIOS_DOCKER_SMOKE_DIR:-$(mktemp -d "${TMPDIR:-/tmp}/kaios-docker-smoke.XXXXXX")}"
+
+if [[ -z "${KAIOS_KEEP_SMOKE:-}" && -z "${KAIOS_DOCKER_SMOKE_DIR:-}" ]]; then
+  trap 'rm -rf "$WORKDIR"' EXIT
+fi
+
+assert_file() {
+  local path="$1"
+  if [[ ! -f "$path" ]]; then
+    echo "Expected file '$path' to exist." >&2
+    exit 1
+  fi
+}
+
+assert_contains() {
+  local path="$1"
+  local expected="$2"
+  if ! grep -Fq -- "$expected" "$path"; then
+    echo "Expected '$path' to contain: $expected" >&2
+    exit 1
+  fi
+}
+
+run_step() {
+  local label="$1"
+  shift
+  echo "==> $label" >&2
+  "$@"
+}
+
+mkdir -p "$WORKDIR"
+
+run_step "build Docker image" docker build -t "$IMAGE" "$ROOT"
+
+run_step "print CLI version from image" docker run --rm "$IMAGE" --version > "$WORKDIR/version.out"
+assert_contains "$WORKDIR/version.out" "kaios"
+
+run_step "run no-key tour in Docker" docker run --rm -v "$WORKDIR:/work" "$IMAGE" tour --dir /work/tour --json > "$WORKDIR/tour.json"
+assert_contains "$WORKDIR/tour.json" "\"schema\": \"kaios.tour/v1\""
+
+TOUR_CAPSULE="$WORKDIR/tour/workspace/artifacts/change-review.capsule.json"
+assert_file "$TOUR_CAPSULE"
+
+run_step "validate generated Docker tour capsule" docker run --rm -v "$WORKDIR:/work" "$IMAGE" capsule --file /work/tour/workspace/artifacts/change-review.capsule.json --check > "$WORKDIR/tour-capsule.out"
+assert_contains "$WORKDIR/tour-capsule.out" "status: valid"
+
+run_step "replay generated Docker tour capsule offline" docker run --rm -v "$WORKDIR:/work" "$IMAGE" replay --file /work/tour/workspace/artifacts/change-review.capsule.json > "$WORKDIR/tour-replay.out"
+assert_contains "$WORKDIR/tour-replay.out" "status: valid"
+assert_contains "$WORKDIR/tour-replay.out" "deterministic: true"
+
+run_step "validate bundled Evidence Sample capsule" docker run --rm "$IMAGE" capsule --file examples/evidence-sample/change-review.capsule.json --check > "$WORKDIR/sample-capsule.out"
+assert_contains "$WORKDIR/sample-capsule.out" "status: valid"
+
+echo "kaios docker smoke ok"
+echo "image: $IMAGE"
+if [[ -n "${KAIOS_KEEP_SMOKE:-}" || -n "${KAIOS_DOCKER_SMOKE_DIR:-}" ]]; then
+  echo "smoke_workspace: $WORKDIR"
+fi

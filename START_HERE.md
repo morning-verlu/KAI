@@ -29,7 +29,22 @@ Use this path when you do not want to install Java, Gradle, or the release ZIP l
 
 The smoke check builds the CLI, runs the no-key tour, validates a generated capsule, replays it offline, and checks the checked-in Evidence Sample.
 
-### 2. Local CLI
+### 2. Docker
+
+Use this path when you want to try KAI OS without installing Java or Gradle locally.
+
+```bash
+docker build -t kaios:local .
+docker run --rm kaios:local tour
+```
+
+To verify the Docker path end to end:
+
+```bash
+./scripts/docker-smoke.sh
+```
+
+### 3. Local CLI
 
 Use this path when you want the installed `kaios` command on your machine.
 
@@ -41,7 +56,7 @@ kaios tour
 
 `kaios tour` creates a disposable Git workspace, runs the Evidence OS loop, and prints the artifact paths to inspect next.
 
-### 3. Artifact-Only Review
+### 4. Artifact-Only Review
 
 Use this path when you want to understand the product before running anything.
 

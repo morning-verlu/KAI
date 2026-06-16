@@ -104,7 +104,7 @@ Use Codespaces when you want to try KAI OS without installing Java or Gradle loc
 The dev container installs the CLI distribution with:
 
 ```bash
-./gradlew :kaios-cli:installDist --no-daemon
+./gradlew installDist --no-daemon
 ```
 
 Then run:
@@ -114,6 +114,34 @@ build/install/kaios-cli/bin/kaios tour
 ```
 
 See [CODESPACES.md](CODESPACES.md) for the full no-local-install path.
+
+## Docker
+
+Use Docker when you want to try KAI OS without installing Java or Gradle on the host:
+
+```bash
+docker build -t kaios:local .
+docker run --rm kaios:local tour
+```
+
+The Dockerfile installs the published `v0.3.1` release ZIP by default. Override the release source when testing another published version:
+
+```bash
+docker build --build-arg KAIOS_VERSION=0.3.1 -t kaios:local .
+```
+
+To keep generated artifacts on the host:
+
+```bash
+mkdir -p artifacts/docker-tour
+docker run --rm -v "$PWD/artifacts/docker-tour:/work" kaios:local tour --dir /work/tour
+```
+
+Verify the Docker path end to end:
+
+```bash
+./scripts/docker-smoke.sh
+```
 
 ## Download ZIP
 
