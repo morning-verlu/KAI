@@ -30,6 +30,30 @@ build/install/kaios-cli/bin/kaios tour
 
 3. Keep the PR small and include the command you used to verify it.
 
+## External Contributor Flow
+
+You do not need repository write access or an assignee slot to contribute.
+
+If GitHub will not assign the issue to you yet, comment that you are taking it and open a pull request from your fork:
+
+```bash
+git clone https://github.com/<your-user>/KAI.git
+cd KAI
+git remote add upstream https://github.com/morning-verlu/KAI.git
+git checkout -b docs/short-description
+```
+
+Before opening the PR, run the smallest relevant check:
+
+```bash
+./scripts/codespaces-smoke.sh
+./scripts/evidence-samples-smoke.sh
+./scripts/repository-ci-smoke.sh
+./gradlew test installDist
+```
+
+Use the narrowest command that proves your change. For docs-only changes, `git diff --check` plus the relevant smoke command is usually enough.
+
 ## Good First Areas
 
 - `kaios tour` examples that help new users understand KAI OS in under one minute.
