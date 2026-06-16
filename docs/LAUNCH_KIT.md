@@ -1,6 +1,6 @@
 # Outbound Launch Kit
 
-Use this page when announcing KAI OS. The launch goal is real feedback and real stars from Kotlin/JVM developers, OSS maintainers, and agent infrastructure builders.
+Use this page when announcing KAI OS. The launch goal is real feedback and real stars from Kotlin/JVM developers, OSS maintainers, and agent infrastructure builders. For the shortest next-action queue, use [launch-posts/post-now.md](launch-posts/post-now.md).
 
 ## Canonical Pitch
 

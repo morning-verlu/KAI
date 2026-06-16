@@ -40,6 +40,7 @@ Capture a metrics snapshot before posting and again at +2h, +24h, and +72h:
 
 4. Use the post that matches the channel:
 
+- [Post now](post-now.md)
 - [First external wave](first-wave.md)
 - [Evidence Viewer-first posts](evidence-viewer-first.md)
 - [Short social post](short-social.md)
