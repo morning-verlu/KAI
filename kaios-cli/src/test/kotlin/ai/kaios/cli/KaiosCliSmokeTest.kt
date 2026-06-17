@@ -54,6 +54,9 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("CI needs a no-key Agent Gate"))
         assertTrue(text.contains("PID/state/token/context/syscall observability"))
         assertTrue(text.contains("portable evidence"))
+        assertTrue(text.contains("Check the proof before installing:"))
+        assertTrue(text.contains("https://morning-verlu.github.io/KAI/proof-pack.html"))
+        assertTrue(text.contains("local check: ./scripts/evidence-samples-smoke.sh"))
         assertTrue(text.contains("Three-step product path:"))
         assertTrue(text.contains("kaios review"))
         assertTrue(text.contains("Need the next workspace-aware move?"))
@@ -84,6 +87,9 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("CI needs a no-key Agent Gate"))
         assertTrue(text.contains("PID/state/token/context/syscall observability"))
         assertTrue(text.contains("portable evidence"))
+        assertTrue(text.contains("Check the proof before installing:"))
+        assertTrue(text.contains("https://morning-verlu.github.io/KAI/proof-pack.html"))
+        assertTrue(text.contains("local check: ./scripts/evidence-samples-smoke.sh"))
         assertTrue(text.contains("Three-step product path:"))
         assertTrue(text.contains("kaios review"))
         assertTrue(text.contains("Need the next workspace-aware move?"))
@@ -105,6 +111,7 @@ class KaiosCliSmokeTest {
         assertTrue(text.contains("kaios start [--no-ci]"))
         assertTrue(text.contains("kaios status"))
         assertTrue(text.contains("kaios ls"))
+        assertTrue(text.contains("kaios proof"))
     }
 
     @Test

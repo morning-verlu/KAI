@@ -4590,6 +4590,10 @@ class KaiosCli(
               - A multi-agent run needs PID/state/token/context/syscall observability.
               - A run needs portable evidence for review, replay, support, or baseline drift.
 
+            Check the proof before installing:
+              https://morning-verlu.github.io/KAI/proof-pack.html
+              local check: ./scripts/evidence-samples-smoke.sh
+
             Three-step product path:
               1. kaios quickstart --dry-run
               2. kaios quickstart
@@ -4658,6 +4662,7 @@ class KaiosCli(
                 kaios ls               -> kaios runs
                 kaios proc             -> kaios ps
                 kaios audit            -> kaios evidence
+                kaios proof            -> kaios evidence
             """.trimIndent(),
         )
     }
