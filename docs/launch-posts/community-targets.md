@@ -3,6 +3,7 @@
 Status: operating notes, not proof that anything has been posted.
 
 Use this after `post-now.md` when choosing where to publish the next KAI OS update. The current launch diagnosis is still distribution failure, so the goal is to reach Kotlin/JVM and infrastructure audiences without posting the same copy everywhere.
+After any post goes live, use [follow-up-playbook.md](follow-up-playbook.md) to decide whether the next action is replying, switching channel, or improving conversion.
 
 ## Priority Order
 
@@ -53,7 +54,7 @@ After any post:
 
 1. Save the URL in issue #7.
 2. Run `./scripts/launch-metrics.sh`.
-3. Check again at roughly +2h and +24h.
+3. Use [follow-up-playbook.md](follow-up-playbook.md) at roughly +2h, +24h, and +72h.
 4. If GitHub views stay at 0, switch channel before changing the project page again.
 5. If views rise but stars stay flat, inspect the README first screen and Evidence Viewer conversion path.
 

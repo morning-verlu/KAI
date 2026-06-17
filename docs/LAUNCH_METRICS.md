@@ -23,6 +23,9 @@ https://morning-verlu.github.io/KAI/evidence-viewer.html?utm_source=x&utm_medium
 
 The Evidence Viewer links back to GitHub with `utm_source=evidence_viewer`, so a later traffic readout can distinguish direct GitHub clicks from viewer-assisted clicks when the hosting/referrer surface exposes enough detail.
 
+For the response checklist after a post goes live, use
+[launch-posts/follow-up-playbook.md](launch-posts/follow-up-playbook.md).
+
 If measuring an X post, pass the visible analytics from the browser:
 
 ```bash

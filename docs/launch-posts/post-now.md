@@ -3,6 +3,7 @@
 Status: draft, not posted.
 
 Use this page when you want the next manual launch action without reading every launch draft. For channel choice and source notes, see [community-targets.md](community-targets.md).
+After publishing, use [follow-up-playbook.md](follow-up-playbook.md) for replies, metric checks, and channel-switch decisions.
 
 Current diagnosis:
 
@@ -83,6 +84,8 @@ After posting, record the URL in issue #7 and run:
 ```bash
 ./scripts/launch-metrics.sh
 ```
+
+Then follow [follow-up-playbook.md](follow-up-playbook.md) at +2h, +24h, and +72h.
 
 ## 2. Show HN
 

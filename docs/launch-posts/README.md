@@ -38,6 +38,10 @@ Capture a metrics snapshot before posting and again at +2h, +24h, and +72h:
 ./scripts/launch-metrics.sh
 ```
 
+Use [follow-up-playbook.md](follow-up-playbook.md) after posting so replies,
+metric checks, and channel switches are driven by observed signals instead of
+guesswork.
+
 4. Use the post that matches the channel:
 
 - [Post now](post-now.md)
