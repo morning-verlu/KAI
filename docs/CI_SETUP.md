@@ -39,6 +39,9 @@ This source repository is ready for GitHub Actions. If workflow-file pushes are 
 gh auth refresh -h github.com -s workflow
 ```
 
+For the exact maintainer procedure, verification commands, and rollback path,
+see [CI_ENABLE_RUNBOOK.md](CI_ENABLE_RUNBOOK.md).
+
 Until that scope is available, the repository CI path can still be verified locally:
 
 ```bash

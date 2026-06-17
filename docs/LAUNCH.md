@@ -86,6 +86,8 @@ Stars should come from real interest, not automation or artificial engagement. T
 See [LAUNCH_KIT.md](LAUNCH_KIT.md) for copy-paste launch posts, channel-specific drafts, reply guidance, and metrics to capture. Use [launch-posts/post-now.md](launch-posts/post-now.md) for the next manual post queue and [launch-posts/community-targets.md](launch-posts/community-targets.md) for channel priority. Use [LAUNCH_METRICS.md](LAUNCH_METRICS.md) and `./scripts/launch-metrics.sh` for the repeatable +2h/+24h/+72h readout. Standalone drafts live in [launch-posts](launch-posts/).
 Use the [Contributor Board](CONTRIBUTOR_BOARD.md) when someone asks how to help without a large PR.
 Latest saved operating snapshot: [2026-06-17](launch-snapshots/2026-06-17.md).
+Public repository CI is prepared but still blocked on GitHub `workflow` token
+scope; the maintainer procedure is tracked in [CI_ENABLE_RUNBOOK.md](CI_ENABLE_RUNBOOK.md).
 
 ## First External Wave
 
@@ -108,6 +110,7 @@ Visible, scoped issues help turn early attention into participation. Keep these 
 - Help wanted issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22
 - Feedback issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3Afeedback
 - Kotlin/JVM API feedback: https://github.com/morning-verlu/KAI/issues/new?template=kotlin_api_feedback.yml
+- Public CI enablement runbook: [CI_ENABLE_RUNBOOK.md](CI_ENABLE_RUNBOOK.md)
 
 ## Manual GitHub Settings Tasks
 
