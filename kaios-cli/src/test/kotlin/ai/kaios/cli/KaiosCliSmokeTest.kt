@@ -184,6 +184,30 @@ class KaiosCliSmokeTest {
     }
 
     @Test
+    fun `tour text output reads like an evidence walkthrough`() {
+        val workspace = Files.createTempDirectory("kaios-cli-tour-text-parent")
+        val tourDir = workspace.resolve("tour")
+        val cli = cliFor(workspace)
+        val out = ByteArrayOutputStream()
+
+        val code = cli.run(arrayOf("tour", "--dir", tourDir.toString()), PrintStream(out), PrintStream(ByteArrayOutputStream()))
+        val text = out.toString()
+
+        assertEquals(0, code)
+        assertTrue(text.contains("KAI OS Evidence OS tour"))
+        assertTrue(text.contains("what happened:"))
+        assertTrue(text.contains("product proof:"))
+        assertTrue(text.contains("Agent = Process"))
+        assertTrue(text.contains("Tool  = Syscall"))
+        assertTrue(text.contains("Run   = Evidence"))
+        assertTrue(text.contains("proof pack:"))
+        assertTrue(text.contains("https://morning-verlu.github.io/KAI/proof-pack.html"))
+        assertTrue(text.contains("commands executed:"))
+        assertTrue(text.contains("artifacts:"))
+        assertTrue(text.contains("next:"))
+    }
+
+    @Test
     fun `quickstart help documents local only mode`() {
         val cli = cliFor(Files.createTempDirectory("kaios-cli-help-quickstart"))
         val out = ByteArrayOutputStream()
