@@ -42,6 +42,59 @@ https://github.com/morning-verlu/KAI/discussions/17
 
 Use this first for Kotlin Slack, Kotlin forum, JVM backend groups, or a Kotlin-focused Discord.
 
+### 30-Second Version
+
+Use this when the channel favors short posts:
+
+```text
+I am building KAI OS, a Kotlin/JVM Evidence OS for AI agent runs.
+
+The runtime model is:
+
+Agent = Process
+Workflow = Scheduler
+Tool = Syscall
+Run = Evidence
+
+The goal is not another Kotlin LangChain clone. It is local runtime evidence:
+process traces, syscall ledgers, replayable capsules, and CI baseline gates.
+
+No install needed to inspect the product surface:
+https://morning-verlu.github.io/KAI/evidence-viewer.html?utm_source=kotlin_community&utm_medium=community&utm_campaign=post_now
+
+Kotlin/JVM evaluation path:
+https://github.com/morning-verlu/KAI/blob/main/docs/KOTLIN_JVM_EVALUATION.md
+
+Focused feedback discussion:
+https://github.com/morning-verlu/KAI/discussions/17
+
+I would love feedback on whether the API shape feels idiomatic Kotlin and whether replayable capsules would help JVM maintainers trust agent reviews.
+```
+
+First reply if the post gets any response:
+
+```text
+The shortest proof is the checked-in Evidence Viewer. It shows a real run as
+process table + syscall ledger + replayable capsule + baseline gate:
+https://morning-verlu.github.io/KAI/evidence-viewer.html
+```
+
+Record immediately in #7:
+
+```text
+Manual post published:
+
+- Channel: Kotlin/JVM community
+- URL:
+- UTM campaign: post_now
+- Baseline metrics:
+- Next check: +2h
+```
+
+### Longer Version
+
+Use this when the channel allows more context:
+
 ```text
 I am building KAI OS, a Kotlin/JVM runtime for AI agent evidence.
 
