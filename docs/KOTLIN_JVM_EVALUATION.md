@@ -110,6 +110,12 @@ Open feedback here:
 https://github.com/morning-verlu/KAI/issues/new?template=kotlin_api_feedback.yml
 ```
 
+Join the focused GitHub Discussion:
+
+```text
+https://github.com/morning-verlu/KAI/discussions/17
+```
+
 ## Small Ways To Help
 
 If the direction is useful:

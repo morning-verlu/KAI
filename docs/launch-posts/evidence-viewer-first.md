@@ -146,6 +146,9 @@ export PATH="$HOME/.kaios/bin:$PATH"
 kaios tour
 
 I would especially like feedback on the Kotlin API shape, the process/scheduler/tool model, and whether local evidence capsules are useful for JVM backend teams.
+
+Focused feedback discussion:
+https://github.com/morning-verlu/KAI/discussions/17
 ```
 
 ## First Reply

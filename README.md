@@ -18,6 +18,7 @@ Trying to decide whether KAI OS is worth a star or deeper trial? Use the [5-minu
 Want the shortest star/watch/fork rationale? Read [Why Star KAI OS](docs/WHY_STAR.md).
 Want claim-by-claim proof? Read the [KAI OS Trust Matrix](docs/TRUST_MATRIX.md).
 Kotlin/JVM developer? Use the [Kotlin/JVM evaluation path](docs/KOTLIN_JVM_EVALUATION.md).
+Kotlin/JVM discussion? Join [Feedback wanted: Kotlin/JVM runtime API and Evidence OS model](https://github.com/morning-verlu/KAI/discussions/17).
 Kotlin/JVM feedback? Open the [Kotlin API feedback form](https://github.com/morning-verlu/KAI/issues/new?template=kotlin_api_feedback.yml).
 Community signal: the first external PR is merged and covered by `./scripts/repository-ci-smoke.sh`; see [Contributors](CONTRIBUTORS.md).
 Want to help in 5-30 minutes? Pick a concrete action from the [Contributor Board](docs/CONTRIBUTOR_BOARD.md).

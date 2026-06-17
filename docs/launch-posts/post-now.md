@@ -32,6 +32,9 @@ https://github.com/morning-verlu/KAI/blob/main/docs/CONTRIBUTOR_BOARD.md
 
 Kotlin/JVM evaluation path:
 https://github.com/morning-verlu/KAI/blob/main/docs/KOTLIN_JVM_EVALUATION.md
+
+Kotlin/JVM feedback discussion:
+https://github.com/morning-verlu/KAI/discussions/17
 ```
 
 ## 1. Kotlin/JVM Community
@@ -61,6 +64,9 @@ https://github.com/morning-verlu/KAI/blob/main/docs/KOTLIN_JVM_EVALUATION.md
 
 Kotlin/JVM feedback form:
 https://github.com/morning-verlu/KAI/issues/new?template=kotlin_api_feedback.yml
+
+Focused GitHub Discussion:
+https://github.com/morning-verlu/KAI/discussions/17
 
 Contributor board:
 https://github.com/morning-verlu/KAI/blob/main/docs/CONTRIBUTOR_BOARD.md

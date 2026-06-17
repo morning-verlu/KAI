@@ -38,6 +38,7 @@ I would especially like feedback on the Kotlin API shape, the process/scheduler/
 
 Repo: https://github.com/morning-verlu/KAI
 Kotlin/JVM evaluation path: https://github.com/morning-verlu/KAI/blob/main/docs/KOTLIN_JVM_EVALUATION.md
+Focused feedback discussion: https://github.com/morning-verlu/KAI/discussions/17
 Kotlin API: https://github.com/morning-verlu/KAI/blob/main/docs/KOTLIN_API.md
 Start here: https://github.com/morning-verlu/KAI/blob/main/START_HERE.md
 ```

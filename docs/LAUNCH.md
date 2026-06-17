@@ -110,6 +110,7 @@ Visible, scoped issues help turn early attention into participation. Keep these 
 - Help wanted issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22
 - Feedback issues: https://github.com/morning-verlu/KAI/issues?q=is%3Aissue%20state%3Aopen%20label%3Afeedback
 - Kotlin/JVM API feedback: https://github.com/morning-verlu/KAI/issues/new?template=kotlin_api_feedback.yml
+- Kotlin/JVM feedback discussion: https://github.com/morning-verlu/KAI/discussions/17
 - Public CI enablement runbook: [CI_ENABLE_RUNBOOK.md](CI_ENABLE_RUNBOOK.md)
 
 ## Manual GitHub Settings Tasks
