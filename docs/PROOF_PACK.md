@@ -99,6 +99,26 @@ KAI OS does not prove that an agent answer is correct. It proves something narro
 
 That is the product boundary: portable agent-run evidence for developers, reviewers, maintainers, and CI.
 
+## Evidence Glossary
+
+These are the main artifacts KAI OS produces. If you have ever looked at a CI log and wished it told you *what actually happened* instead of just pass/fail, this is the vocabulary you need.
+
+**Review artifact** — The Markdown file you get after `kaios review`. It is a human-readable summary of what the agent did: which files it looked at, what processes ran, and what it concluded. Think of it as the agent's pull request comment, written for people who do not want to open JSON.
+
+**Process trace** — A structured JSON record (`kaios.process-trace/v1`) of every process that ran during a workflow. It tracks PIDs, state transitions, token counts, context size, syscall totals, cost, and lifecycle events. If review artifacts are the summary, the process trace is the detailed receipt.
+
+**Syscall ledger** — The audit log inside a process trace that records every tool call an agent made. Each entry says which tool was requested, whether the runtime allowed or denied it, how long it took, and what it cost. It is called a "syscall" ledger because KAI OS treats tool calls the way an operating system treats system calls — as a permission boundary.
+
+**Replay capsule** — A portable JSON package (`kaios.run-capsule/v1`) that bundles the run snapshot, the process trace, provenance hashes, and replay commands into one file. You can copy it to a different machine and replay it offline without an API key. It is proof that a run happened, and proof that the evidence has not been tampered with.
+
+**Baseline diff** — The output of `kaios diff` when you compare two replay capsules. It ignores noise like timestamps and run ids, and focuses on whether the stable runtime behavior actually changed — things like process paths, token counts, syscall counts, and final output hashes. CI uses `--check` to fail the build when the diff is not empty.
+
+**Evidence summary** — The compact Markdown report from `kaios evidence --summary`. It is designed to be pasted into a PR description or a CI step summary. It contains a verdict, a list of changed runtime behaviors (if any), a "fix first" section, and a process table. One glance tells you if the run is clean.
+
+**Recovery dry-run** — The output of `kaios recover --dry-run`. When an agent process crashes during a run, the runtime records the failure. The dry-run does not restart anything — it just explains which processes crashed, what recovery evidence exists, and what commands you would run to actually recover. It is read-only on purpose, so you can inspect before you act.
+
+For the full JSON schemas behind these artifacts, see [JSON Contracts](JSON_CONTRACTS.md).
+
 ## Honest Gaps
 
 - Public GitHub Actions CI is not committed yet because the current token lacks the `workflow` scope. A copyable workflow template exists at `examples/github-actions-repository-ci.yml`.

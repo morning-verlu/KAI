@@ -98,6 +98,22 @@ KAI OS is probably not the right fit if you only need:
 - a hosted agent product.
 - a mature provider marketplace today.
 
+## Quick Glossary
+
+New to KAI OS? Here is a short cheat sheet for the evidence files you will run into:
+
+| Term | What it is |
+| --- | --- |
+| Review artifact | Markdown summary of an agent run — the human-readable version of the trace |
+| Process trace | JSON record of processes, syscalls, tokens, costs, and lifecycle events |
+| Syscall ledger | Audit log of every tool call, with allowed/denied status and cost |
+| Replay capsule | Portable package that bundles a run so you can replay it offline |
+| Baseline diff | Comparison of two capsules, ignoring timestamps and focusing on real changes |
+| Evidence summary | One-page PR-friendly report with verdict, changes, and next steps |
+| Recovery dry-run | Read-only inspection of crashed processes and available recovery paths |
+
+For longer explanations and links to the JSON schemas, see the [Evidence Glossary](PROOF_PACK.md#evidence-glossary).
+
 ## One-Minute Star Test
 
 If the following sentence matches a problem you have, the repo is worth starring and watching:
