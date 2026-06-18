@@ -29,6 +29,23 @@ What to look for:
 - `syscalls[]`: every tool call is recorded as an audit entry.
 - `cost.estimatedCostMicros == 0`: the deterministic no-key provider has no money cost.
 
+## Glossary
+
+If the filenames in this folder do not mean much to you yet, here is a quick rundown:
+
+- **Review artifact** (`change-review.md`) — A Markdown write-up of the agent run. It tells you which files were reviewed, what processes ran, and what the agent concluded. You can read it like a normal code-review comment.
+- **Process trace** (`change-review.trace.json`) — The detailed record behind the review. Every process, every tool call, every token count and cost entry is captured here so you can dig into the specifics when the Markdown summary is not enough.
+- **Replay capsule** (`change-review.capsule.json`) — A self-contained package you can carry to another machine and replay offline, no API key needed. It bundles the snapshot, the trace, and provenance hashes together so nothing gets lost in transit.
+- **Review result** (`review-result.json`) — The stable CLI/CI contract. Automation tools read this instead of parsing Markdown or terminal output.
+
+Two other terms you will see in the wider docs:
+
+- **Baseline diff** — When you compare two capsules with `kaios diff`, the output highlights real behavior changes and ignores noise like timestamps. CI can use `--check` to block a merge when something actually changed.
+- **Evidence summary** — A compact, PR-friendly report from `kaios evidence --summary`. One look tells you whether the run is clean.
+- **Recovery dry-run** — A read-only report from `kaios recover --dry-run` that lists crashed processes and what you could do about them, without touching anything.
+
+For the full glossary with schema links, see [Evidence Glossary](../../docs/PROOF_PACK.md#evidence-glossary).
+
 After installing KAI OS, validate the capsule from this folder:
 
 ```bash
