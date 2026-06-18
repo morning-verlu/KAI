@@ -1,15 +1,49 @@
 # Baseline Gate Evidence Sample
 
-This sample shows how KAI OS turns two valid run capsules into a CI-style baseline gate.
+This sample shows how `kaios diff --check` catches changes in agent runtime behavior — and why that exit code `1` is a feature, not a bug.
 
-It uses the same tiny billing-service scenario as [JVM Service Review](../jvm-service-review/):
+## What Is A Baseline Gate?
 
-- `baseline.capsule.json`: the known-good run before the payment-plan change.
-- `current-different.capsule.json`: a later run after the payment-plan change.
-- `expected/diff.stable.json`: a normalized, path-light view of the stable runtime differences.
-- `expected/evidence-summary.md`: the PR/CI-style Markdown shape readers should expect.
+A baseline gate answers one question: **did the agent's runtime behavior change since last time?**
 
-The current capsule is checked in only so this example can be replayed offline. In a real project, commit the baseline capsule and let CI generate the current capsule.
+Here is how it works, step by step:
+
+1. You run your agent workflow and save the output as a **baseline capsule**. This is your known-good snapshot — the run you reviewed and were happy with.
+2. Later, something in your project changes. Maybe a source file was updated, maybe a new test was added. You run the workflow again and get a **current capsule**.
+3. `kaios diff` compares the two. It does not care about timestamps, run ids, or how long each step took. It looks at what actually matters: which processes ran, how many tokens they used, what syscalls happened, and whether the final output changed.
+4. If the two capsules match on those stable fields, `kaios diff --check` exits `0`. Nothing interesting happened.
+5. If something changed, it exits `1`. That is on purpose — it means "hey, the agent behaved differently this time, someone should take a look."
+
+The important thing to understand: **exit `1` is not a test failure.** Both capsules are perfectly valid. Both replay fine. The gate is just telling you that stable runtime behavior shifted, and you should review the diff before merging.
+
+## What Is In This Folder
+
+This sample uses a small billing-service scenario (same one as [JVM Service Review](../jvm-service-review/)):
+
+| File | What it is |
+| --- | --- |
+| `capsules/baseline.capsule.json` | The known-good run, captured before a payment-plan code change |
+| `capsules/current-different.capsule.json` | A later run after the code change — valid, but different |
+| `expected/diff.stable.json` | The normalized diff output showing what actually changed |
+| `expected/evidence-summary.md` | The PR-friendly Markdown summary a reviewer would see |
+| `ci/github-actions-baseline-gate.yml` | A ready-to-copy GitHub Actions workflow for your own repo |
+
+The current capsule is checked in so you can try this offline. In a real project, you would only commit the baseline and let CI generate the current capsule on each push.
+
+## Shortest Way To See It
+
+If you just want to see the diff without reading any JSON, run this one command after building KAI OS:
+
+```bash
+./gradlew installDist
+
+build/install/kaios-cli/bin/kaios diff \
+  examples/baseline-gate/capsules/baseline.capsule.json \
+  examples/baseline-gate/capsules/current-different.capsule.json \
+  --check
+```
+
+It will exit `1` and print the differences. That is the whole point — the two runs are both valid, but the runtime behavior changed because the billing service code changed between them.
 
 ## Try The Gate
 
@@ -74,3 +108,11 @@ In a real repository:
 - Treat exit `1` as a valid evidence difference that should block until reviewed.
 
 Before committing any baseline capsule, inspect it for secrets. KAI OS respects `.kaiosignore`, but a capsule is still an artifact produced from local run state.
+
+## Changed Behavior Is Not A Bug
+
+If you are coming from a normal test suite, exit `1` probably feels wrong. In most tools, `1` means something broke.
+
+In a baseline gate, it means something *changed*. The old run and the new run are both valid. They both replay. They just disagree on things like token counts, context size, or final output — and that is exactly the kind of drift you want to catch before it reaches production.
+
+When you see exit `1` from `kaios diff --check`, read the diff output. If the changes make sense (you added a file, you changed a test, you updated a dependency), update the baseline. If they do not make sense, you just caught a regression that a normal test would have missed.
