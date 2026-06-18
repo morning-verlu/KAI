@@ -73,6 +73,15 @@ For the full repository trust path:
 
 That also builds and tests the project, installs the CLI, runs the Kotlin runtime API example, runs `kaios tour`, validates the generated tour capsule, and replays it offline.
 
+## Community Trust Signal
+
+KAI OS has started receiving small external contributions. [PR #24](https://github.com/morning-verlu/KAI/pull/24) added the Evidence Glossary across this Proof Pack, the evaluator path, and the checked-in evidence sample. It was verified with:
+
+```bash
+git diff --check
+./scripts/evidence-samples-smoke.sh
+```
+
 ## Checked-In Artifacts
 
 | Artifact | Why it matters |
@@ -118,6 +127,38 @@ These are the main artifacts KAI OS produces. If you have ever looked at a CI lo
 **Recovery dry-run** — The output of `kaios recover --dry-run`. When an agent process crashes during a run, the runtime records the failure. The dry-run does not restart anything — it just explains which processes crashed, what recovery evidence exists, and what commands you would run to actually recover. It is read-only on purpose, so you can inspect before you act.
 
 For the full JSON schemas behind these artifacts, see [JSON Contracts](JSON_CONTRACTS.md).
+
+## FAQ For Skeptical Developers
+
+### How is KAI OS different from Koog or LangChain4j?
+
+Koog and LangChain4j are better fits when you want application-level agent and provider integration. KAI OS is focused on the evidence layer around a run: process traces, syscall ledgers, replay capsules, recovery evidence, and CI baseline gates.
+
+The goal is not "another Kotlin agent framework." The goal is portable runtime proof that can be inspected after the agent answer is gone.
+
+### Is the mock provider just a demo trick?
+
+No. The deterministic mock provider is part of the trust path. It makes the first run, examples, capsules, and CI checks reproducible without an API key, network access, or provider billing.
+
+Real providers can plug into the same runtime boundary, but the Evidence OS claim should be checkable before any secret or hosted model is configured.
+
+### What does offline replay actually replay?
+
+Offline replay checks the saved run evidence: snapshot data, process trace shape, artifact contracts, replay metadata, and stable behavior comparisons. It does not re-call a hosted model or pretend to reconstruct nondeterministic provider internals.
+
+That boundary is intentional. KAI OS proves what the runtime recorded and whether the portable capsule remains valid.
+
+### Does KAI OS prove the agent answer is correct?
+
+No. KAI OS proves runtime evidence, not model truth. It can show what processes ran, which tools were allowed or denied, what changed from a baseline, and what can be replayed offline.
+
+Answer correctness still belongs to tests, reviewers, domain checks, and stronger model/tool design.
+
+### Why Kotlin/JVM?
+
+JVM teams already run a lot of backend, CI, build, and internal automation infrastructure. Kotlin gives KAI OS a typed API, DSL ergonomics, coroutine-friendly scheduling, and a path toward Kotlin Multiplatform later.
+
+The bet is that agent evidence should feel native to JVM teams instead of bolted on from a Python-only stack.
 
 ## Honest Gaps
 

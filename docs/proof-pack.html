@@ -456,6 +456,92 @@ kaios tour</code></pre>
         </div>
       </section>
 
+      <section aria-labelledby="community-trust">
+        <div class="section-head">
+          <h2 id="community-trust">Community trust signal.</h2>
+          <p>Small external contributions are now part of the product proof, not a separate vanity metric.</p>
+        </div>
+        <div class="callout">
+          <p><a href="https://github.com/morning-verlu/KAI/pull/24">PR #24</a> added the Evidence Glossary across the Proof Pack, evaluator path, and checked-in evidence sample. It was verified with <code>git diff --check</code> and <code>./scripts/evidence-samples-smoke.sh</code>.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="evidence-glossary">
+        <div class="section-head">
+          <h2 id="evidence-glossary">Evidence glossary.</h2>
+          <p>The main artifacts KAI OS produces, explained without requiring the JSON schema docs first.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Term</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Review artifact</td>
+                <td>A Markdown summary from <code>kaios review</code>; the human-readable version of the run evidence.</td>
+              </tr>
+              <tr>
+                <td>Process trace</td>
+                <td>A structured JSON record of processes, state transitions, token counts, syscalls, cost, and lifecycle events.</td>
+              </tr>
+              <tr>
+                <td>Syscall ledger</td>
+                <td>The audit log for tool calls, including allowed or denied status, duration, redacted args, and cost.</td>
+              </tr>
+              <tr>
+                <td>Replay capsule</td>
+                <td>A portable package that bundles snapshot, trace, provenance hashes, and replay commands for offline checks.</td>
+              </tr>
+              <tr>
+                <td>Baseline diff</td>
+                <td>A stable comparison of two capsules that ignores timestamp noise and focuses on runtime behavior changes.</td>
+              </tr>
+              <tr>
+                <td>Evidence summary</td>
+                <td>A compact Markdown report for PRs and CI summaries: verdict, changed behavior, fix-first notes, and process table.</td>
+              </tr>
+              <tr>
+                <td>Recovery dry-run</td>
+                <td>A read-only report that explains crashed processes and recovery evidence without restarting anything.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="faq">
+        <div class="section-head">
+          <h2 id="faq">FAQ for skeptical developers.</h2>
+          <p>Short answers to the first questions people usually ask before trusting a new agent runtime category.</p>
+        </div>
+        <div class="panel-grid">
+          <article class="panel">
+            <h3>How is this different from Koog or LangChain4j?</h3>
+            <p>Koog and LangChain4j are better fits for application-level agent and provider integration. KAI OS focuses on the evidence layer around a run: traces, ledgers, capsules, recovery evidence, and CI gates.</p>
+          </article>
+          <article class="panel">
+            <h3>Is the mock provider just a demo trick?</h3>
+            <p>No. The deterministic mock provider makes first runs, examples, capsules, and CI checks reproducible without API keys, network access, or provider billing.</p>
+          </article>
+          <article class="panel">
+            <h3>What does offline replay replay?</h3>
+            <p>Offline replay checks saved evidence: snapshots, trace shape, artifact contracts, replay metadata, and stable behavior comparisons. It does not re-call a hosted model.</p>
+          </article>
+          <article class="panel">
+            <h3>Does KAI OS prove the agent answer is correct?</h3>
+            <p>No. It proves runtime evidence: what ran, which tools were allowed or denied, what changed from baseline, and what can be replayed offline.</p>
+          </article>
+          <article class="panel">
+            <h3>Why Kotlin/JVM?</h3>
+            <p>JVM teams already run a lot of backend, CI, build, and internal automation infrastructure. Kotlin gives the runtime typed APIs, DSL ergonomics, and coroutine-friendly scheduling.</p>
+          </article>
+        </div>
+      </section>
+
       <section aria-labelledby="boundary">
         <div class="section-head">
           <h2 id="boundary">What this proves, and what it does not.</h2>

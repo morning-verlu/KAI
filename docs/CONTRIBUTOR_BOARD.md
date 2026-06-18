@@ -42,6 +42,14 @@ During the first launch waves, the maintainer goal is:
 
 This is part of the product surface. KAI OS is trying to earn real developer trust, so issues should read like small executable tasks, not vague wish lists.
 
+## Recent External Contributions
+
+Small PRs are welcome when they improve the Evidence OS trust path:
+
+| PR | Contributor | What changed | Verification |
+| --- | --- | --- | --- |
+| [#24 Evidence glossary](https://github.com/morning-verlu/KAI/pull/24) | [Making4444](https://github.com/Making4444) | Added plain-language definitions for review artifacts, traces, ledgers, capsules, baseline diffs, evidence summaries, and recovery dry-runs | `git diff --check` and `./scripts/evidence-samples-smoke.sh` |
+
 ## Active Now
 
 These are the best currently open tasks during launch:
@@ -51,12 +59,12 @@ These are the best currently open tasks during launch:
 | [#14 Kotlin API capability recipe](https://github.com/morning-verlu/KAI/issues/14) | Kotlin/JVM docs contributor | Add one compact custom-tool/capability recipe to `docs/KOTLIN_API.md` | `git diff --check` and `./gradlew -p examples/kotlin-runtime-api run` |
 | [#15 Denied-syscall walkthrough](https://github.com/morning-verlu/KAI/issues/15) | Evidence/docs contributor | Show where a denied syscall appears in checked-in trace or capsule output | `git diff --check` and `./scripts/evidence-samples-smoke.sh` |
 | [#19 `kaios tour` transcript](https://github.com/morning-verlu/KAI/issues/19) | CLI/docs contributor | Add a short first-run transcript for the no-key tour | `git diff --check` |
-| [#20 Proof Pack FAQ](https://github.com/morning-verlu/KAI/issues/20) | Launch/docs contributor | Answer the first skeptical developer questions in the Proof Pack | `git diff --check` |
-| [#21 Evidence glossary](https://github.com/morning-verlu/KAI/issues/21) | Evidence/docs contributor | Explain review artifact, trace, ledger, capsule, diff, summary, and recovery dry-run | `git diff --check` |
+| [#25 Codespaces first-run timing notes](https://github.com/morning-verlu/KAI/issues/25) | Browser/docs contributor | Explain what first-time Codespaces users should expect before running the tour | `git diff --check` |
+| [#26 Baseline gate walkthrough](https://github.com/morning-verlu/KAI/issues/26) | Evidence/docs contributor | Explain baseline vs current capsules and `kaios diff --check` behavior | `git diff --check` and `./scripts/evidence-samples-smoke.sh` |
 | [#16 Docker smoke verification](https://github.com/morning-verlu/KAI/issues/16) | Docker/CI tester | Run `./scripts/docker-smoke.sh --preflight`, then full smoke on a normal network | `./scripts/docker-smoke.sh --preflight` and `./scripts/docker-smoke.sh` |
 | [#12 Public repository CI](https://github.com/morning-verlu/KAI/issues/12) | Maintainer with GitHub auth access | Follow [CI_ENABLE_RUNBOOK.md](CI_ENABLE_RUNBOOK.md), refresh `workflow` scope, then copy the repository CI template into `.github/workflows/ci.yml` | `./scripts/repository-ci-smoke.sh` and GitHub Actions green run |
 
-If you are unsure which one to pick, start with #19, #20, or #21. They are docs-first and do not require write access to the repository.
+If you are unsure which one to pick, start with #19, #25, or #26. They are docs-first and do not require write access to the repository.
 
 ## 30-Minute Contribution Ideas
 

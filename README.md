@@ -42,6 +42,8 @@ kaios tour
 
 No local setup? [Open KAI OS in GitHub Codespaces](https://codespaces.new/morning-verlu/KAI?quickstart=1) and run `build/install/kaios-cli/bin/kaios tour`.
 
+Community signal: external contributor PR [#24](https://github.com/morning-verlu/KAI/pull/24) added the evidence glossary and passed `./scripts/evidence-samples-smoke.sh`.
+
 Kotlin/JVM developer? Use the [Kotlin/JVM evaluation path](docs/KOTLIN_JVM_EVALUATION.md) or the [Kotlin Runtime API example](examples/kotlin-runtime-api/). Trying to decide whether this deserves a star? Read [Why Star KAI OS](docs/WHY_STAR.md) and the [Trust Matrix](docs/TRUST_MATRIX.md). Want to help in 5-30 minutes? Pick from the [Contributor Board](docs/CONTRIBUTOR_BOARD.md).
 
 ## Use KAI OS When
