@@ -10,6 +10,8 @@ The dev container uses Java 17 and runs:
 ./gradlew installDist --no-daemon
 ```
 
+First-time Codespaces setup can take a few minutes while the dev container installs Java dependencies and builds the CLI. Wait for the terminal prompt to return before running the tour commands.
+
 After the workspace finishes creating, run the no-key tour:
 
 ```bash
@@ -40,5 +42,13 @@ If the dev container build is interrupted, rerun:
 ```bash
 ./gradlew installDist --no-daemon
 ```
+
+If you run a `kaios` command before the build finishes and see `No such file or directory`, wait for the container setup to complete, then run:
+
+```bash
+./scripts/codespaces-smoke.sh
+```
+
+The smoke script rebuilds the CLI when needed and verifies the browser-only path end to end.
 
 For the complete evaluator path, read [START_HERE.md](../START_HERE.md).
