@@ -12,6 +12,53 @@ kaios tour
 
 `kaios tour` creates a tiny temporary Git project, runs quickstart, makes a code change, runs review, writes a process trace and capsule, and prints next commands for inspection.
 
+## 60-Second Tour Transcript
+
+Here is what you will see in your terminal when running the tour (paths will show your operating system's temp directory):
+
+```text
+KAI OS Evidence OS tour
+schema: kaios.tour/v1
+status: ready
+run_id: run-89d4fb12
+workspace: /tmp/kaios-tour.849204/workspace
+changed_file: src/App.kt
+
+what happened:
+  1. Created a disposable Git workspace.
+  2. Ran no-key quickstart with the deterministic provider.
+  3. Changed src/App.kt and reviewed the diff.
+  4. Wrote a Markdown review, process trace, replayable capsule, and recovery dry-run report.
+
+product proof:
+  Agent = Process   -> run 'kaios ps run-89d4fb12'
+  Tool  = Syscall   -> inspect 'artifacts/change-review.trace.json'
+  Run   = Evidence  -> replay 'artifacts/change-review.capsule.json'
+  CI    = Gate      -> compare a future baseline with 'kaios evidence --baseline ... --check'
+
+artifacts:
+  review: /tmp/kaios-tour.849204/workspace/artifacts/change-review.md
+  trace: /tmp/kaios-tour.849204/workspace/artifacts/change-review.trace.json
+  capsule: /tmp/kaios-tour.849204/workspace/artifacts/change-review.capsule.json
+
+commands executed:
+  quickstart: exit=0 command="kaios quickstart --no-ci --json"
+  review: exit=0 command="kaios review --json"
+  ps: exit=0 command="kaios ps run-89d4fb12 --json"
+  evidence: exit=0 command="kaios evidence run-89d4fb12 --summary"
+  recover: exit=0 command="kaios recover run-89d4fb12 --dry-run --json"
+```
+
+### Artifacts to Inspect
+
+Once the tour wraps up, head over to the printed `workspace` directory. You will find three main files worth looking at:
+
+1. **Review Artifact** (`artifacts/change-review.md`) — A readable Markdown summary of what the agent actually did. It includes a process table and a timeline of events.
+2. **Process Trace** (`artifacts/change-review.trace.json`) — The detailed JSON trace behind the run. This tracks token counts, process states, and the **syscall ledger** (which lists every tool call the agent tried to make).
+3. **Replay Capsule** (`artifacts/change-review.capsule.json`) — A standalone bundle containing the run's snapshot and trace. You can copy this to another machine to replay the run offline without needing a model provider.
+
+---
+
 Use the source-tree script when developing KAI OS itself or when you want to run the tour against an existing local project:
 
 ```bash
