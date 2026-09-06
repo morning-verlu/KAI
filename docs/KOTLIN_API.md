@@ -64,7 +64,30 @@ val result = WorkflowScheduler(
 println(result.processes)
 println(result.syscalls)
 ```
+## Custom Tool Capability Recipe
 
+To give an agent access to your own tool, define a `ToolCapabilityGrant`
+inside its `capability { }` block. This is the syscall boundary described
+above — an agent can only call tools it has an explicit grant for, and only
+up to the call limit that grant allows.
+
+```kotlin
+val analyst = agent("analyst") {
+    memory(memory)
+    capability(
+        tool = "my-custom-tool",
+        permission = ToolPermission.NETWORK,
+        scope = "mock://kaios/analysis",
+        limits = ToolCapabilityLimits(maxCalls = 1),
+    )
+}
+```
+
+- `tool` names the exact tool this agent may call — access to any other tool is denied by default.
+- `permission` categorizes the kind of access being granted (e.g. `NETWORK`, `FILE`, `ECHO`), not just whether access exists.
+- `limits.maxCalls` caps how many times the agent may invoke the tool, so a runaway agent can't call it indefinitely.
+
+See [examples/kotlin-runtime-api](../examples/kotlin-runtime-api/) for a full runnable example with multiple agents and grants.
 ## Expected Output Shape
 
 The full example prints:
